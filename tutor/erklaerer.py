@@ -37,6 +37,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "build"))
 
+import curriculum as C       # noqa: E402   Alter und Klasse je Stufe
 import validate as V          # noqa: E402
 
 UNITS = ROOT / "data" / "units_seed.json"
@@ -54,7 +55,8 @@ MODEL = "claude-opus-5"
 EFFORT = "low"
 MAX_TOKENS = 1600      # das Nachdenken zählt mit hinein
 
-SYSTEM = """Du hilfst einem achtjährigen Kind bei Mathe.
+SYSTEM = """Du hilfst einem Grundschulkind bei Mathe. Wie alt es ist, steht
+in der Anfrage — richte Wortwahl und Satzlänge danach.
 
 Es ist bei einer Aufgabe nicht weitergekommen und hat um eine Erklärung
 gebeten. Zeig ihm den Weg — aber an einer ANDEREN, gleichartigen Aufgabe mit
@@ -205,7 +207,9 @@ def _client():
 
 
 def _frage(u, t):
-    teile = [f'Bereich: {u["skill"]}, Stufe {u["stage"]}',
+    st = C.STAGES.get(u.get("stage")) or {}
+    teile = [f'Das Kind ist etwa {st.get("alter", 8)} Jahre alt ({st.get("grade", "Grundschule")}).',
+             f'Bereich: {u["skill"]}, Stufe {u["stage"]}',
              f'Aufgabenart: {t.get("type")}',
              f'Die Aufgabe, an der es klemmt: {t.get("q","")}']
     if isinstance(t.get("check"), dict) and t["check"].get("expr"):

@@ -163,7 +163,7 @@ def main():
     SP.ignoriert_setzen("22bb33cc44dd55ee", True)
 
     dienst = subprocess.Popen(
-        [str(ROOT / ".venv/bin/python"), str(ROOT / "tutor/server.py"),
+        [sys.executable, str(ROOT / "tutor/server.py"),
          "--port", str(PORT), "--host", "127.0.0.1"],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         env=dict(os.environ, MC_TELE=str(tele)))

@@ -2,6 +2,7 @@
 """Erzeugt Lernpakete mit Claude und lässt kein einziges ungeprüft durch.
 
   .venv/bin/python build/generate_units.py --seed          # Grundstock (Stufe 1-3)
+  .venv/bin/python build/generate_units.py --seed --klasse 4  # Vorrat für einen Viertklässler
   .venv/bin/python build/generate_units.py --skill plus_bis20 --stage 2 --n 2
   .venv/bin/python build/generate_units.py --seed --dry-run  # nur zeigen, was liefe
 
@@ -23,6 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))   # konfig.py
 
 import curriculum as C
+import fundus as F
 import schema as S
 import validate as V
 import raetsel_kern as K
@@ -44,16 +46,17 @@ DEFAULT_BUDGET = 400_000     # Ausgabe-Token je Lauf; grob 10 EUR Deckel
 # --------------------------------------------------------------- Anweisungen
 # Dieser Block ist bei jedem Aufruf identisch und wird deshalb zwischenge-
 # speichert (Prompt-Caching) — er kostet dann nur noch einen Bruchteil.
-SYSTEM = """Du baust Matheaufgaben für einen achtjährigen Jungen, der in die zweite
-Klasse kommt und in Mathematik als besonders begabt aufgefallen ist. Er soll gefordert,
-aber nie überfahren werden. Die Aufgaben erscheinen in einer Lern-App, in der er Punkte,
-Sterne und Abzeichen sammelt.
+SYSTEM = """Du baust Matheaufgaben für ein Grundschulkind, das in Mathematik als
+besonders begabt aufgefallen ist. Es soll gefordert, aber nie überfahren werden. Die
+Aufgaben erscheinen in einer Lern-App, in der es Punkte, Sterne und Abzeichen sammelt.
 
 WER DA LIEST
-Er ist acht. Er liest noch langsam. Jeder Satz, den er zweimal lesen muss, kostet ihn
-mehr Kraft als das Rechnen selbst. Also: kurze Sätze, vertraute Wörter, höchstens zwei
-Sätze pro Aufgabe. Sprich ihn direkt an ("du"), niemals von oben herab. Kein "Super!",
-kein "Ganz einfach!" — das erledigt die App.
+Wie alt das Kind ist und in welche Klasse es geht, steht bei jedem Auftrag unter KIND —
+richte Wortwahl und Satzlänge danach. Es liest noch langsam. Jeder Satz, den es zweimal
+lesen muss, kostet mehr Kraft als das Rechnen selbst. Also: kurze Sätze, vertraute
+Wörter, höchstens zwei Sätze pro Aufgabe. Sprich es direkt an ("du"), niemals von oben
+herab. Kein "Super!", kein "Ganz einfach!" — das erledigt die App. Schreib geschlechts-
+neutral: Die App wird von Mädchen wie Jungen benutzt.
 
 DIE EINKLEIDUNG
 Jedes Paket spielt in einer Themenwelt, die ihn interessiert. Nutze ihre Begriffe
@@ -94,7 +97,7 @@ ist gut. "Es sind 13" ist wertlos.
 
 TON DER RÜCKMELDUNG
 Wenn du erklärst (Aufgabentyp "entdecken"), dann zeige die Idee an einem Beispiel,
-statt eine Regel zu verkünden. Ein Achtjähriger versteht "drei Reihen mit je vier
+statt eine Regel zu verkünden. Ein Grundschulkind versteht "drei Reihen mit je vier
 Blöcken sind zwölf" sofort und "Multiplikation ist wiederholte Addition" nie."""
 
 
@@ -118,6 +121,7 @@ def build_prompt(sk, stage, wid, n_tasks, problems=None):
 
     p = f"""Baue EIN Lernpaket.
 
+KIND         etwa {st['alter']} Jahre alt, {st['grade']}
 FERTIGKEIT   {sk['title']} ({sk['id']})
 AUFTRAG      {sk['brief']}
 STUFE        {stage} — {st['name']}, etwa {st['grade']}
@@ -603,6 +607,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--seed", action="store_true", help="Grundstock für die APK erzeugen")
     ap.add_argument("--stages", help="Stufen für --seed, z.B. 4,5 (Standard 1,2,3)")
+    ap.add_argument("--klasse", type=int,
+                    help="Stufen aus der Schulklasse ableiten statt sie aufzuzählen "
+                         f"(z. B. --klasse 4 -> Stufen {','.join(map(str, C.klasse_band(4)))}). "
+                         "--stages schlägt diese Angabe.")
     ap.add_argument("--skill"); ap.add_argument("--stage", type=int)
     ap.add_argument("--world"); ap.add_argument("--n", type=int, default=1)
     ap.add_argument("--tasks", type=int, default=8)
@@ -612,7 +620,14 @@ def main():
     a = ap.parse_args()
 
     if a.seed:
-        stages = tuple(int(x) for x in a.stages.split(",")) if a.stages else (1, 2, 3)
+        if a.stages:
+            stages = tuple(int(x) for x in a.stages.split(","))
+        elif a.klasse:
+            stages = C.klasse_band(a.klasse)
+            print(f"Klasse {a.klasse}: Stufen {','.join(map(str, stages))} "
+                  f"(Einstieg {C.klasse_einstieg(a.klasse)})")
+        else:
+            stages = (1, 2, 3)
         plan, out = seed_plan(stages), Path(a.out or SEED_OUT)
     elif a.skill:
         sk = C.skill(a.skill)
@@ -655,6 +670,13 @@ def main():
             print(f"\n{e} – Lauf hier beendet.")
             break
         if unit:
+            # Ersetzt dieser Lauf ein vorhandenes Paket (--skill auf eine
+            # belegte Stelle), wandert die alte Fassung in den Fundus, bevor
+            # sie aus units_seed.json verschwindet.
+            if key in have:
+                ab = F.lege_paket_ab(have[key])
+                if ab:
+                    print(f"     [ar] alte Fassung im Fundus: {ab.relative_to(ROOT)}")
             have[key] = unit
             notiere("neu", sid, stage, "vorratsluecke",
                     {"n": 1, "aufgaben": len(unit["tasks"]), "welt": wid})

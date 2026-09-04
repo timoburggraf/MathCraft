@@ -14,17 +14,65 @@ Prüfung auseinander.
 # Erwachsene sitzen". Der Einstieg ist bewusst leicht: Wer sich am ersten Tag
 # blamiert, macht am zweiten nicht weiter. Ab Stufe 5 geht es über den
 # Klassenstoff hinaus — dafür ist die App da.
+# alter: das Lebensalter, das zu dieser Stufe gehört. Es steht hier, weil die
+# Sprachmodell-Anweisungen es brauchen: Wortwahl, Satzlänge und was als bekannt
+# vorausgesetzt werden darf, hängen daran. Vor dieser Angabe war "achtjährig"
+# fest in die Anweisungen geschrieben — was für ein Kind auf Stufe 7 falsch war
+# und es unnötig unterfordert klingen ließ.
 STAGES = {
-    1: dict(name="Erste Schritte",  max_value=20,      grade="Anfang Klasse 2"),
-    2: dict(name="Sicher bis 20",   max_value=20,      grade="Klasse 2"),
-    3: dict(name="Der Hunderter",   max_value=100,     grade="Klasse 2"),
-    4: dict(name="Mal und Geteilt", max_value=100,     grade="Ende Klasse 2"),
-    5: dict(name="Der Tausender",   max_value=1000,    grade="Klasse 3"),
-    6: dict(name="Große Zahlen",    max_value=10000,   grade="Klasse 4"),
-    7: dict(name="Zahlenforscher",  max_value=100000,  grade="Klasse 5/6"),
-    8: dict(name="Meisterprüfung",  max_value=1000000, grade="Knobelolympiade"),
+    1: dict(name="Erste Schritte",  max_value=20,      grade="Anfang Klasse 2",  alter=7),
+    2: dict(name="Sicher bis 20",   max_value=20,      grade="Klasse 2",         alter=8),
+    3: dict(name="Der Hunderter",   max_value=100,     grade="Klasse 2",         alter=8),
+    4: dict(name="Mal und Geteilt", max_value=100,     grade="Ende Klasse 2",    alter=8),
+    5: dict(name="Der Tausender",   max_value=1000,    grade="Klasse 3",         alter=9),
+    6: dict(name="Große Zahlen",    max_value=10000,   grade="Klasse 4",         alter=10),
+    7: dict(name="Zahlenforscher",  max_value=100000,  grade="Klasse 5/6",       alter=11),
+    8: dict(name="Meisterprüfung",  max_value=1000000, grade="Knobelolympiade",  alter=11),
 }
 MAX_STAGE = max(STAGES)
+
+# ------------------------------------------------------------- Klassenstufen
+# Dieselbe App wird von verschiedenen Kindern verwendet, und die sitzen nicht
+# in derselben Klasse. Ein Viertklässler, der bei „Zahlen bis 20“ anfangen
+# muss, hört wieder auf, bevor es interessant wird — und ein Zweitklässler,
+# den man bei „Der Tausender“ einsteigen lässt, ebenfalls.
+#
+# Zwei Angaben je Klasse:
+#
+#   einstieg  Stufe, auf der ein Kind dieser Klasse beginnt. Bewusst eine
+#             unter dem, was der Lehrplan der Klasse verlangt: Der Anfang soll
+#             gelingen, nicht beeindrucken. Wer darüber steht, ist nach zwei
+#             fehlerfrei gelösten Paketen oben — die App steigt von selbst auf
+#             (baseStage() in src/app.html). Die Zahl ist also ein Boden, keine
+#             Decke, und kostet niemanden etwas außer ein paar leichten Paketen.
+#   band      Stufen, für die Vorrat da sein muss, damit ein Kind dieser Klasse
+#             Wochen übersteht, ohne dass jemand nachlegt. Eine Stufe über dem
+#             Lehrplan ist Absicht: Wer schnell ist, soll nicht anstehen.
+KLASSEN = {
+    2: dict(einstieg=1, band=(1, 2, 3, 4)),
+    3: dict(einstieg=4, band=(4, 5, 6)),
+    4: dict(einstieg=5, band=(5, 6, 7)),
+    5: dict(einstieg=6, band=(6, 7, 8)),
+    6: dict(einstieg=7, band=(7, 8)),
+}
+
+
+def klasse_einstieg(klasse):
+    """Einstiegsstufe für eine Schulklasse. Außerhalb des Bereichs wird
+    gekappt statt geraten — eine erfundene Stufe wäre schlimmer als eine zu
+    niedrige."""
+    if klasse in KLASSEN:
+        return KLASSEN[klasse]["einstieg"]
+    return KLASSEN[min(KLASSEN)]["einstieg"] if klasse < min(KLASSEN) \
+        else KLASSEN[max(KLASSEN)]["einstieg"]
+
+
+def klasse_band(klasse):
+    """Stufen, für die eine Schulklasse Vorrat braucht."""
+    if klasse in KLASSEN:
+        return KLASSEN[klasse]["band"]
+    return KLASSEN[min(KLASSEN)]["band"] if klasse < min(KLASSEN) \
+        else KLASSEN[max(KLASSEN)]["band"]
 
 # Rechenarten, die ab welcher Stufe überhaupt vorkommen dürfen. Der Validator
 # lehnt alles ab, was zu früh auftaucht — ein Modell schreibt sonst gern mal

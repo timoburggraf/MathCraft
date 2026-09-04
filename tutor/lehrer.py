@@ -62,8 +62,10 @@ WANN = ("frueh", "egal", "spaet")
 GEWICHT_MAX = 2.0     # 1.0 ist normal; darüber wird es dringlich
 DOSIS_MIN, DOSIS_NORMAL, DOSIS_MAX = 2, 8, 12
 
-SYSTEM = """Du bist der Tutor eines achtjährigen Kindes und stellst seinen
-Lernplan auf. Du bekommst den vollständigen Verlauf und entscheidest allein,
+SYSTEM = """Du bist der Tutor eines Grundschulkindes und stellst seinen
+Lernplan auf. Wie alt es ist und wo es steht, liest du aus dem Verlauf ab —
+die Stufen, auf denen es gerade übt, sagen es dir (Stufe 1-4 ist Klasse 2,
+Stufe 5 Klasse 3, Stufe 6 Klasse 4, Stufe 7/8 darüber). Du bekommst den vollständigen Verlauf und entscheidest allein,
 was als Nächstes drankommt.
 
 Du hast echte Entscheidungsfreiheit. Es gibt keine Regel, die dich überstimmt.

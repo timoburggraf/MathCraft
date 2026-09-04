@@ -1,9 +1,11 @@
 # MathCraft
 
-Adaptiver Mathe-Trainer für einen **achtjährigen Jungen** (2. Klasse, in Mathe
-besonders begabt). Leichter Einstieg, dann sukzessive schwerer — und die
-Lernkurve wird nicht vorgegeben, sondern von einem **LLM-Tutor** laufend an das
-angepasst, was das Kind kann und was es interessiert.
+Adaptiver Mathe-Trainer für **Grundschulkinder, die in Mathe mehr wollen** —
+Klasse 2 bis 4, einstellbar. Leichter Einstieg, dann sukzessive schwerer, und
+die Lernkurve wird nicht vorgegeben, sondern von einem **LLM-Tutor** laufend an
+das angepasst, was das Kind kann und was es interessiert. Wo es losgeht, sagt
+die eingestellte [Schulklasse](#mehr-als-ein-kind); wie es weitergeht, das Kind
+selbst.
 
 Läuft als **Android-App** (Redmi Note 13 Pro) und im Browser. Der Fortschritt
 bleibt auf dem Gerät; gespielt wird immer offline.
@@ -143,6 +145,70 @@ wird verworfen und der feste Tipp bleibt stehen.
 
 ---
 
+## Mehr als ein Kind
+
+Dieselbe App wird von Kindern verwendet, die nicht in derselben Klasse sitzen.
+Ein Viertklässler, der bei „Zahlen bis 20“ anfangen muss, hört wieder auf,
+bevor es interessant wird.
+
+**Einstellungen ▸ Schulklasse** setzt deshalb einen **Boden**, keine Decke:
+
+| Klasse | Start bei | Vorratsband |
+|---|---|---|
+| 2 | Stufe 1 · Erste Schritte | 1–4 |
+| 3 | Stufe 4 · Mal und Geteilt | 4–6 |
+| 4 | Stufe 5 · Der Tausender | 5–7 |
+| 5 | Stufe 6 · Große Zahlen | 6–8 |
+| 6 | Stufe 7 · Zahlenforscher | 7–8 |
+
+Der Einstieg liegt je Klasse bewusst **eine Stufe unter** dem, was der Lehrplan
+dieser Klasse verlangt: Der Anfang soll gelingen, nicht beeindrucken. Nach oben
+zählt weiterhin nur, was das Kind zeigt — wer zwei Pakete fehlerfrei löst,
+steigt von selbst. Umstellen ändert nur den Boden; Sterne, Level und
+Wiederholungstermine bleiben unangetastet.
+
+Die Zuordnung steht an genau einer Stelle: `KLASSEN` in `build/curriculum.py`.
+Die App bekommt sie beim Bauen mitgeliefert, damit Lehrplan und Oberfläche
+nicht auseinanderlaufen können.
+
+**Passenden Vorrat erzeugen** — sonst steht ein Viertklässler nach ein paar
+Tagen ohne Nachschub da:
+
+```bash
+.venv/bin/python build/kern_pakete.py --alle --klasse 4     # kostenlos, aus den Kernen
+.venv/bin/python build/generate_units.py --seed --klasse 4  # mit Claude, kostet Guthaben
+```
+
+> Der Lernstand hängt am Gerät. Zwei Kinder auf **einem** Gerät teilen sich
+> heute noch einen Fortschritt — für zwei Kinder braucht es zwei Geräte oder
+> zwei Browser-Profile. Auf der Elternseite lassen sich die Geräte dann
+> getrennt auswerten.
+
+---
+
+## Der Fundus — nichts Erzeugtes wird vernichtet
+
+Jedes Paket, jedes Bild und jede Tonspur hat Rechenzeit und Geld gekostet.
+Wird etwas ersetzt, wandert die alte Fassung deshalb zuerst nach
+[`fundus/`](fundus/README.md), statt überschrieben zu werden:
+
+```
+fundus/pakete/<fertigkeit>@<stufe>/<zeitstempel>.json
+fundus/bilder/<name>/<zeitstempel>.png
+```
+
+Betroffen sind `kern_pakete.py --force`, `generate_units.py --skill …` und
+`make_images.py --force`. Die **Vorlesestimmen** brauchen das nicht: ihr
+Dateiname ist der crc32 des gesprochenen Textes, ein geänderter Text bekommt
+also eine neue Datei statt die alte zu überschreiben — `data/audio/` ist von
+sich aus ein Fundus.
+
+```bash
+.venv/bin/python build/fundus.py      # was gerade drinliegt
+```
+
+---
+
 ## Motivation
 
 * **XP & Level** — 10 Stufen von *Rookie* bis *Legende*
@@ -218,6 +284,7 @@ build/
   adaptiv_test.py               ← Z5 und Z3: weicht der Tutor richtig ab, und sagt er es?
   wunsch_test.py                ← Z4: wirken die Elternwünsche?
   erklaer_test.py               ← Z6: wird eine falsch gerechnete Erklärung verworfen?
+  klassen_test.py               ← Klassenstufe: Boden, keine Decke — und der Fundus vernichtet nichts
 tutor/
   server.py                     ← der Heim-Dienst (Routen)
   speicher.py                   ← Ablage der Messdaten, idempotent
@@ -226,6 +293,8 @@ tutor/
   eltern.py                     ← die Elternseite
   erklaerer.py                  ← Erklärung am Beispiel, nachgerechnet
 konfig.py                       ← Schlüssel und rechnerspezifische Pfade, aus Umgebung oder .env
+build/fundus.py                 ← legt ab, was ersetzt wird — nichts Erzeugtes geht verloren
+fundus/                         ← die abgelegten Vorgängerfassungen
 .env.beispiel                   ← Vorlage dafür; die ausgefüllte .env bleibt lokal
 data/units_seed.json            ← Grundstock, wird in die App gebacken
 data/audio/<stimme>/*.opus      ← vorproduzierte Vorlesestimmen (zephyr, puck, leda)
@@ -259,6 +328,7 @@ python3 -m venv .venv && .venv/bin/pip install -U anthropic google-genai Pillow 
 .venv/bin/python build/raetsel_kern_test.py build/grafik_kern_test.py   # (je einzeln aufrufen)
 .venv/bin/python build/muster_kern_test.py; .venv/bin/python build/algo_kern_test.py
 .venv/bin/python build/spiel_kern_test.py; .venv/bin/python build/validate_v2_test.py
+.venv/bin/python build/klassen_test.py     # Klassenstufe (Boden, keine Decke) und der Fundus
 ```
 
 Pakete aus den deterministischen Kernen (kostenlos, ohne Sprachmodell):

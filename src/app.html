@@ -402,6 +402,13 @@ const AREAS  = DATA.areas;
 const SKILLS = DATA.skills;
 const WORLDS = DATA.worlds;
 const STAGES = DATA.stages;
+/* Klasse -> Einstiegsstufe, geliefert von build/curriculum.py. Ältere gebaute
+   Fassungen kennen das Feld nicht; dann bleibt die Liste leer und die
+   Einstellung blendet sich aus, statt eine erfundene Zuordnung zu zeigen. */
+const KLASSEN = Array.isArray(DATA.klassen) ? DATA.klassen : [];
+/* Höchste Stufe. Steht hier oben und nicht erst bei baseStage(), weil schon
+   loadState() sie zum Kappen braucht und beim Start früher läuft. */
+const MAX_STAGE_ROH = Math.max(...Object.keys(STAGES).map(Number));
 
 const UNITS = {};                       // Schlüssel "skill@stufe" -> Paket
 DATA.units.forEach(u => { u.id = u.skill + "@" + u.stage; UNITS[u.id] = u; });
@@ -467,8 +474,11 @@ const TYP_FENSTER = 200;    // so weit zurück wird die Aufgabenmischung gemesse
 const freshState = () => ({
   v:1,
   dev: neueGeraeteId(),
+  // einstieg: Stufe, unter die dieses Kind nicht mehr fällt — aus seiner
+  // Schulklasse abgeleitet (siehe KLASSEN und baseStage()). 0 heißt: nie
+  // gesetzt, dann gilt Stufe 1 wie bisher.
   profile:{name:"", xp:0, streak:0, bestStreak:0, lastDay:0, goal:15, todayDay:0, todayCount:0,
-           badges:[], lastUnitId:""},
+           badges:[], lastUnitId:"", einstieg:0, klasse:0},
   // skillId -> {l:Level, d:fällig ab (ms), c:richtig, w:falsch, h:letzte Antworten}
   // h ist das Kurzzeitgedächtnis: c und w summieren über Monate und verdecken
   // damit genau das, worauf es ankommt — was zuletzt passiert ist.
@@ -585,6 +595,10 @@ function load(){
         goal: Math.max(5, Math.min(60, num(p.goal,15)|0)),
         todayDay: num(p.todayDay,0)|0, todayCount: Math.max(0, num(p.todayCount,0)|0),
         lastUnitId: UNITS[p.lastUnitId] ? p.lastUnitId : "",
+        // Ein Lernstand von vor dieser Fassung kennt beide Felder nicht. 0
+        // bedeutet dann genau das bisherige Verhalten: Einstieg auf Stufe 1.
+        einstieg: Math.max(0, Math.min(MAX_STAGE_ROH, num(p.einstieg, 0)|0)),
+        klasse: Math.max(0, Math.min(13, num(p.klasse, 0)|0)),
         badges: Array.isArray(p.badges) ? p.badges.filter(b => BADGES.some(x => x.id === b)) : [],
       });
     }
@@ -1197,7 +1211,7 @@ function render(){
                       noch nie gesehen hat, nicht mehr bei eins an.
      · Weltniveau   — was er in DIESER Welt zeigt. Geometrie kann sitzen,
                       während Sachaufgaben noch haken. */
-const MAX_STAGE = Math.max(...Object.keys(STAGES).map(Number));
+const MAX_STAGE = MAX_STAGE_ROH;
 const PERFEKT_FUER_AUFSTIEG = 2;
 
 function baseStage(){
@@ -1206,11 +1220,30 @@ function baseStage(){
     const u = UNITS[id];
     if(u && p.stars >= 3) perfekt[u.stage] = (perfekt[u.stage] || 0) + 1;
   });
-  let base = 1;
+  /* Der Boden. Ein Viertklässler soll nicht bei „Zahlen bis 20“ anfangen und
+     sich acht fehlerfreie Pakete lang hocharbeiten, bis es interessant wird.
+     Ist keine Klasse eingestellt (einstieg 0), bleibt es bei 1 — genau das
+     Verhalten aller Lernstände von vor dieser Einstellung.
+
+     Ein Boden, keine Decke: nach oben zählt weiterhin nur, was das Kind
+     zeigt. Zu hoch eingestellt korrigiert sich nichts von selbst — deshalb
+     liegt der Einstieg je Klasse bewusst eine Stufe unter dem Lehrplan
+     (build/curriculum.py, KLASSEN). */
+  let base = Math.max(1, Math.min(MAX_STAGE, S.profile.einstieg || 0));
   for(let s = 1; s <= MAX_STAGE; s++){
-    if((perfekt[s] || 0) >= PERFEKT_FUER_AUFSTIEG) base = s + 1;
+    if((perfekt[s] || 0) >= PERFEKT_FUER_AUFSTIEG) base = Math.max(base, s + 1);
   }
   return Math.min(MAX_STAGE, base);
+}
+
+/* Klasse setzen. Ändert nur den Boden, nie den Lernstand: Sterne, Level und
+   Wiederholungstermine bleiben unangetastet. Wer sich vertippt, stellt es
+   zurück und ist wieder da, wo er war. */
+function setzeKlasse(k){
+  const e = KLASSEN.find(x => x.k === k);
+  S.profile.klasse = e ? k : 0;
+  S.profile.einstieg = e ? e.einstieg : 0;
+  save(); render();
 }
 
 function areaStage(aid){
@@ -1855,6 +1888,25 @@ VIEWS.settings = () =>
         autocorrect="off" spellcheck="false"
         oninput="S.profile.name=this.value.trim().slice(0,18);save()">
     </div>
+    ${KLASSEN.length ? `
+    <div class="card" style="margin-bottom:12px">
+      <h3>Schulklasse</h3>
+      <div class="muted" style="font-size:14.5px;margin-bottom:8px">
+        Legt fest, wo es losgeht — damit niemand bei Aufgaben anfängt, die er
+        längst kann. Nach oben entscheidest weiterhin du: Wer zwei Pakete
+        fehlerfrei löst, steigt von selbst eine Stufe.
+        ${S.profile.klasse
+          ? `Eingestellt: <b>Klasse ${S.profile.klasse}</b> — Start bei Stufe
+             ${S.profile.einstieg} (${esc(STAGES[S.profile.einstieg] || "")}).`
+          : "Noch nichts eingestellt — es geht bei Stufe 1 los."}
+        <br>Der Lernstand bleibt beim Umstellen erhalten.</div>
+      <select class="srv" style="width:100%"
+        onchange="setzeKlasse(+this.value)">
+        <option value="0"${S.profile.klasse ? "" : " selected"}>Keine Angabe — bei Stufe 1 anfangen</option>
+        ${KLASSEN.map(e => `<option value="${e.k}"${S.profile.klasse === e.k ? " selected" : ""}>`
+          + `Klasse ${e.k} — Start bei Stufe ${e.einstieg} (${esc(e.name)})</option>`).join("")}
+      </select>
+    </div>` : ""}
     <div class="card" style="margin-bottom:12px">
       <h3>Tagesziel</h3>
       <div class="muted" style="font-size:14.5px;margin-bottom:8px">

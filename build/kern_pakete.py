@@ -11,6 +11,7 @@ wird nicht geschrieben, sondern laut abgebrochen ("Kein Fehler erreicht das
 Kind").
 
   .venv/bin/python build/kern_pakete.py --alle
+  .venv/bin/python build/kern_pakete.py --alle --klasse 4
       Baut jedes fehlende Kern-Paket (Fertigkeit@Stufe und Fertigkeit@Stufe+1,
       Welt rotierend über einen laufenden Index) in data/units_seed.json.
 
@@ -35,6 +36,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import curriculum as C
+import fundus as F
 import validate as V
 import grafik_kern as GK
 import muster_kern as MK
@@ -860,12 +862,28 @@ def main():
     ap.add_argument("--skill", help="nur diese Fertigkeit")
     ap.add_argument("--stage", type=int, help="Stufe (Standard: die eigene Stufe der Fertigkeit)")
     ap.add_argument("--world", help="Themenwelt (Standard bei --skill: erste Welt)")
-    ap.add_argument("--force", action="store_true", help="auch schon vorhandene Pakete ersetzen")
+    ap.add_argument("--klasse", type=int,
+                    help="mit --alle nur die Stufen bauen, die diese Schulklasse braucht "
+                         "(siehe KLASSEN in curriculum.py)")
+    ap.add_argument("--force", action="store_true",
+                    help="auch schon vorhandene Pakete ersetzen; die alte Fassung "
+                         "wandert dabei in den Fundus, sie geht nicht verloren")
     ap.add_argument("--dry-run", action="store_true", help="nur den Bauplan zeigen")
     a = ap.parse_args()
 
+    # Ein Tippfehler in --world lief bisher bis in ein 'NoneType'-Problem
+    # mitten im Bauplan. Lieber hier abbrechen, mit der Liste dabei.
+    if a.world and C.world(a.world) is None:
+        raise SystemExit(f"unbekannte Themenwelt: {a.world!r}\n"
+                         f"gültig sind: {', '.join(C.WORLD_IDS)}")
+
     if a.alle:
         plan = _alle_pakete_plan()
+        if a.klasse:
+            band = set(C.klasse_band(a.klasse))
+            plan = [e for e in plan if e[1] in band]
+            print(f"Klasse {a.klasse}: Stufen {','.join(map(str, sorted(band)))} "
+                  f"— {len(plan)} von {len(_alle_pakete_plan())} Kern-Paketen")
     elif a.skill:
         if not hat_kern(a.skill):
             raise SystemExit(f"{a.skill!r} ist keine Kern-Fertigkeit (siehe KERN_SKILLS in "
@@ -897,6 +915,10 @@ def main():
     gebaut = 0
     for sid, stage, wid in plan:
         key = f"{sid}@{stage}"
+        if key in have and a.force:
+            ab = F.lege_paket_ab(have[key])
+            if ab:
+                print(f"   [ar] alte Fassung im Fundus: {ab.relative_to(ROOT)}")
         if key in have and not a.force:
             print(f"[=] {key} vorhanden")
             continue

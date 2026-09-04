@@ -79,7 +79,7 @@ def main():
         "date": "2026-07-27"}, ensure_ascii=False), "utf-8")
 
     dienst = subprocess.Popen(
-        [str(ROOT / ".venv/bin/python"), str(ROOT / "tutor/server.py"),
+        [sys.executable, str(ROOT / "tutor/server.py"),
          "--port", str(PORT), "--host", "127.0.0.1"],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 

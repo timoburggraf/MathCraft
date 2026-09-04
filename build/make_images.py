@@ -12,7 +12,10 @@ import sys
 import time
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))          # fundus.py
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))   # konfig.py
+
+import fundus as F                                                # noqa: E402
 
 OUT = Path(__file__).resolve().parent.parent / "img" / "raw"
 MODEL = "gemini-3-pro-image-preview"
@@ -136,6 +139,13 @@ def main():
         if dest.exists() and not force:
             print(f"[=]  {name} existiert schon")
             continue
+        if dest.exists():
+            # --force: das bisherige Bild kommt in den Fundus, bevor das neue
+            # darüber geschrieben wird. Ein Bild kostet Geld und lässt sich
+            # nicht reproduzieren — dasselbe Motiv kommt nie zweimal gleich.
+            ab = F.lege_datei_ab(dest, "bilder")
+            if ab:
+                print(f"[ar] {name:9s} alte Fassung im Fundus: {ab.name}")
 
         aspect, motif = SCENES[name]
         prompt = f"{motif}\n\nSTYLE: {STYLE}"

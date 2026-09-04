@@ -141,6 +141,13 @@ def app_data():
         "skills": [{k: s[k] for k in ("id", "area", "stage", "title")} for s in C.SKILLS],
         "worlds": [{k: w[k] for k in ("id", "title")} for w in C.WORLDS],
         "stages": {str(k): v["name"] for k, v in C.STAGES.items()},
+        # Klassenstufen für die Einstellung „In welche Klasse geht das Kind?“.
+        # Die Zuordnung Klasse -> Einstiegsstufe steht in build/curriculum.py und
+        # nur dort; die App bekommt sie fertig geliefert, damit Lehrplan und
+        # Oberfläche nicht auseinanderlaufen können.
+        "klassen": [{"k": k, "einstieg": v["einstieg"],
+                     "name": C.STAGES[v["einstieg"]]["name"]}
+                    for k, v in sorted(C.KLASSEN.items())],
         "units":  good,
     }, len(good), len(bad)
 

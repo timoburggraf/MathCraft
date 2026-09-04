@@ -92,7 +92,7 @@ def main():
                        "ms": 4000, "r": 0, "h": 0})
 
     dienst = subprocess.Popen(
-        [str(ROOT / ".venv/bin/python"), str(ROOT / "tutor/server.py"),
+        [sys.executable, str(ROOT / "tutor/server.py"),
          "--port", str(PORT), "--host", "127.0.0.1"],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         env=dict(os.environ, MC_TELE=str(tele)))

@@ -107,7 +107,7 @@ def main():
     tele = Path(tempfile.mkdtemp(prefix="mathcraft_tele_"))
     umgebung = dict(os.environ, MC_TELE=str(tele))
     dienst = subprocess.Popen(
-        [str(ROOT / ".venv/bin/python"), str(ROOT / "tutor/server.py"),
+        [sys.executable, str(ROOT / "tutor/server.py"),
          "--port", str(PORT), "--host", "127.0.0.1"],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=umgebung)
 
