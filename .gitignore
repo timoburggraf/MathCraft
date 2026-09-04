@@ -1,0 +1,38 @@
+# --------------------------------------------------------------- Persönliches
+# Schlüssel und rechnerspezifische Pfade. Die Vorlage dazu ist .env.beispiel
+# und gehört ins Repository — die ausgefüllte .env niemals.
+.env
+.env.local
+
+# ------------------------------------------------------------------ Lerndaten
+# Alles, was von einem echten Kind stammt oder etwas über es aussagt. Das
+# verlässt den heimischen Rechner nicht — auch nicht in ein privates Repository.
+data/telemetrie/
+data/erklaerungen/
+data/entscheidungen.jsonl
+data/verworfen.json
+data/tutorplan.json
+data/*.tmp
+
+# --------------------------------------------------------------- Bauergebnisse
+# Entstehen aus src/app.html mit build/build.py bzw. build/android.sh. Sie
+# gehören nicht in die Versionsverwaltung: sie sind groß, ändern sich bei jedem
+# Bau komplett — und index.html trägt die Adresse des heimischen Rechners.
+index.html
+www/
+dist/
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+android/app/src/main/res/xml/config.xml
+
+# --------------------------------------------------------------- Werkzeugkram
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/

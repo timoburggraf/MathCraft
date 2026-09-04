@@ -1,0 +1,37 @@
+# Heim-Dienst für MathCraft — liefert Updates aus, nimmt den Lernstand entgegen,
+# zeigt die Elternseite und stößt den Tutor an.
+#
+# Ab hier hängt mehr daran als ein Download: Läuft der Dienst nicht, kommt kein
+# Lernstand an, die Elternseite bleibt leer, und der Tutor denkt nicht nach.
+# Deshalb gehört er in systemd und nicht in ein Terminalfenster.
+#
+# Einrichten (einmalig):
+#   mkdir -p ~/.config/systemd/user
+#   cp tutor/mathcraft.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now mathcraft
+#   loginctl enable-linger $USER        # läuft auch ohne angemeldete Sitzung
+#
+# Nachsehen:
+#   systemctl --user status mathcraft
+#   journalctl --user -u mathcraft -f
+
+[Unit]
+Description=MathCraft Heim-Dienst (Updates, Lernstand, Elternseite, Tutor)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/projects/MathCraft
+ExecStart=%h/projects/MathCraft/.venv/bin/python %h/projects/MathCraft/tutor/server.py --port 8790
+Restart=on-failure
+RestartSec=10
+
+# Der Dienst braucht nur Lesezugriff auf das Projekt und keinerlei Rechte
+# darüber hinaus.
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

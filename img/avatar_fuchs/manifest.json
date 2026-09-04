@@ -1,0 +1,71 @@
+{
+ "figur": "wuerfelfuchs",
+ "version": 1,
+ "posen": {
+  "steht": {
+   "datei": "steht.webp",
+   "breite": 433,
+   "hoehe": 512
+  },
+  "blinzelt": {
+   "datei": "blinzelt.webp",
+   "breite": 433,
+   "hoehe": 512
+  },
+  "winkt": {
+   "datei": "winkt.webp",
+   "breite": 483,
+   "hoehe": 512
+  },
+  "jubelt": {
+   "datei": "jubelt.webp",
+   "breite": 479,
+   "hoehe": 512
+  },
+  "freut": {
+   "datei": "freut.webp",
+   "breite": 433,
+   "hoehe": 512
+  },
+  "gruebelt": {
+   "datei": "gruebelt.webp",
+   "breite": 438,
+   "hoehe": 512
+  },
+  "schnuppert": {
+   "datei": "schnuppert.webp",
+   "breite": 443,
+   "hoehe": 512
+  },
+  "fragt": {
+   "datei": "fragt.webp",
+   "breite": 484,
+   "hoehe": 512
+  },
+  "staunt": {
+   "datei": "staunt.webp",
+   "breite": 433,
+   "hoehe": 512
+  },
+  "schlaeft": {
+   "datei": "schlaeft.webp",
+   "breite": 513,
+   "hoehe": 512
+  },
+  "laeuft1": {
+   "datei": "laeuft1.webp",
+   "breite": 581,
+   "hoehe": 512
+  },
+  "laeuft2": {
+   "datei": "laeuft2.webp",
+   "breite": 515,
+   "hoehe": 512
+  },
+  "gaehnt": {
+   "datei": "gaehnt.webp",
+   "breite": 441,
+   "hoehe": 512
+  }
+ }
+}

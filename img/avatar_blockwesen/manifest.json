@@ -1,0 +1,56 @@
+{
+ "figur": "blockwesen",
+ "version": 1,
+ "posen": {
+  "steht": {
+   "datei": "steht.webp",
+   "breite": 291,
+   "hoehe": 512
+  },
+  "blinzelt": {
+   "datei": "blinzelt.webp",
+   "breite": 291,
+   "hoehe": 512
+  },
+  "winkt": {
+   "datei": "winkt.webp",
+   "breite": 332,
+   "hoehe": 512
+  },
+  "jubelt": {
+   "datei": "jubelt.webp",
+   "breite": 350,
+   "hoehe": 512
+  },
+  "freut": {
+   "datei": "freut.webp",
+   "breite": 294,
+   "hoehe": 512
+  },
+  "gruebelt": {
+   "datei": "gruebelt.webp",
+   "breite": 298,
+   "hoehe": 512
+  },
+  "schnuppert": {
+   "datei": "schnuppert.webp",
+   "breite": 277,
+   "hoehe": 512
+  },
+  "fragt": {
+   "datei": "fragt.webp",
+   "breite": 329,
+   "hoehe": 512
+  },
+  "staunt": {
+   "datei": "staunt.webp",
+   "breite": 273,
+   "hoehe": 512
+  },
+  "schlaeft": {
+   "datei": "schlaeft.webp",
+   "breite": 266,
+   "hoehe": 512
+  }
+ }
+}

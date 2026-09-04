@@ -1,0 +1,56 @@
+{
+ "figur": "golem",
+ "version": 1,
+ "posen": {
+  "steht": {
+   "datei": "steht.webp",
+   "breite": 394,
+   "hoehe": 512
+  },
+  "blinzelt": {
+   "datei": "blinzelt.webp",
+   "breite": 394,
+   "hoehe": 512
+  },
+  "winkt": {
+   "datei": "winkt.webp",
+   "breite": 487,
+   "hoehe": 512
+  },
+  "jubelt": {
+   "datei": "jubelt.webp",
+   "breite": 518,
+   "hoehe": 512
+  },
+  "freut": {
+   "datei": "freut.webp",
+   "breite": 416,
+   "hoehe": 512
+  },
+  "gruebelt": {
+   "datei": "gruebelt.webp",
+   "breite": 390,
+   "hoehe": 512
+  },
+  "schnuppert": {
+   "datei": "schnuppert.webp",
+   "breite": 382,
+   "hoehe": 512
+  },
+  "fragt": {
+   "datei": "fragt.webp",
+   "breite": 483,
+   "hoehe": 512
+  },
+  "staunt": {
+   "datei": "staunt.webp",
+   "breite": 413,
+   "hoehe": 512
+  },
+  "schlaeft": {
+   "datei": "schlaeft.webp",
+   "breite": 429,
+   "hoehe": 512
+  }
+ }
+}
