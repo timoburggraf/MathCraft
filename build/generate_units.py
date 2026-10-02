@@ -10,7 +10,11 @@ Ablauf je Paket: erzeugen → validate.check_unit → bei Mängeln neu anfordern
 diesmal mit den Mängeln im Prompt. Nach drei Fehlversuchen wird das Paket
 verworfen und protokolliert. Was die App zu sehen bekommt, ist nachgerechnet.
 
-Der Schlüssel kommt aus dem Vault, nie aus dem Quelltext.
+Standardweg ist das Claude-Abo (`claude -p` headless, build/claude_abo.py):
+keine API-Kosten, ANTHROPIC_API_KEY wird dem Subprozess vorenthalten. Der alte
+Weg über den bezahlten API-Schlüssel (aus dem Vault, nie aus dem Quelltext) ist
+nur mit dem ausdrücklichen Schalter --api erreichbar. Es gibt keinen stillen
+Rückfall: Scheitert der Abo-Weg, bricht der Lauf mit Meldung ab.
 """
 import argparse
 import json
@@ -30,6 +34,7 @@ import validate as V
 import raetsel_kern as K
 import verkleidung as VK
 import kern_pakete as KP
+import claude_abo as CA
 
 ROOT = Path(__file__).resolve().parent.parent
 SEED_OUT = ROOT / "data" / "units_seed.json"
@@ -154,32 +159,71 @@ class Budget:
     def __init__(self, limit):
         self.limit, self.out, self.inp, self.cached, self.calls = limit, 0, 0, 0, 0
 
+    abo = False      # True: Abo-Lauf, Kosten werden nicht als echtes Geld geführt
+
     def add(self, usage):
+        """usage: API-Objekt (Attribute) oder dict aus `claude -p` (Abo)."""
+        def feld(name):
+            if isinstance(usage, dict):
+                return usage.get(name, 0) or 0
+            return getattr(usage, name, 0) or 0
         self.calls += 1
-        self.out += usage.output_tokens
-        self.inp += usage.input_tokens
-        self.cached += getattr(usage, "cache_read_input_tokens", 0) or 0
+        self.out += feld("output_tokens")
+        # Im Abo legt die CLI den Kontext immer in den Cache; zur Eingabe zählt das mit.
+        self.inp += feld("input_tokens") + (feld("cache_creation_input_tokens")
+                                            if isinstance(usage, dict) else 0)
+        self.cached += feld("cache_read_input_tokens")
 
     def left(self):
         return self.limit - self.out
 
     def report(self):
+        if self.abo:
+            return (f"{self.calls} Aufrufe · {self.inp} rein ({self.cached} aus dem Cache) · "
+                    f"{self.out} raus · Kosten: 0 EUR (abo)")
         # Opus 5: 5 USD je Mio. Eingabe, 25 je Mio. Ausgabe; Cache-Lesen ~0,1x
         eur = (self.inp * 5 + self.cached * 0.5 + self.out * 25) / 1e6 * 0.92
         return (f"{self.calls} Aufrufe · {self.inp} rein ({self.cached} aus dem Cache) · "
                 f"{self.out} raus · rund {eur:.2f} EUR")
 
 
-def get_client():
+class AboClient:
+    """Marker: Aufrufe laufen über `claude -p` (Abo), nicht über die API."""
+
+
+def get_client(api=False):
+    """Standard: Abo. Der API-Schlüssel wird nur mit ausdrücklichem --api geholt."""
+    if not api:
+        return AboClient()
     from anthropic import Anthropic
     import konfig
     return Anthropic(api_key=konfig.geheim("ANTHROPIC_API_KEY"))
+
+
+def _abo(prompt, fmt, budget, max_tokens):
+    """Ein Abo-Aufruf mit denselben Parametern wie der API-Aufruf: gleiches
+    Modell, effort high, SYSTEM als System-Prompt, Prompt per stdin, Schema aus
+    fmt. Wirft CA.AboFehler – kein Rückfall auf die API."""
+    schema = fmt["schema"] if fmt else None
+    r = CA.abo_aufruf(MODEL, SYSTEM, prompt, schema=schema, effort="high",
+                      max_tokens=max_tokens)
+    budget.add(r["usage"])
+    return r
 
 
 def ask(client, prompt, fmt, budget, max_tokens=16000):
     """Ein Aufruf. Gibt das geparste JSON zurück oder None."""
     if budget.left() <= 0:
         raise RuntimeError("Budget aufgebraucht")
+    if isinstance(client, AboClient):
+        r = _abo(prompt, fmt, budget, max_tokens)
+        if r["stop_reason"] == "refusal":
+            print("     [!] Anfrage wurde abgelehnt")
+            return None
+        if r["daten"] is None:
+            print("     [!] Antwort abgeschnitten oder leer")
+            return None
+        return r["daten"]
     resp = client.messages.create(
         model=MODEL,
         max_tokens=max_tokens,
@@ -211,6 +255,12 @@ def ask_text(client, prompt, budget, max_tokens=4000):
     """
     if budget.left() <= 0:
         raise RuntimeError("Budget aufgebraucht")
+    if isinstance(client, AboClient):
+        r = _abo(prompt, None, budget, max_tokens)
+        if r["stop_reason"] == "refusal":
+            print("     [!] Anfrage wurde abgelehnt")
+            return None
+        return r["text"]
     resp = client.messages.create(
         model=MODEL,
         max_tokens=max_tokens,
@@ -616,6 +666,9 @@ def main():
     ap.add_argument("--tasks", type=int, default=8)
     ap.add_argument("--budget", type=int, default=DEFAULT_BUDGET)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--api", action="store_true",
+                    help="alter Weg über den bezahlten API-Schlüssel statt über das "
+                         "Claude-Abo (Standard)")
     ap.add_argument("--out")
     a = ap.parse_args()
 
@@ -646,12 +699,16 @@ def main():
                   f'Pfad: {pfad_von(sid)}')
         return 0
 
-    # Der Client kostet echtes Geld schon beim Anlegen nicht, aber sein Schlüssel
-    # kommt aus dem Vault (Netzzugriff) – den Umweg spart sich ein Plan, der nur
-    # aus deterministischen Kern-Paketen besteht (SPEC_lektionen_v2.md §8).
+    # Im Abo-Weg ist der Client nur ein Marker. Im --api-Weg kommt der Schlüssel aus
+    # dem Vault (Netzzugriff) – den Umweg spart sich ein Plan, der nur aus
+    # deterministischen Kern-Paketen besteht (SPEC_lektionen_v2.md §8).
     braucht_client = any(pfad_von(sid) != "kern" for sid, _, _ in plan)
-    client = get_client() if braucht_client else None
+    client = get_client(api=a.api) if braucht_client else None
     budget = Budget(a.budget)
+    budget.abo = not a.api
+    print("Weg: " + ("API-Schlüssel (--api, kostet Geld)" if a.api
+                     else "Claude-Abo (claude -p)"))
+    abgebrochen = False
     have = {}
     if out.exists():
         have = {u["skill"] + "@" + str(u["stage"]): u
@@ -668,6 +725,12 @@ def main():
             unit, log = make_unit(client, sid, stage, wid, budget, a.tasks)
         except RuntimeError as e:
             print(f"\n{e} – Lauf hier beendet.")
+            break
+        except CA.AboFehler as e:
+            print(f"\n[FEHLER] Abo-Weg ausgefallen: {e}\n"
+                  "Lauf abgebrochen, kein Rückfall auf den API-Schlüssel "
+                  "(das ginge nur mit --api).")
+            abgebrochen = True
             break
         if unit:
             # Ersetzt dieser Lauf ein vorhandenes Paket (--skill auf eine
@@ -692,7 +755,7 @@ def main():
     print(f"\n{len(have)} Pakete in {out}")
     print(f"{len(rejected)} verworfen" + (f" (siehe {REJECT_LOG.name})" if rejected else ""))
     print(budget.report())
-    return 0
+    return 1 if abgebrochen else 0
 
 
 if __name__ == "__main__":
