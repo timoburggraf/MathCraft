@@ -36,3 +36,9 @@ node_modules/
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# Private credentials and runtime state
+**/.env
+*.credentials.env
+**/secrets/
+**/__pycache__/

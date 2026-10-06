@@ -41,7 +41,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 # MC_TELE hängt die Ablage woanders hin — der Test soll die echten Daten des
 # Kindes nicht anfassen.
-TELE = Path(os.environ.get("MC_TELE") or (ROOT / "data" / "telemetrie"))
+TELE = Path(os.environ.get("MC_TELE") or (Path(os.environ.get("MC_STATE_HOME") or Path.home() / ".local/share/mathcraft/private") / "telemetrie"))
 WUENSCHE = TELE / "wuensche.json"
 IGNORIERT = TELE / "ignoriert.json"
 

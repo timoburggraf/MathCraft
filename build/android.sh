@@ -66,7 +66,7 @@ else
   # konfig.py liest Umgebung und .env — bewusst ueber Python statt "source .env",
   # damit Anfuehrungszeichen und Sonderzeichen im Passwort nicht die Shell treffen.
   export MC_KEYSTORE="${MC_KEYSTORE:-$(lies MC_KEYSTORE)}"
-  export MC_KEYSTORE_PW="${MC_KEYSTORE_PW:-$(lies MC_KEYSTORE_PW)}"
+  export MC_KEYSTORE_PW="$(lies MC_KEYSTORE_PW)"
   : "${MC_KEYSTORE:=$HOME/.keystores/mathcraft.jks}"
   [ -f "$MC_KEYSTORE" ] || { echo "Keystore fehlt: $MC_KEYSTORE
 Pfad in .env unter MC_KEYSTORE eintragen, oder mit 'build/android.sh debug'

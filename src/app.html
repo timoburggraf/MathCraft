@@ -892,9 +892,95 @@ async function readVersion(){
 }
 
 const serverUrl = pfad => {
-  let h = (S.server || "").trim().replace(/^https?:\/\//, "").replace(/\/+$/, "");
-  return h ? "http://" + h + pfad : "";
+  let h = (S.server || "").trim();
+  if(!h) return "";
+  try{
+    const u = new URL(/^https?:\/\//.test(h) ? h : "https://" + h);
+    if(u.username || u.password || u.search || u.hash || !["", "/"].includes(u.pathname)) return "";
+    u.protocol = "https:";
+    if(u.port === "8790") u.port = "8792"; // public legacy download address -> private TLS service
+    return u.origin + pfad;
+  }catch(e){ return ""; }
 };
+
+/* ===== Secure device connection: no parent password or provider API key on a child device. */
+const PAIR_STORAGE = "mathcraft_device_access_v1";
+let AUTH = {dev:"", key:"", server:"", expires:0, loaded:false, note:""};
+let authLoad = null;
+async function loadDeviceAccess(){
+  if(AUTH.loaded) return AUTH;
+  if(authLoad) return authLoad;
+  authLoad = (async () => {
+    try{
+      let raw;
+      if(NATIVE){
+        const plugin = (CAP.Plugins || {}).MathCraftCredentials;
+        if(!plugin) throw new Error("Sicherer Gerätespeicher fehlt");
+        raw = (await plugin.get()).value;
+      }else raw = localStorage.getItem(PAIR_STORAGE);
+      const parsed = raw ? JSON.parse(raw) : {};
+      if(parsed.dev === S.dev && typeof parsed.key === "string" && /^[0-9a-f]{64}$/.test(parsed.key)
+          && typeof parsed.server === "string" && parsed.server.startsWith("https://")){
+        AUTH = {...AUTH, ...parsed};
+      }
+    }catch(e){ AUTH.note = "Gerät noch nicht verbunden."; }
+    AUTH.loaded = true;
+    return AUTH;
+  })();
+  return authLoad;
+}
+async function storeDeviceAccess(){
+  const value = JSON.stringify({dev:AUTH.dev,key:AUTH.key,server:AUTH.server,expires:AUTH.expires});
+  if(NATIVE){
+    const plugin = (CAP.Plugins || {}).MathCraftCredentials;
+    if(!plugin) throw new Error("Sicherer Gerätespeicher fehlt");
+    await plugin.set({value});
+  }else localStorage.setItem(PAIR_STORAGE,value);
+}
+const bytesHex = bytes => Array.from(new Uint8Array(bytes), b => b.toString(16).padStart(2,"0")).join("");
+async function privateRequest(pfad, payload, options={}){
+  await loadDeviceAccess();
+  const url = serverUrl(pfad), origin = url ? new URL(url).origin : "";
+  if(!origin.startsWith("https://") || AUTH.dev !== S.dev || AUTH.server !== origin || !AUTH.key
+      || AUTH.expires <= Date.now()/1000 || !crypto.subtle){
+    throw new Error("Gerät zuerst über die Elternseite verbinden");
+  }
+  const body = JSON.stringify(payload);
+  const stamp = String(Math.floor(Date.now()/1000));
+  const nonce = bytesHex(crypto.getRandomValues(new Uint8Array(16)));
+  const encoder = new TextEncoder();
+  const digest = bytesHex(await crypto.subtle.digest("SHA-256",encoder.encode(body)));
+  const canonical = ["POST",pfad,stamp,nonce,digest].join("\n");
+  const key = await crypto.subtle.importKey("raw",encoder.encode(AUTH.key),{name:"HMAC",hash:"SHA-256"},false,["sign"]);
+  const signature = bytesHex(await crypto.subtle.sign("HMAC",key,encoder.encode(canonical)));
+  return fetch(url,{...options,method:"POST",cache:"no-store",credentials:"omit",
+    headers:{"Content-Type":"application/json","X-MC-Device":S.dev,"X-MC-Time":stamp,
+             "X-MC-Nonce":nonce,"X-MC-Signature":signature},body});
+}
+async function pairDevice(){
+  AUTH.note = "";
+  const input = document.getElementById("paircode");
+  const code = (input && input.value || "").trim();
+  if(input) input.value = "";
+  const url = serverUrl("/pair");
+  if(!url || !code){ AUTH.note = "Adresse und Verbindungs-Code eingeben."; return render(); }
+  const ctl = new AbortController();
+  const stop = setTimeout(() => ctl.abort(),10000);
+  try{
+    if(NATIVE && !(CAP.Plugins || {}).MathCraftCredentials) throw new Error("Neues App-Update erforderlich");
+    const response = await fetch(url,{method:"POST",credentials:"omit",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({dev:S.dev,code}),signal:ctl.signal});
+    if(!response.ok) throw new Error("Verbindung abgelehnt");
+    const result = await response.json();
+    if(result.dev !== S.dev || !/^[0-9a-f]{64}$/.test(result.key || "")) throw new Error("Ungültige Freigabe");
+    AUTH = {...AUTH,dev:S.dev,key:result.key,expires:Number(result.expires),server:new URL(url).origin,loaded:true};
+    await storeDeviceAccess();
+    AUTH.note = "Gerät sicher verbunden.";
+  }catch(e){ AUTH.note = "Verbindung fehlgeschlagen. Adresse, App-Update und Eltern-Code prüfen."; }
+  finally{ clearTimeout(stop); }
+  render();
+}
+/* ===== End secure device connection. */
 
 async function checkUpdate(){
   if(UPD.laeuft) return;
@@ -1047,9 +1133,7 @@ async function syncNow(leise){
       const paket = S.log.ev.slice(0, SYNC_BATCH);
       const ctl = new AbortController();
       const stop = setTimeout(() => ctl.abort(), 8000);
-      const r = await fetch(url, {method:"POST", cache:"no-store", signal:ctl.signal,
-        // text/plain spart die Vorabfrage des Browsers, also einen ganzen Umlauf
-        headers:{"Content-Type":"text/plain;charset=UTF-8"},
+      const r = await privateRequest("/sync", {
         // D: welche Pakete gerade offen sind (stars<2) — nur die Ids, damit
         // der Dienst einem Planposten ansehen kann, ob es dazu überhaupt noch
         // etwas zu stellen gibt ("nicht stellbar").
@@ -1057,10 +1141,10 @@ async function syncNow(leise){
         // Ereignissen, kein Ereignisfeld — er landet nie in einem Eintrag von
         // S.log.ev. Der Avatar-Name des Fuchses (S.avatar.name) bleibt davon
         // getrennt und erreicht diese Ladung weiterhin nie.
-        body:JSON.stringify({v:1, dev:S.dev, ev:paket, name:(S.profile.name||"").slice(0,18),
+        v:1, dev:S.dev, ev:paket, name:(S.profile.name||"").slice(0,18),
                              stats:{answers:S.stats.answers, lost:S.log.lost,
                                     offen:DATA.units.filter(u => ((S.units[u.id]||{}).stars||0) < 2)
-                                                     .map(u => u.id)}})});
+                                                     .map(u => u.id)}}, {signal:ctl.signal});
       clearTimeout(stop);
       if(!r.ok) throw new Error("Antwort " + r.status);
       const a = await r.json();
@@ -1151,9 +1235,7 @@ async function holeErklaerung(t){
   try{
     const ctl = new AbortController();
     const stop = setTimeout(() => ctl.abort(), 12000);
-    const r = await fetch(url, {method:"POST", cache:"no-store", signal:ctl.signal,
-      headers:{"Content-Type":"text/plain;charset=UTF-8"},
-      body:JSON.stringify({u:t.src, i:t.idx})});
+    const r = await privateRequest("/erklaer", {u:t.src, i:t.idx}, {signal:ctl.signal});
     if(!r.ok) throw new Error("Antwort " + r.status);
 
     if(r.body && r.body.getReader){
@@ -1952,7 +2034,7 @@ VIEWS.settings = () =>
           MEINE.code ? ` (Nr. ${MEINE.code})` : ""}.</div>
 
       <div class="eyebrow" style="margin-bottom:5px">Rechner zu Hause</div>
-      <input class="srv" id="srv" placeholder="z. B. 192.168.1.20:8790"
+      <input class="srv" id="srv" placeholder="z. B. https://192.168.1.20:8792"
         value="${esc(S.server || "")}" autocomplete="off" autocapitalize="off"
         autocorrect="off" spellcheck="false"
         oninput="S.server=this.value.trim();save()">
@@ -1976,6 +2058,12 @@ VIEWS.settings = () =>
 
     <div class="card" style="margin-bottom:12px">
       <h3>Lernstand für die Elternseite</h3>
+      <p class="muted">Gerätekennung: <code>${esc(S.dev)}</code>. Die Eltern erstellen dafür auf der
+      Elternseite einen einmaligen Verbindungs-Code. Spielen bleibt immer offline möglich.</p>
+      <input id="paircode" class="srv" placeholder="Verbindungs-Code der Eltern" autocomplete="off"
+        autocapitalize="characters" spellcheck="false">
+      <button class="btn wide" style="margin-top:10px" onclick="pairDevice()">Gerät sicher verbinden</button>
+      ${AUTH.note ? `<p class="muted">${esc(AUTH.note)}</p>` : ""}
       <div class="muted" style="font-size:14.5px;margin:4px 0 10px">
         Die App schickt dem Rechner zu Hause, welche Aufgaben du gelöst hast —
         und deinen Namen, wenn du ihn oben eingetragen hast. Ist er nicht

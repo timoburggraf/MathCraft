@@ -43,7 +43,7 @@ import disziplinen as DZ        # noqa: E402
 import auswertung as A          # noqa: E402
 import speicher as SP           # noqa: E402
 
-PLAN = Path(os.environ.get("MC_PLAN") or (ROOT / "data" / "tutorplan.json"))
+PLAN = Path(os.environ.get("MC_PLAN") or (Path(os.environ.get("MC_STATE_HOME") or Path.home() / ".local/share/mathcraft/private") / "tutorplan.json"))
 
 MODEL = "claude-opus-5"
 EFFORT = "high"       # er entscheidet über den Lernweg eines Kindes, nicht über Formatierung
@@ -483,7 +483,7 @@ def denk_nach(client=None):
                            "format": {"type": "json_schema", "schema": SCHEMA}},
             messages=[{"role": "user", "content": auszug()}])
     except Exception as e:
-        return None, [f"Aufruf gescheitert: {type(e).__name__}: {e}"]
+        return None, [f"Aufruf gescheitert: {type(e).__name__}"]
 
     if resp.stop_reason == "refusal":
         return None, ["Anfrage wurde abgelehnt"]
@@ -570,7 +570,7 @@ def vielleicht_nachdenken():
             p, log = denk_nach()
             print("Tutor: " + " · ".join(log), flush=True)
         except Exception as e:                       # nie den Dienst mitreißen
-            print(f"Tutor gescheitert: {type(e).__name__}: {e}", flush=True)
+            print(f"Tutor gescheitert: {type(e).__name__}", flush=True)
         finally:
             _laeuft["ja"] = False
 

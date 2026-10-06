@@ -204,23 +204,20 @@ def build_info():
     # ohne beides bleibt das Feld leer und die App fragt in den Einstellungen.
     sys.path.insert(0, str(ROOT))
     import konfig
-    server = konfig.wert("MC_SERVER") or (f"{lan_ip()}:8790" if lan_ip() else "")
+    server = konfig.wert("MC_SERVER") or (f"https://{lan_ip()}:8792" if lan_ip() else "")
+    if server:
+        from urllib.parse import urlsplit, urlunsplit
+        endpoint = urlsplit(server if "://" in server else "https://" + server)
+        port = 8792 if endpoint.port == 8790 else endpoint.port
+        server = urlunsplit(("https", endpoint.hostname + (f":{port}" if port else ""), "", "", ""))
     return {"code": code, "name": name, "server": server}
 
 
 def pruefe_webview_zugang():
-    """Kommt die App im WebView überhaupt an den Heim-Dienst heran?
+    """Prüft sichere Android-Herkunft, Klartextsperre und den öffentlichen CA-Anker.
 
-    Capacitor lädt die App unter https://localhost, der Heim-Dienst spricht
-    http. Damit ist jeder Aufruf dorthin "gemischter Inhalt", und der WebView
-    verbietet den nach Androids Vorgabe — noch bevor ein Paket das Gerät
-    verlässt. Update-Suche, Lernstand-Übertragung und Erklärhilfe wären tot,
-    ohne dass irgendwo eine Fehlermeldung entstünde.
-
-    Das ist genau einmal passiert und war von außen nicht zu sehen: Die
-    Browser-Tests laden index.html über file://, und dort gibt es die Regel
-    nicht. Deshalb hier ein Riegel, der beim Bauen zuschlägt statt auf dem
-    Gerät des Kindes.
+    Private Funktionen benötigen verifiziertes HTTPS. Datei-Browser-Tests
+    bilden Androids Netzrichtlinie nicht ab; deshalb wird sie beim Build geprüft.
     """
     cfg = ROOT / "capacitor.config.json"
     if not cfg.exists():
@@ -232,14 +229,16 @@ def pruefe_webview_zugang():
 
     schema = (c.get("server") or {}).get("androidScheme", "https")   # Capacitors Vorgabe
     gemischt = (c.get("android") or {}).get("allowMixedContent", False)
-    if schema == "https" and not gemischt:
+    if schema != "https" or gemischt:
         raise SystemExit(
-            "capacitor.config.json: androidScheme ist 'https', aber allowMixedContent "
-            "ist aus.\nDer WebView blockt dann jeden Aufruf an den Heim-Dienst "
-            "(http://…:8790) —\nUpdate-Suche, Sync und Erklärhilfe funktionieren auf "
-            "dem Handy nicht.\nEntweder allowMixedContent auf true, oder "
-            "server.androidScheme auf 'http'\n(letzteres wechselt die Herkunft und "
-            "verwirft den gespeicherten Lernstand).")
+            "MathCraft verwendet HTTPS. Die bestehende Android-Herkunft https://localhost "
+            "muss erhalten und allowMixedContent muss ausgeschaltet bleiben.")
+    manifest = (ROOT / "android/app/src/main/AndroidManifest.xml").read_text()
+    if 'android:networkSecurityConfig="@xml/network_security_config"' not in manifest or 'android:usesCleartextTraffic="false"' not in manifest:
+        raise SystemExit("Androids begrenzter CA-Trust und Klartextsperre fehlen.")
+    cert = ROOT / "android/app/src/main/res/raw/mathcraft_local_ca.crt"
+    if not cert.is_file() or "BEGIN CERTIFICATE" not in cert.read_text():
+        raise SystemExit("Der öffentliche MathCraft-CA-Trust muss vor dem Android-Bau vorliegen.")
 
 
 def main():

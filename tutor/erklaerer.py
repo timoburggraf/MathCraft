@@ -43,7 +43,7 @@ import validate as V          # noqa: E402
 UNITS = ROOT / "data" / "units_seed.json"
 # MC_ERK_CACHE hängt die Ablage woanders hin — der Test soll die echten
 # Erklärungen weder lesen noch überschreiben.
-CACHE = Path(os.environ.get("MC_ERK_CACHE") or (ROOT / "data" / "erklaerungen"))
+CACHE = Path(os.environ.get("MC_ERK_CACHE") or (Path(os.environ.get("MC_STATE_HOME") or Path.home() / ".local/share/mathcraft/private") / "erklaerungen"))
 
 MODEL = "claude-opus-5"
 # Niedriger Effort, aber Nachdenken AN. Der erste Anlauf lief ohne — das war
@@ -339,7 +339,7 @@ def erklaere_stream(unit_id, index, client=None, ohne_cache=False):
 
             nachricht = strom.get_final_message()
     except Exception as e:
-        yield ("weg", f"Aufruf gescheitert: {type(e).__name__}: {e}")
+        yield ("weg", f"Aufruf gescheitert: {type(e).__name__}")
         return
 
     probleme = pruefe_text(text)

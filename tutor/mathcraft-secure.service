@@ -1,0 +1,38 @@
+[Unit]
+Description=MathCraft authenticated HTTPS service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=mathcraft
+Group=mathcraft
+WorkingDirectory=/opt/mathcraft/current/tutor
+ExecStart=/opt/mathcraft/venv/bin/python -I -m gunicorn --chdir /opt/mathcraft/current/tutor --bind 127.0.0.1:8792 --bind 192.168.0.152:8792 --workers 1 --threads 4 --timeout 40 --keep-alive 2 --backlog 64 --forwarded-allow-ips= --certfile /etc/mathcraft/server.crt --keyfile /etc/mathcraft/server.key wsgi:app
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PROJECT_VAULT_PROJECTED=1
+Environment=PROJECT_VAULT_SECRETS_FILE=/etc/mathcraft/vault.json
+Environment=MC_STATE_HOME=/var/lib/mathcraft/state
+Environment=MC_TELE=/var/lib/mathcraft/state/telemetrie
+Environment=MC_PLAN=/var/lib/mathcraft/state/tutorplan.json
+Environment=MC_ERK_CACHE=/var/lib/mathcraft/state/erklaerungen
+Environment=MC_ALLOWED_HOSTS=localhost,127.0.0.1,192.168.0.152,pop-os
+UMask=0077
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/mathcraft/state
+ReadOnlyPaths=/etc/mathcraft
+InaccessiblePaths=/etc/project-vault-pki /var/lib/project-vault-pki
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+
+[Install]
+WantedBy=multi-user.target

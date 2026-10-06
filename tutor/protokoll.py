@@ -16,6 +16,7 @@ Herausgegeben wird nicht die Rohform, sondern je Eintrag ein deutscher Satz,
 in dem die Zahlen stehen, auf denen die Entscheidung beruht.
 """
 import json
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -28,8 +29,9 @@ import curriculum as C          # noqa: E402
 import auswertung as A          # noqa: E402
 import speicher as SP           # noqa: E402
 
-ENTSCHEIDUNGEN = ROOT / "data" / "entscheidungen.jsonl"
-VERWORFEN = ROOT / "data" / "verworfen.json"
+PRIVATE_DATA = Path(os.environ.get("MC_STATE_HOME") or (Path.home() / ".local/share/mathcraft/private"))
+ENTSCHEIDUNGEN = PRIVATE_DATA / "entscheidungen.jsonl"
+VERWORFEN = PRIVATE_DATA / "verworfen.json"
 
 ARTEN = {
     "vor":       "vorgezogen",

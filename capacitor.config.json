@@ -3,8 +3,8 @@
   "appName": "MathCraft",
   "webDir": "www",
   "android": {
-    "_hinweis": "Der WebView laeuft unter https://localhost (Capacitors Vorgabe). Der Heim-Dienst spricht http. Ohne allowMixedContent blockt der WebView jeden fetch dorthin, bevor ein Paket das Geraet verlaesst — Update-Suche, Sync und Erklaerhilfe waeren tot. build/build.py prueft das bei jedem Bau.",
-    "allowMixedContent": true,
+    "_hinweis": "Der Heim-Dienst verwendet HTTPS. Privater CA-Trust ist ausschließlich für die festgelegten MathCraft-Hosts in Androids network_security_config eingebunden; unverschlüsselter Verkehr bleibt blockiert.",
+    "allowMixedContent": false,
     "backgroundColor": "#0b1020"
   },
   "plugins": {
@@ -16,5 +16,6 @@
       "androidScaleType": "CENTER_CROP",
       "showSpinner": false
     }
-  }
+  },
+  "loggingBehavior": "none"
 }

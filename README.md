@@ -27,15 +27,15 @@ cd MathCraft
 python3 -m venv .venv
 .venv/bin/pip install -U anthropic google-genai Pillow playwright cryptography
 
-cp .env.beispiel .env       # und dort die eigenen Schlüssel eintragen
+cp .env.beispiel .env       # nur normale Einstellungen; Schlüssel im zentralen Vault
 .venv/bin/python konfig.py  # zeigt, was gesetzt ist (nie einen Wert selbst)
 
 .venv/bin/python build/build.py    # baut index.html aus src/app.html
 ./"MathCraft starten.sh"           # öffnet sie im Browser
 ```
 
-**Ohne einen einzigen Schlüssel** läuft bereits alles Wesentliche: die App, der
-Heim-Dienst, die Elternseite und sämtliche Tests. Der Aufgabenvorrat
+**Offline und ohne API-Schlüssel** laufen App und deterministische Tests. Der
+HTTPS-Heimdienst und die Elternseite brauchen Vault-basierte Authentifizierung. Der Aufgabenvorrat
 (`data/units_seed.json`), die Bilder und die Vorlesestimmen liegen fertig im
 Repository. Ein Schlüssel wird erst gebraucht, wenn **Neues entstehen** soll:
 
@@ -50,13 +50,13 @@ Kosten stehen bei den jeweiligen Abschnitten weiter unten. Neue Aufgaben lassen
 sich auch **ganz ohne Sprachmodell** erzeugen: `build/kern_pakete.py` baut sie
 aus den deterministischen Kernen, kostenlos.
 
-> `konfig.py` liest zuerst die Umgebung, dann die `.env`. Die `.env` steht in
-> `.gitignore` und verlässt den eigenen Rechner nie. Im Quelltext steht kein
-> einziger Schlüssel — wer einen dort hineinschreibt, macht ihn öffentlich.
+> `konfig.geheim()` liest Secrets ausschließlich aus dem zentralen Vault. Die
+> `.env` enthält normale Einstellungen und Platzhalter. Der isolierte Dienst
+> erhält nur vier benötigte Werte als private Projektion; siehe [VAULT_MIGRATION.md](VAULT_MIGRATION.md).
 
-**Was hier nicht liegt:** Lernstände. `data/telemetrie/` und alles Weitere, was
-von einem echten Kind stammt, ist von der Versionsverwaltung ausgenommen und
-bleibt auf dem Rechner, auf dem es entsteht.
+**Was hier nicht liegt:** Produktions-Lernstände und Secrets. Private
+Dienst-Daten liegen unter `/var/lib/mathcraft/state` außerhalb des Projekts
+(Verzeichnisse 0700, Dateien 0600, Dienstbenutzer `mathcraft`).
 
 ---
 
@@ -301,13 +301,11 @@ data/audio/<stimme>/*.opus      ← vorproduzierte Vorlesestimmen (zephyr, puck,
 img/raw/*.png                   ← Illustrationen im Original
 ```
 
-**Nicht im Repository** — steht in `.gitignore` und bleibt auf dem eigenen
-Rechner: alles, was von einem echten Kind stammt (`data/telemetrie/`,
-`data/erklaerungen/`, `data/entscheidungen.jsonl`, `data/verworfen.json`,
-`data/tutorplan.json`), die `.env` mit den Schlüsseln, und die Bauergebnisse
-(`index.html`, `www/`, `dist/`). Die Protokolldateien legen der Erzeuger und
-der Prüfer beim ersten Lauf selbst an; fehlen sie, bleiben die entsprechenden
-Abschnitte der Elternseite einfach leer.
+**Nicht im Repository:** private Lernstände, Erklärungs-Cache, Tutorplan,
+Vault-Projektionen und Schlüssel. Im Betrieb liegen private Daten unter
+`/var/lib/mathcraft/state`; bei lokaler Entwicklung standardmäßig unter
+`~/.local/share/mathcraft/private`. Die `.env` bleibt lokal und enthält keine
+Secrets. Bauergebnisse (`index.html`, `www/`, `dist/`) sind ebenfalls ignoriert.
 
 Die Ziele, an denen sich `tutor/` messen lässt, stehen in **[ZIELE.md](ZIELE.md)** —
 samt der Schwellen, ab denen eine Fertigkeit als „sitzt“ oder „hakt“ gilt. Wer
@@ -347,7 +345,7 @@ Neue Aufgaben erzeugen (kostet API-Guthaben):
 ```
 
 Die Schlüssel (`ANTHROPIC_API_KEY`, `GEMINI_API_KEY`) liefert `konfig.py` aus
-der Umgebung oder der `.env` — siehe [Einrichten](#einrichten). Im Quelltext
+dem zentralen Vault — siehe [Einrichten](#einrichten). Im Quelltext
 steht keiner. Die fertige `index.html` enthält ebenfalls keinerlei Schlüssel
 und ruft im Betrieb nichts ab: Das Kind spielt offline.
 
@@ -399,19 +397,13 @@ Die App wird weiterentwickelt — eine APK jedes Mal per USB aufs Handy zu
 schieben, hält niemand durch. Deshalb läuft zu Hause ein kleiner Dienst, und in
 der App genügt ein Knopf.
 
-```bash
-.venv/bin/python tutor/server.py          # auf 0.0.0.0:8790
-```
-
-Dauerhaft im Hintergrund:
-
-```bash
-mkdir -p ~/.config/systemd/user
-cp tutor/mathcraft.service ~/.config/systemd/user/
-systemctl --user daemon-reload
-systemctl --user enable --now mathcraft
-loginctl enable-linger $USER              # läuft auch ohne Anmeldung
-```
+Der Produktionsbetrieb verwendet zwei getrennte Systemdienste:
+`mathcraft-secure.service` auf **HTTPS 8792** unter Benutzer `mathcraft` und
+`mathcraft-updates.service` auf **HTTP 8790** unter einem dynamischen Benutzer.
+HTTP bietet nur öffentliche APK, Versionsnummer und Status; alle privaten
+Funktionen sind dort gesperrt. Die frühere Benutzer-Unit ist deaktiviert.
+Installation, minimale Vault-Projektion und Zertifikate sind in
+[VAULT_MIGRATION.md](VAULT_MIGRATION.md) beschrieben.
 
 **Ablauf auf dem Handy:** Einstellungen ▸ *Update* ▸ **Nach Update suchen**. Gibt es
 etwas Neues, steht dort, was sich geändert hat; ein Tipp auf *Herunterladen*
@@ -424,20 +416,24 @@ aktuelle WLAN-Adresse); in den Einstellungen ist sie änderbar, falls sich die
 IP ändert. Eine feste Adresse lässt sich beim Bauen vorgeben:
 
 ```bash
-MC_SERVER=192.168.1.20:8790 build/android.sh      # oder dauerhaft in die .env
+MC_SERVER=https://192.168.0.152:8792 build/android.sh      # oder dauerhaft in die .env
 MC_NOTES="Neue Knobelaufgaben ab Stufe 5." build/android.sh
 ```
 
 `MC_NOTES` ist der Text, den das Kind beim Update zu lesen bekommt — ohne Angabe
 steht dort ein allgemeiner Hinweis.
 
-> Der Dienst ist **nur im Heimnetz** erreichbar und spricht Klartext-HTTP;
-> dafür erlaubt die App `usesCleartextTraffic`. Für einen Dienst, der nie das
-> WLAN verlässt, ist das vertretbar — nach außen geöffnet werden sollte er nicht.
+> Private Funktionen verwenden überprüftes HTTPS. Android sperrt Klartext und
+> vertraut für den lokalen Dienst der eingebauten öffentlichen Projekt-CA.
+> Ein Gerätepaarungscode ist fünf Minuten gültig und wird nur einmal verwendet.
+> Alte Apps können weiter offline spielen; Synchronisation erfordert das neue
+> signierte APK und eine bewusste Paarung durch die Eltern.
 
 ## Die Elternseite
 
-`http://<Rechner>:8790/eltern` — erreichbar, sobald `tutor/server.py` läuft.
+`https://192.168.0.152:8792/login` — anmelden mit dem Vault-Eintrag
+`MATHCRAFT_PARENT_PASSWORD`; anschließend `/eltern`. Das Passwort wird nicht
+ins Repository, in die App oder in Protokolle geschrieben.
 Was dort steht und woran es sich messen lässt, steht vollständig in
 **[ZIELE.md](ZIELE.md)**; hier nur der Überblick:
 

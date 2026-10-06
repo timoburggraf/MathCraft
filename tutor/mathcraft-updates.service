@@ -1,0 +1,28 @@
+[Unit]
+Description=MathCraft public legacy APK downloads
+After=network-online.target
+
+[Service]
+DynamicUser=true
+User=mathcraft-updates
+WorkingDirectory=/opt/mathcraft/current/tutor
+ExecStart=/opt/mathcraft/venv/bin/python -I -m gunicorn --chdir /opt/mathcraft/current/tutor --bind 0.0.0.0:8790 --workers 1 --threads 2 --timeout 20 --keep-alive 2 --backlog 32 --forwarded-allow-ips= updates:app
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=MC_ALLOWED_HOSTS=localhost,127.0.0.1,192.168.0.152,pop-os
+UMask=0077
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+InaccessiblePaths=/etc/mathcraft /var/lib/mathcraft /etc/project-vault-pki /var/lib/project-vault-pki
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+
+[Install]
+WantedBy=multi-user.target
