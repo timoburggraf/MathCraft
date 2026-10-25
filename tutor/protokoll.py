@@ -99,6 +99,10 @@ def satz(e):
         art = {"wunsch_mehr": "du dir mehr davon gewünscht hast",
                "wunsch_jetzt": "du es nach vorn geholt hast"}.get(grund, "du es gewünscht hast")
         return f'{t}{stufe} vorgezogen, weil {art}.'
+    if d == "vor" and grund == "fokus":
+        return (f'{t}{stufe} vorgezogen, weil dein Kind auf der Karte „Nur hier spielen“ '
+                f'gewählt hat und diese Welt fertig machen will. Wünsche aus anderen '
+                f'Welten warten so lange.')
     if d == "ueber" and grund.startswith("wunsch"):
         art = {"wunsch_weniger": "du weniger davon wolltest",
                "wunsch_spaeter": "du es nach hinten gestellt hast"}.get(grund, "du es so wolltest")

@@ -298,6 +298,67 @@ JS = r"""
       normal.stage + " -> " + hart.stage);
   }
 
+  // ------------------------------------------------ Fokus: nur eine Welt
+  // Wer sich auf der Karte eine Welt vornimmt, bleibt dort, bis sie durch ist —
+  // statt nach jedem Paket in eine andere Welt geschickt zu werden.
+  frisch();
+  S.settings.modus = "v1";
+  const fw = AREAS.find(a => unitsOfArea(a.id).length >= 3);
+  const inFw = u => (SKILLS.find(s => s.id === u.skill) || {}).area === fw.id;
+  t("ohne Fokus gibt es keinen Umschalter", fokusUmschalter() === "");
+  setzeFokus("welt", fw.id);
+  const f1 = nextUnit();
+  t("mit Fokus kommt ein Paket aus der gewählten Welt", inFw(f1), fw.id + " -> " + f1.skill);
+  S.profile.lastUnitId = f1.id; S.units[f1.id] = {stars:1, plays:1};
+  const f2 = nextUnit();
+  t("auch das nächste bleibt in der Welt (keine Rotation)", inFw(f2), f2.skill);
+  t("erst Ungespieltes, dann Sterne nachholen", !S.units[f2.id], f2.id);
+  t("auch der Schwerer-Knopf bleibt in der Welt", !hasHarder() || inFw(nextUnit(true)));
+  t("Umschalter zeigt beide Knöpfe", /Nur/.test(fokusUmschalter()) && /Alle Welten/.test(fokusUmschalter()));
+  t("Kartenknopf zeigt den aktiven Fokus", /Du spielst nur hier/.test(fokusKnopf("welt", fw.id)));
+
+  // Ein Elternwunsch aus einer anderen Welt wartet, das Protokoll sagt warum
+  const fremd = DATA.units.find(u => !inFw(u));
+  S.wishes = [{ziel:"skill", id:fremd.skill, art:"jetzt", t:Date.now()}];
+  const fw3 = waehleUnit();
+  t("Fokus schlägt den Wunsch aus einer anderen Welt", inFw(fw3.unit), fw3.unit.skill);
+  t("die Abweichung steht als Grund 'fokus' im Protokoll",
+    fw3.log.some(e => e.grund === "fokus" && e.u.id === fw3.unit.id), JSON.stringify(fw3.log.map(e => e.grund)));
+  S.wishes = [];
+
+  // Umschalten auf alle Welten: die Wahl bleibt gemerkt, die Rotation ist zurück
+  fokusSchalten(false);
+  t("ausgeschaltet bleibt die Welt gemerkt", !!S.settings.fokus && !S.settings.fokusAn);
+  const f4 = nextUnit();
+  t("ausgeschaltet geht es wieder in andere Welten", !inFw(f4), f4.skill);
+  fokusSchalten(true);
+  t("wieder eingeschaltet geht es zurück in die Welt", inFw(nextUnit()));
+
+  // Welt komplett: dann geht es normal weiter, und das Ergebnis sagt es
+  unitsOfArea(fw.id).forEach(u => { S.units[u.id] = {stars:3, plays:1}; });
+  t("komplette Welt: es geht in anderen Welten weiter", !inFw(nextUnit()));
+  t("komplette Welt wird gefeiert", /komplett/.test(fokusStand()) && /🏆/.test(fokusUmschalter()));
+
+  // Denkschule: Fokus auf eine Disziplin; im anderen Modus wirkt er nicht
+  frisch();
+  S.settings.modus = "v2";
+  const dk = Object.keys(DISZIPLINEN).find(k => unitsOfDisziplin(k).length >= 2);
+  setzeFokus("disziplin", dk);
+  const ids = new Set(unitsOfDisziplin(dk).map(u => u.id));
+  t("Disziplin-Fokus bleibt in der Disziplin", ids.has(nextUnit().id), dk);
+  S.settings.modus = "v1";
+  t("Disziplin-Fokus wirkt in der Weltenkarte nicht", fokusUnits() === null);
+
+  // Laden: Unsinn wird verworfen, gültiger Fokus überlebt
+  frisch();
+  localStorage.setItem(KEY, JSON.stringify({v:1, settings:{fokus:{art:"welt", id:"gibtsnicht"}, fokusAn:true}}));
+  let fokusGeladen = load();
+  t("unbekannte Welt wird beim Laden verworfen", !fokusGeladen.settings.fokus && !fokusGeladen.settings.fokusAn);
+  localStorage.setItem(KEY, JSON.stringify({v:1, settings:{fokus:{art:"welt", id:fw.id}, fokusAn:true}}));
+  fokusGeladen = load();
+  t("gültiger Fokus überlebt das Laden", fokusGeladen.settings.fokus && fokusGeladen.settings.fokus.id === fw.id && fokusGeladen.settings.fokusAn);
+  frisch();
+
   // Nie über die höchste Stufe hinaus
   frisch();
   DATA.units.forEach(u => { S.units[u.id] = {stars:3, plays:1}; });

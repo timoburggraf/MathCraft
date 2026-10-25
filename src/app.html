@@ -500,7 +500,12 @@ const freshState = () => ({
   // A: stimme wählt zwischen der Gerätestimme ("system", wie bisher) und
   // einer der drei vorproduzierten Stimmen vom Heim-Dienst — siehe speak()
   // und build/tts_erzeugen.py.
-  settings:{sound:true, speech:true, modus:"v2", begleiter:true, stimme:"system"},
+  // fokus: die Welt (Modus v1) oder Disziplin (Modus v2), die sich das Kind auf
+  // der Karte mit "Nur hier spielen" ausgesucht hat — {art:"welt"|"disziplin",
+  // id}. fokusAn schaltet zwischen "nur dort" und "alle Welten" um, ohne die
+  // Wahl zu vergessen. Siehe fokusUnits() und waehleUnit().
+  settings:{sound:true, speech:true, modus:"v2", begleiter:true, stimme:"system",
+            fokus:null, fokusAn:false},
   // D5: der Würfelfuchs. Der Name ist ein Freitext des Kindes und bleibt
   // strikt lokal — er darf logEvent()/syncNow() nie erreichen (Z1).
   avatar:{name:"", getauft:false, letzteNachfrageTag:"", nachfrageWarZuletzt:false},
@@ -572,6 +577,13 @@ function load(){
       // Standard "system" (Gerätestimme).
       if(["system","zephyr","puck","leda"].includes(raw.settings.stimme))
         s.settings.stimme = raw.settings.stimme;
+      // Fokus: nur eine bekannte Welt oder Disziplin, sonst keiner.
+      const f = raw.settings.fokus;
+      if(isObj(f) && typeof f.id === "string" &&
+         ((f.art === "welt" && AREAS.some(a => a.id === f.id)) ||
+          (f.art === "disziplin" && Object.prototype.hasOwnProperty.call(DISZIPLINEN, f.id))))
+        s.settings.fokus = {art:f.art, id:f.id};
+      if(!s.settings.fokus) s.settings.fokusAn = false;
     }
     if(isObj(raw.avatar)){
       const av = raw.avatar;
@@ -1560,9 +1572,72 @@ function sortiereVorrang(pool){
    abgewichen wurde. Diese Funktion verändert nichts und protokolliert nichts —
    sie wird bei jedem Neuzeichnen aufgerufen. Festgehalten wird erst in
    startNext(), wenn das Kind wirklich losspielt. */
+/* ------------------------------------------------------------ Der Fokus
+   Ein Kind, das sich eine Welt vorgenommen hat, will sie fertig machen — und
+   wurde früher nach jedem Paket woanders hingeschickt ("andere Welt zuerst").
+   Auf der Karte wählt es darum "Nur hier spielen"; auf der Startseite schaltet
+   es zwischen "nur dort" und "alle Welten" hin und her. Welche Pakete dazu
+   gehören, ist genau das, was die Karte unter dieser Kachel zeigt. */
+function fokusAngaben(){
+  const f = S.settings.fokus;
+  if(!f) return null;
+  const v2 = S.settings.modus === "v2";
+  if(f.art === "disziplin"){
+    const d = DISZIPLINEN[f.id];
+    if(!v2 || !d) return null;
+    return {titel:d.titel, emoji:DISZIPLIN_EMOJI[f.id] || "🧩", units:unitsOfDisziplin(f.id)};
+  }
+  const a = areaOf(f.id);
+  if(!a) return null;
+  // In der Denkschule zeigt die Weltkarte nur noch den Schulstoff dieser Welt.
+  const us = unitsOfArea(f.id).filter(u => !v2 || PRE_LESSON_SET.has(u.skill));
+  return {titel:a.title, emoji:a.emoji, units:us};
+}
+const istFokus = (art, id) => !!S.settings.fokus &&
+  S.settings.fokus.art === art && S.settings.fokus.id === id;
+
+/* Die Pakete, auf die sich die Auswahl gerade beschränkt — oder null. */
+function fokusUnits(){
+  if(!S.settings.fokusAn) return null;
+  const f = fokusAngaben();
+  return f && f.units.length ? f.units : null;
+}
+/* Was in der Fokuswelt noch fehlt: erst Ungespieltes (das füllt den Balken
+   auf der Karte), danach, was noch keine zwei Sterne hat. */
+function fokusOffen(us){
+  const sterne = u => (S.units[u.id] || {}).stars || 0;
+  const neu = us.filter(u => !S.units[u.id]);
+  return neu.length ? neu : us.filter(u => sterne(u) < 2);
+}
+
+function setzeFokus(art, id){
+  S.settings.fokus = {art, id};
+  S.settings.fokusAn = true;
+  save(); render();
+}
+function fokusSchalten(an){
+  S.settings.fokusAn = !!an && !!S.settings.fokus;
+  save(); render();
+}
+
 function waehleUnit(mehr){
+  const us = fokusUnits();
+  const offen = us ? fokusOffen(us) : [];
+  if(!offen.length) return waehleAus(mehr, null);
+  const mit = waehleAus(mehr, offen), ohne = waehleAus(mehr, null);
+  if(mit.unit.id === ohne.unit.id) return mit;
+  // Abweichung von dem, was ohne Fokus käme: im Protokoll steht der Fokus als
+  // Grund, damit die Elternseite erklärt, warum ein Wunsch gerade wartet.
+  const log = mit.log.filter(e => e.art !== "vor");
+  log.push({u:mit.unit, art:"vor", grund:"fokus", belege:{}});
+  return {unit:mit.unit, schlicht:ohne.schlicht, log};
+}
+
+/* scope: null für alle Pakete, sonst die Pakete, unter denen gewählt wird. */
+function waehleAus(mehr, scope){
   const log = [];
-  let offen = DATA.units.filter(u => ((S.units[u.id] || {}).stars || 0) < 2);
+  let offen = (scope || DATA.units).filter(u => ((S.units[u.id] || {}).stars || 0) < 2);
+  if(scope && !offen.length) offen = scope.slice();
   if(!offen.length) return {unit:DATA.units[0], schlicht:DATA.units[0], log};
 
   // B: Der Vorrangpool weiter unten (wunschFuer()==="jetzt"/"mehr" oder ein
@@ -1573,10 +1648,10 @@ function waehleUnit(mehr){
   // leerlaufen lassen: Was waehleUnit(false) ohnehin liefern würde, fällt im
   // mehr-Lauf als Kandidat weg — außer danach bliebe gar nichts mehr übrig;
   // dann lieber dasselbe Paket als ein leerer Bildschirm (Verhalten wie
-  // bisher). waehleUnit(false) ruft sich dabei nie selbst mit mehr=true auf,
+  // bisher). waehleAus(false) ruft sich dabei nie selbst mit mehr=true auf,
   // also keine Rekursionsgefahr.
   if(mehr){
-    const normal = waehleUnit(false).unit;
+    const normal = waehleAus(false, scope).unit;
     const ohneNormal = offen.filter(u => u.id !== normal.id);
     if(ohneNormal.length) offen = ohneNormal;
   }
@@ -1712,6 +1787,36 @@ function ringSvg(pct){
     </linearGradient></defs></svg>`;
 }
 
+/* Zwei Knöpfe nebeneinander: nur die gewählte Welt — oder alle. Erscheint
+   erst, wenn das Kind auf der Karte einmal "Nur hier spielen" gewählt hat. */
+function fokusUmschalter(){
+  const f = fokusAngaben();
+  if(!f || !f.units.length) return "";
+  const an = !!S.settings.fokusAn;
+  const fertig = !fokusOffen(f.units).length;
+  const stil = aktiv => aktiv
+    ? "border-color:var(--teal);background:rgba(37,208,192,.22);color:var(--teal)" : "";
+  return `<div class="row" style="margin-bottom:10px">
+      <button class="btn grow" style="${stil(an)}" onclick="fokusSchalten(true)">
+        ${an ? "✓ " : ""}🎯 Nur ${f.emoji} ${esc(f.titel)}${fertig ? " 🏆" : ""}</button>
+      <button class="btn grow" style="${stil(!an)}" onclick="fokusSchalten(false)">
+        ${an ? "" : "✓ "}🔀 Alle Welten</button>
+    </div>`;
+}
+
+/* Unter dem Ergebnis: wie weit die Fokuswelt ist. */
+function fokusStand(){
+  const us = fokusUnits();
+  if(!us) return "";
+  const f = fokusAngaben();
+  const fehlt = us.filter(u => !S.units[u.id]).length;
+  const text = fehlt ? `Noch ${fehlt} ${fehlt === 1 ? "Paket" : "Pakete"}, dann hast du
+      ${f.emoji} ${esc(f.titel)} einmal ganz durch.`
+    : fokusOffen(us).length ? `${f.emoji} ${esc(f.titel)}: alles gespielt — jetzt die Sterne holen!`
+    : `🏆 ${f.emoji} ${esc(f.titel)} ist komplett! Such dir auf der Karte die nächste Welt aus.`;
+  return `<div class="tip" style="text-align:center;margin-bottom:9px">${text}</div>`;
+}
+
 VIEWS.home = function(){
   const p = S.profile, lvl = levelOf(p.xp);
   const inLvl = p.xp % XP_PER_LEVEL, pctLvl = inLvl / XP_PER_LEVEL * 100;
@@ -1766,6 +1871,8 @@ VIEWS.home = function(){
           ${narea.emoji} ${esc(nu.title)} · Stufe ${nu.stage}</span>
       </span></button>
 
+    ${fokusUmschalter()}
+
     ${hasHarder() ? `<button class="btn wide" style="margin-bottom:10px"
       onclick="startNext(true)">🔥 Gib mir was Schwereres</button>` : ""}
 
@@ -1801,10 +1908,24 @@ function paketKacheln(us){
   }).join("") + `</div>`;
 }
 
+/* "Nur hier spielen" unter jeder Kachel der Karte (siehe fokusUnits()). */
+function fokusKnopf(art, id){
+  const an = istFokus(art, id) && S.settings.fokusAn;
+  return an
+    ? `<button class="btn wide" style="margin:10px 0 2px;border-color:var(--teal);
+        background:rgba(37,208,192,.18);color:var(--teal)"
+        onclick="fokusSchalten(false)">🎯 Du spielst nur hier · 🔀 wieder alle Welten</button>`
+    : `<button class="btn wide" style="margin:10px 0 2px"
+        onclick="setzeFokus('${art}','${id}')">🎯 Nur hier spielen</button>`;
+}
+
+const fokusRahmen = (art, id) => istFokus(art, id) && S.settings.fokusAn
+  ? ` style="outline:2px solid var(--teal);outline-offset:2px"` : "";
+
 function weltKarte(a, us){
   const fertig = us.filter(u => ((S.units[u.id]||{}).stars||0) > 0).length;
   const pct = us.length ? fertig/us.length*100 : 0;
-  return `<div class="uc">
+  return `<div class="uc"${fokusRahmen("welt", a.id)}>
       <div class="hd">
         <img src="${img(a.id)}" alt="">
         <div class="txt">
@@ -1814,7 +1935,7 @@ function weltKarte(a, us){
           <div class="muted" style="font-size:12.5px;margin-top:5px">
             ${fertig} von ${us.length} Paketen</div>
         </div>
-      </div>` + paketKacheln(us) + `</div>`;
+      </div>` + fokusKnopf("welt", a.id) + paketKacheln(us) + `</div>`;
 }
 
 /* ---------------------------------------------------- D1: Denkschule-Karte
@@ -1835,7 +1956,7 @@ const unitsOfDisziplin = key => DATA.units
 function disziplinKarte(key, angaben, us){
   const fertig = us.filter(u => ((S.units[u.id]||{}).stars||0) > 0).length;
   const pct = us.length ? fertig/us.length*100 : 0;
-  return `<div class="uc">
+  return `<div class="uc"${fokusRahmen("disziplin", key)}>
       <div class="hd">
         <img src="${img(DISZIPLIN_BILD[key] || key)}" alt="">
         <div class="txt">
@@ -1846,7 +1967,7 @@ function disziplinKarte(key, angaben, us){
             ${fertig} von ${us.length} Paketen</div>` : ""}
         </div>
       </div>` +
-      (us.length ? paketKacheln(us)
+      (us.length ? fokusKnopf("disziplin", key) + paketKacheln(us)
         : `<div class="muted" style="padding:16px">Hier schlummert noch was — ` +
           `bald gibt es hier neue Rätsel.</div>`) +
       `</div>`;
@@ -3161,6 +3282,7 @@ VIEWS.result = function(){
           <button class="btn" style="font-size:27px;padding:9px 16px" onclick="gibSpassFeedback(3)">😄</button>
         </div>
       </div>`}
+    ${fokusStand()}
     <button class="btn primary wide" style="margin-bottom:9px" id="cont"
       onclick="startNext()">▶ Weiter: ${esc(nu.title)}</button>
     <div class="row">
