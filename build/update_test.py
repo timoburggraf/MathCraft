@@ -10,13 +10,14 @@ die App umwerfen — sie muss in jedem Fall verständlich sagen, was los ist.
 import json
 import shutil
 import socket
-import subprocess
+import tempfile
 import sys
 import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import testhilfe as T
+from eltern_test import HttpsDienst
 
 ROOT = Path(__file__).resolve().parent.parent
 APP = ROOT / "index.html"
@@ -44,20 +45,8 @@ def frei(port):
         s.close()
 
 
-def warte_auf_dienst(url, sekunden=15):
-    import urllib.request
-    for _ in range(sekunden * 5):
-        try:
-            urllib.request.urlopen(url, timeout=1)
-            return True
-        except Exception:
-            time.sleep(.2)
-    return False
-
-
 def main():
     from playwright.sync_api import sync_playwright
-    import urllib.request
 
     if not frei(PORT):
         sys.exit(f"Port {PORT} ist belegt")
@@ -78,38 +67,39 @@ def main():
         "notes": "Neue Knobelaufgaben und ein schnelleres Ziffernfeld.",
         "date": "2026-07-27"}, ensure_ascii=False), "utf-8")
 
-    dienst = subprocess.Popen(
-        [sys.executable, str(ROOT / "tutor/server.py"),
-         "--port", str(PORT), "--host", "127.0.0.1"],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # Seit der Sicherheitsumstellung spricht die App den Heim-Dienst nur noch
+    # über HTTPS an (serverUrl() macht aus jeder Adresse https://). Der Test
+    # nimmt darum denselben HTTPS-Testdienst wie eltern_test.py: localhost,
+    # Dummy-Geheimnisse, Wegwerf-Zertifikat.
+    tele = Path(tempfile.mkdtemp(prefix="mathcraft_update_"))
+    dienst = HttpsDienst(PORT, tele)
 
     try:
-        add("Dienst startet", warte_auf_dienst(f"http://127.0.0.1:{PORT}/health"))
+        add("Dienst startet", dienst.start())
 
-        # Der WebView laeuft unter https://localhost, der Dienst spricht http.
-        # Ohne allowMixedContent blockt Android jeden Aufruf dorthin — und zwar
-        # lautlos. Playwright merkt davon nichts, weil es file:// benutzt.
+        # Der WebView läuft unter https://localhost und der Dienst spricht
+        # HTTPS: Gemischte Inhalte braucht es nicht, und sie bleiben verboten.
         cfg = json.loads((ROOT / "capacitor.config.json").read_text("utf-8"))
         schema = (cfg.get("server") or {}).get("androidScheme", "https")
         gemischt = (cfg.get("android") or {}).get("allowMixedContent", False)
-        add("Die App darf den Heim-Dienst im WebView überhaupt erreichen",
-            schema == "http" or gemischt,
+        add("Der WebView läuft unter HTTPS und erlaubt keine gemischten Inhalte",
+            schema == "https" and not gemischt,
             f"androidScheme={schema}, allowMixedContent={gemischt}")
 
-        with urllib.request.urlopen(f"http://127.0.0.1:{PORT}/version", timeout=3) as r:
-            info = json.loads(r.read())
+        r = dienst.anfrage("GET", "/version", cookies=False)
+        info = r.json()
         add("Dienst nennt die bereitstehende Fassung",
             info["versionCode"] == 999 and info["size"] > 0, f'Nr. {info["versionCode"]}')
 
-        with urllib.request.urlopen(f"http://127.0.0.1:{PORT}/app.apk", timeout=10) as r:
-            kopf = r.headers.get("Content-Type", "")
-            laenge = int(r.headers.get("Content-Length", 0))
+        r = dienst.anfrage("GET", "/app.apk", cookies=False)
+        kopf = r.header.get("Content-Type", "")
         add("APK wird zum Herunterladen angeboten",
-            "android.package-archive" in kopf and laenge > 0, kopf)
+            "android.package-archive" in kopf and len(r.body) > 0, kopf)
 
         with sync_playwright() as pw:
             b = pw.chromium.launch()
-            page = b.new_context(viewport={"width": 393, "height": 873}).new_page()
+            page = b.new_context(viewport={"width": 393, "height": 873},
+                                 ignore_https_errors=True).new_page()
             errs = []
             page.on("pageerror", lambda e: errs.append(str(e)))
             T.ohne_dienst(page)
@@ -145,7 +135,7 @@ def main():
 
             # --- Fall 3: Falsche Adresse -------------------------------------
             page.evaluate("""async () => {
-              S.server = '10.255.255.1:9'; UPD = {stand:'', info:null, laeuft:false};
+              S.server = '127.0.0.1:1'; UPD = {stand:'', info:null, laeuft:false};
               save(); await checkUpdate();
             }""")
             page.wait_for_timeout(7000)     # der Abbruch greift nach 6 Sekunden
@@ -199,7 +189,7 @@ def main():
             # --- Fall 7: Und schweigt, wenn der Rechner aus ist --------------
             page.evaluate("""() => {
               const s = JSON.parse(localStorage.getItem('mathcraft_v1') || '{}');
-              s.v = 1; s.server = '10.255.255.1:9';
+              s.v = 1; s.server = '127.0.0.1:1';
               localStorage.setItem('mathcraft_v1', JSON.stringify(s));
             }""")
             page.reload()
@@ -215,8 +205,8 @@ def main():
             add("keine JS-Fehler", not errs, errs[0][:70] if errs else "")
             b.close()
     finally:
-        dienst.terminate()
-        dienst.wait(timeout=5)
+        dienst.stop()
+        shutil.rmtree(tele, ignore_errors=True)
         if sicherung is not None:
             version_datei.write_text(sicherung, "utf-8")
         else:

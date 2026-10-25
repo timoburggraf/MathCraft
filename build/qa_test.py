@@ -157,6 +157,54 @@ BEISPIELE = {
    "optionen":["die Ingenieurin","der Kapitän","der Pilot","die Funkerin","die Astronautin"],
    "richtig":2,
    "hint":"Trag die festen Hinweise zuerst in die Denkhilfe-Tabelle ein."},
+
+ # ---- Legen (V3/G1). legen_alle: 4 Figuren, geordnet, zwei Regeln — von Hand:
+ # Drache ganz hinten (auf_platz 3), Biene nie auf Platz 2 (nicht_platz 2):
+ # Die drei anderen verteilen sich auf Platz 0..2 (6 Wege), die Biene darf nicht
+ # auf Platz 2 -> 4 Anordnungen. legen_zaehlen: 4 Figuren auf 3 Plätzen ohne
+ # Regel = 4*3*2 = 24 Anordnungen, genau die Grenze, bis zu der die App bei einer
+ # falschen Zahl alle als Mini-Reihen zeigt (längste Rückmeldung).
+ # legen_sechs: sechs Figuren, sechs Plätze — das breiteste Brett, 720 Wege.
+ "legen_alle": {"type":"legen", "skill":"komb_reihen", "modus":"alle", "geordnet":True,
+   "q":"Lege alle Reihenfolgen mit 4 Figuren. Der Drache steht ganz hinten. Die Biene steht nie auf Platz 2.",
+   "figuren":[{"name":"Fuchs","bild":"🦊"},{"name":"Eule","bild":"🦉"},{"name":"Biene","bild":"🐝"},{"name":"Drache","bild":"🐲"}],
+   "plaetze":4, "regeln":[{"art":"auf_platz","a":3,"platz":3},{"art":"nicht_platz","a":2,"platz":2}], "a":4,
+   "hint":"Fang mit dem Fuchs vorne an und probier alles dahinter."},
+ "legen_zaehlen": {"type":"legen", "skill":"komb_reihen", "modus":"zaehlen", "geordnet":True,
+   "q":"Wie viele Reihenfolgen gibt es, wenn drei von vier Figuren auf drei Plätze kommen?",
+   "figuren":[{"name":"Fuchs","bild":"🦊"},{"name":"Eule","bild":"🦉"},{"name":"Katze","bild":"🐱"},{"name":"Drache","bild":"🐲"}],
+   "plaetze":3, "regeln":[], "a":24,
+   "hint":"Vier Möglichkeiten für vorne, dann drei, dann zwei."},
+ "legen_sechs": {"type":"legen", "skill":"komb_reihen", "modus":"zaehlen", "geordnet":True,
+   "q":"Wie viele Reihenfolgen gibt es für alle sechs Figuren?",
+   "figuren":[{"name":"Fuchs","bild":"🦊"},{"name":"Eule","bild":"🦉"},{"name":"Golem","bild":"🗿"},
+              {"name":"Katze","bild":"🐱"},{"name":"Drache","bild":"🐲"},{"name":"Biene","bild":"🐝"}],
+   "plaetze":6, "regeln":[], "a":720, "hint":"Sechs mal fünf mal vier mal drei mal zwei mal eins."},
+
+ # ---- Papier-Streifen über der Frage (V3/G3)
+ "papier": {"type":"bildzahl", "skill":"geo_quader", "papier":True,
+   "q":"Wie viele Würfel fehlen noch bis zum vollen Quader? Skizziere die Schichten auf Papier.",
+   "svg":('<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">'
+          '<rect x="5" y="60" width="30" height="30" fill="#8b5cf6"/>'
+          '<rect x="40" y="60" width="30" height="30" fill="#8b5cf6"/>'
+          '<rect x="5" y="25" width="30" height="30" fill="#8b5cf6"/></svg>'),
+   "a":9, "hint":"Zähl Schicht für Schicht."},
+
+ # ---- Merkbild (V3/G4): Fragebild zeigen, dann ausblenden, erst dann die Optionen
+ "merkbild": {"type":"bildwahl", "skill":"geo_spiegel", "merken_ms":600,
+   "q":"Merk dir das Bild. Welches Bild war das?",
+   "svg":('<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
+          '<circle cx="30" cy="30" r="14" fill="#ffb238"/><circle cx="70" cy="70" r="14" fill="#3ad0ff"/></svg>'),
+   "optionen_svg":[
+     ('<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
+      '<circle cx="30" cy="30" r="14" fill="#ffb238"/><circle cx="70" cy="70" r="14" fill="#3ad0ff"/></svg>'),
+     ('<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
+      '<circle cx="70" cy="30" r="14" fill="#ffb238"/><circle cx="30" cy="70" r="14" fill="#3ad0ff"/></svg>'),
+     ('<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
+      '<circle cx="30" cy="30" r="14" fill="#3ad0ff"/><circle cx="70" cy="70" r="14" fill="#ffb238"/></svg>'),
+     ('<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">'
+      '<circle cx="50" cy="50" r="14" fill="#ff5a68"/></svg>')],
+   "richtig":0, "hint":"Achte auf Farben und Plätze."},
 }
 
 SIZES = [("320x568", 320, 568), ("360x640", 360, 640), ("393x873 Redmi", 393, 873),
@@ -216,12 +264,44 @@ def beantworte(page, key):
         else:  # reparieren
             page.evaluate("() => tapBefehl(SESS.tasks[0].loesung.index)")
     elif typ == "bildwahl":
+        if t.get("merken_ms"):
+            page.wait_for_timeout(t["merken_ms"] + 150)   # erst dann gibt es Optionen
         page.evaluate("() => chooseBild(SESS.tasks[0].richtig)")
+    elif typ == "legen":
+        # Bewusst FALSCH beantworten: die Rückmeldung mit der Liste der fehlenden
+        # bzw. aller gültigen Anordnungen ist die längste Ansicht des Typs.
+        if t["modus"] == "alle":
+            page.evaluate("""() => {
+              const L = legenAlle(SESS.tasks[0]);
+              L[0].forEach(i => document.querySelectorAll('.lg-fig')[i].click());
+              legenPruefen(); legenFertig();
+            }""")
+        else:
+            page.evaluate("() => { SESS.typed = '5'; checkZahl(); }")
     elif typ == "bildzahl":
         page.evaluate("() => { SESS.typed = String(SESS.tasks[0].a); checkZahl(); }")
     elif typ == "positionen":
         page.evaluate("() => choosePosition(SESS.tasks[0].richtig)")
     page.wait_for_timeout(200)
+
+
+def passt_brett(page):
+    """Legen vor der Antwort: Brett, Knöpfe und Fundliste ohne Scrollen sichtbar,
+    nichts ragt seitlich heraus?"""
+    return page.evaluate("""() => {
+      const vb = innerWidth, vh = innerHeight;
+      const teile = [...document.querySelectorAll('.lg-fig, .lg-slot, #app button')]
+        .filter(e => e.getBoundingClientRect().width > 0);
+      const seitlich = teile.filter(e => { const r = e.getBoundingClientRect();
+        return r.left < -1 || r.right > vb + 1; }).length;
+      const knoepfe = [...document.querySelectorAll('#app button')].filter(
+        b => /Legen|Das sind alle/.test(b.textContent));
+      const unten = Math.max(0, ...knoepfe.map(b => b.getBoundingClientRect().bottom));
+      const fig = [...document.querySelectorAll('.lg-fig')].map(e => e.getBoundingClientRect());
+      return {seitlich, unten: unten <= vh + 2, figuren: fig.length,
+              breit: Math.round(Math.min(...fig.map(r => r.width))),
+              hoch: Math.round(Math.min(...fig.map(r => r.height)))};
+    }""")
 
 
 def passt(page):
@@ -289,6 +369,92 @@ def main():
                     eng.append(key)
             add("Passt aufs Display", f"{label}: Rückmeldung und Weiter ohne Scrollen",
                 not eng, ", ".join(eng) or f"alle {len(BEISPIELE)} Ansichten")
+
+            # V3: das Legen-Brett VOR der Antwort (Figuren, Plätze, Knöpfe, Fundliste)
+            # und die beiden Ansichten mit Zeitablauf; dazu Papier-Streifen und
+            # die Denk-Check-Ansichten.
+            brett_fehler = []
+            for key in ("legen_alle", "legen_zaehlen", "legen_sechs"):
+                zeige(page, BEISPIELE[key])
+                if key == "legen_alle":      # zwei gefundene, dazu ein halb belegtes Brett
+                    page.evaluate("""() => { const L = legenAlle(SESS.tasks[0]);
+                      [L[0], L[1]].forEach(a => { a.forEach(i => document.querySelectorAll('.lg-fig')[i].click());
+                        legenPruefen(); });
+                      L[2].slice(0, 2).forEach(i => document.querySelectorAll('.lg-fig')[i].click()); }""")
+                else:                        # Ausprobieren: eine gültige Anordnung gefunden
+                    page.evaluate("""() => { const t = SESS.tasks[0];
+                      for(let i = 0; i < t.plaetze; i++) document.querySelectorAll('.lg-fig')[i].click();
+                      legenPruefen(); }""")
+                page.wait_for_timeout(400)     # die Skalierung läuft 0,18 s nach
+                r = passt_brett(page)
+                if r["seitlich"] or not r["unten"]:
+                    brett_fehler.append(f'{key}: seitlich {r["seitlich"]}, unten sichtbar {r["unten"]}')
+            add("Passt aufs Display", f"{label}: Legen-Brett (Figuren, Plätze, Knöpfe, Fundliste) sichtbar",
+                not brett_fehler, "; ".join(brett_fehler) or "3 Bretter")
+
+            zeige(page, BEISPIELE["papier"])
+            pap = page.evaluate("""() => { const e = document.querySelector('.papier');
+              if(!e) return null; const r = e.getBoundingClientRect();
+              return {oben: r.top >= -1, breit: r.right <= innerWidth + 1, links: r.left >= -1,
+                      text: e.textContent.trim()}; }""")
+            add("Passt aufs Display", f"{label}: Papier-Streifen vollständig sichtbar",
+                bool(pap) and pap["oben"] and pap["breit"] and pap["links"]
+                and pap["text"] == "📝 Papier und Stift erlaubt", str(pap))
+
+            zeige(page, BEISPIELE["merkbild"])
+            vorher = page.evaluate("""() => ({optionen: document.querySelectorAll('.bw-opt').length,
+              bild: !!document.querySelector('.bw-frage svg'), balken: !!document.querySelector('.merk-balken'),
+              breit: document.documentElement.scrollWidth <= innerWidth + 1})""")
+            page.wait_for_timeout(BEISPIELE["merkbild"]["merken_ms"] + 500)
+            nachher = page.evaluate("""() => { const g = [...document.querySelectorAll('.bw-opt')]
+                .map(e => e.getBoundingClientRect());
+              return {optionen: g.length, platzhalter: !!document.querySelector('.merk-weg'),
+                      unten: Math.max(0, ...g.map(r => r.bottom)) <= innerHeight + 2,
+                      breit: document.documentElement.scrollWidth <= innerWidth + 1}; }""")
+            add("Passt aufs Display", f"{label}: Merkbild vorher (nur Bild + Balken) und nachher (Platzhalter + Optionen)",
+                vorher["optionen"] == 0 and vorher["bild"] and vorher["balken"] and vorher["breit"]
+                and nachher["optionen"] == 4 and nachher["platzhalter"] and nachher["breit"]
+                # Die Optionen stehen im Hochformat ohne Scrollen da. Im Querformat
+                # (412 px hoch) sprengt jedes 2x2-Bildraster die Höhe, auch das der
+                # bisherigen Bildwahl; dort gilt nur: nichts ragt seitlich heraus.
+                and (nachher["unten"] or w > h),
+                f"{vorher} {nachher}")
+
+            # Denk-Check: Karte auf der Startseite, Einleitung, Aufgabe, Zwischenstand
+            # und Ergebnis. Nichts darf seitlich herausragen; Knöpfe bleiben groß genug.
+            dc_fehler = []
+            for ansicht in ("home", "intro", "aufgabe", "antwort", "zwischen", "ergebnis"):
+                page.evaluate("""(a) => {
+                  SESS = null; S = freshState(); S.profile.name = 'Alex'; S.profile.einstieg = 4;
+                  S.avatar.getauft = true; S.avatar.name = 'Kiko'; save();
+                  const lauf = () => S.denkcheck.laeufe[S.denkcheck.laeufe.length - 1];
+                  const durch = (r, m) => { dcLos(r); const n = {};
+                    while(SESS){ const t = SESS.tasks[SESS.i]; n[t.dcDim] = (n[t.dcDim] || 0) + 1;
+                      grade((m[t.dcDim] || [1, 1, 1, 1])[n[t.dcDim] - 1] === 1); nextTask(); } };
+                  if(a === 'home') go('home');
+                  else if(a === 'intro') dcIntro('A', false);
+                  else if(a === 'aufgabe') dcLos('A');
+                  else if(a === 'antwort'){ dcLos('A'); grade(true); }
+                  else if(a === 'zwischen') durch('A', {algorithmik: [0, 0, 0, 0], raum: [1, 0, 1, 1]});
+                  else { durch('A', {raum: [1, 0, 1, 1]}); dcIntro('B', false);
+                         durch('B', {systematik: [1, 1, 0, 1]}); }
+                }""", ansicht)
+                page.wait_for_timeout(250)
+                r = page.evaluate("""() => { const vb = innerWidth;
+                  const teile = [...document.querySelectorAll('#app button, #app .card, #app .dc-kraft')]
+                    .filter(e => e.getBoundingClientRect().width > 0);
+                  const seitlich = teile.filter(e => { const r = e.getBoundingClientRect();
+                    return r.left < -1 || r.right > vb + 1; }).length;
+                  const klein = [...document.querySelectorAll('#app button')].filter(
+                    b => !b.disabled && b.getBoundingClientRect().height < 43.5 && !b.classList.contains('rob-chip'))
+                    .map(b => b.textContent.trim().slice(0, 12));
+                  return {seitlich, klein, horizontal: document.documentElement.scrollWidth > vb + 1}; }""")
+                # Zu kleine Knöpfe zählen nur außerhalb der Sitzung: dort schrumpft
+                # fitScreen() den Inhalt auf kleinen Displays absichtlich.
+                if r["seitlich"] or r["horizontal"] or (r["klein"] and ansicht in ("home", "intro", "zwischen", "ergebnis")):
+                    dc_fehler.append(f'{ansicht}: seitlich {r["seitlich"]}, waagerecht scrollbar {r["horizontal"]}, zu klein {r["klein"]}')
+            add("Passt aufs Display", f"{label}: Denk-Check (Karte, Einleitung, Aufgabe, Antwort, Zwischenstand, Ergebnis)",
+                not dc_fehler, "; ".join(dc_fehler) or "6 Ansichten")
             if errs:
                 add("Passt aufs Display", f"{label}: keine JS-Fehler", False, errs[0][:70])
             page.close()

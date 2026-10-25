@@ -19,6 +19,14 @@ SHOTS = Path("/tmp/mathcraft_shots")
 # Redmi Note 13 Pro: 1080x2400 bei DPR 2.75 ≈ 393x873 CSS-Pixel
 PHONE = {"width": 393, "height": 873}
 
+# Playwright wartet vor jedem Klick, bis das Ziel „ruhig“ steht. Die App animiert
+# ständig (Einblenden, Fuchs, Puls); jeder Klick kostete dadurch gut eine Viertel-
+# sekunde, bei 121 Paketen mit je ~15 Aufgaben über zehn Minuten — der Test lief
+# in sein Zeitlimit und sah aus wie ein Hänger (kein Dialog, keine Netzanfrage).
+# Ohne Animationen klickt derselbe Test in einem Zehntel der Zeit. Verändert wird
+# nur die Darstellung der Seite im Test, nichts an der App.
+RUHIG = "*,*::before,*::after{animation:none!important;transition:none!important}"
+
 
 def solve(page):
     """Löst die gerade angezeigte Aufgabe richtig. Rückgabe: Typ der Aufgabe."""
@@ -103,7 +111,33 @@ def solve(page):
         return typ
 
     if typ == "bildwahl":
-        page.evaluate("() => chooseBild(SESS.tasks[SESS.i].richtig)")
+        # Merkbild: die Optionen erscheinen erst nach merken_ms — wie ein Kind
+        # abwarten, statt in die noch ausgeblendete Auswahl zu greifen.
+        if page.evaluate("() => !!SESS.tasks[SESS.i].merken_ms"):
+            page.wait_for_selector(".bw-opt", timeout=15000)
+        page.locator(".bw-opt").nth(page.evaluate("() => SESS.tasks[SESS.i].richtig")).click()
+        return typ
+
+    if typ == "legen":
+        # Wie ein Kind: Figuren antippen, „✓ Legen“, am Ende „Das sind alle!“
+        # bzw. die Zahl über das Ziffernfeld.
+        info = page.evaluate("""() => { const t = SESS.tasks[SESS.i];
+          return {modus: t.modus, a: t.a, alle: legenAlle(t)}; }""")
+        if info["modus"] == "zaehlen":
+            # erst ein freiwilliger Versuch auf dem Brett, dann die Zahl
+            if info["alle"]:
+                for i in info["alle"][0]:
+                    page.locator(".lg-fig").nth(i).click()
+                page.click("button:has-text('Legen')")
+            for ch in str(info["a"]):
+                page.click(f".pad button:has-text('{ch}')")
+            page.click(".pad button.act")
+        else:
+            for anordnung in info["alle"]:
+                for i in anordnung:
+                    page.locator(".lg-fig").nth(i).click()
+                page.click("button.primary:has-text('Legen')")
+            page.click("button:has-text('Das sind alle')")
         return typ
 
     if typ == "bildzahl":
@@ -148,6 +182,7 @@ def main():
         page.on("pageerror", lambda e: fehler.append(f"JS: {e}"))
         T.ohne_dienst(page)
         page.goto(APP.as_uri())
+        page.add_style_tag(content=RUHIG)
         page.wait_for_timeout(500)
 
         # Elternwunsch 02.09.2026: davor fragt die App einmal nach dem
@@ -195,6 +230,7 @@ def main():
         xp = page.evaluate("() => S.profile.xp")
         sterne = page.evaluate("() => Object.keys(S.units).length")
         page.reload()
+        page.add_style_tag(content=RUHIG)
         page.wait_for_timeout(400)
         xp2 = page.evaluate("() => S.profile.xp")
         if xp2 != xp or xp == 0:
@@ -216,6 +252,36 @@ def main():
                 typen, _ = play(page)
                 print(f"  Wiederholen: {len(typen)} Aufgabenarten")
         page.screenshot(path=str(SHOTS / "04_ende.png"))
+
+        # Denk-Check (V3/G4): beide Runden wie ein Kind, über die Karte auf der
+        # Startseite. Das Merkbild wird hier auf 0,3 s gekürzt, damit der Test
+        # nicht viermal sechs Sekunden wartet; den echten Ablauf prüft logic_test.
+        stand = page.evaluate("""() => { S.settings.modus = 'v2'; save(); go('home');
+          DENKCHECK.aufgaben.forEach(a => { if(a.task.merken_ms) a.task.merken_ms = 300; });
+          return {xp: S.profile.xp, heute: S.profile.todayCount, ev: S.log.ev.length}; }""")
+        page.wait_for_timeout(200)
+        page.click("button.dc-karte")
+        page.click("button:has-text('Los geht')")
+        typen_a, schritte_a = play(page)
+        if page.evaluate("() => view.name + ':' + view.opts.phase") != "denkcheck:rundeFertig":
+            fehler.append("Denk-Check: nach Runde A fehlt der Zwischenstand")
+        page.screenshot(path=str(SHOTS / "06_denkcheck_a.png"))
+        page.click("text=Weiter mit Runde B")
+        page.click("button:has-text('Los geht')")
+        typen_b, schritte_b = play(page)
+        if page.evaluate("() => view.name + ':' + view.opts.phase") != "denkcheck:ergebnis":
+            fehler.append("Denk-Check: nach Runde B fehlt das Ergebnis")
+        page.screenshot(path=str(SHOTS / "07_denkcheck_ergebnis.png"))
+        dc = page.evaluate("""() => ({fertig: !!S.denkcheck.laeufe.slice(-1)[0].fertig,
+          a: S.log.ev.filter(e => e.e === 'a' && e.u === 'denkcheck').length,
+          c: S.log.ev.filter(e => e.e === 'c').length, xp: S.profile.xp,
+          heute: S.profile.todayCount, ohneCheck: S.log.ev.length})""")
+        if not (dc["fertig"] and dc["a"] == 36 and dc["c"] == 9):
+            fehler.append(f"Denk-Check: unvollständig {dc}")
+        if dc["xp"] != stand["xp"] or dc["heute"] != stand["heute"]:
+            fehler.append(f"Denk-Check hat XP/Tagesziel verändert: {stand} -> {dc}")
+        print(f"  Denk-Check: Runde A {schritte_a} und B {schritte_b} Schritte; "
+              f"Typen {', '.join(sorted(typen_a | typen_b))}")
 
         # Nebenansichten dürfen nicht krachen
         for name in ("badges", "stats", "settings"):

@@ -10,23 +10,32 @@ Paketnummer und Aufgabennummer.
 Die Antwortzeit lässt sich nur an einem echten Aufruf messen; dafür gibt es
 tutor/erklaerer.py auf der Kommandozeile.
 
+Der Dienst spricht seit der Sicherheitsumstellung nur noch HTTPS und verlangt
+für /erklaer eine signierte Geräteanfrage. Den echten Dienst startet deshalb
+HttpsDienst aus eltern_test.py (localhost, Dummy-Geheimnisse, wie in
+wunsch_test.py); die Attrappe für das Strömen in Häppchen spricht ebenfalls TLS
+(mit dem Wegwerf-Zertifikat dieses Dienstes), antwortet auf die Vorabfrage des
+Browsers und schreibt die Signatur-Kopfzeilen mit. Die App-Seite prüft
+unverändert: nichts wird gelockert, die Anfrage muss signiert sein.
+
   .venv/bin/python build/erklaer_test.py
 """
 import http.server
 import json
 import os
+import re
 import shutil
 import socket
-import subprocess
+import ssl
 import sys
 import tempfile
 import threading
 import time
-import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import testhilfe as T
+from eltern_test import HttpsDienst
 
 ROOT = Path(__file__).resolve().parent.parent
 APP = ROOT / "index.html"
@@ -34,7 +43,8 @@ PORT = 8795          # echter Dienst
 STUB = 8794          # Attrappe, die die Anfrage mitschreibt
 
 RESULTS = []
-GESEHEN = []
+GESEHEN = []          # Nutzlasten, die die Attrappe bekommen hat
+GESEHEN_KOPF = []     # dazu die Kopfzeilen (Signatur!)
 
 
 def add(name, ok, info=""):
@@ -71,9 +81,20 @@ class Attrappe(http.server.BaseHTTPRequestHandler):
         {"t": "fertig", "v": {"ms": 900, "erste_worte": 300, "aus_ablage": False}},
     ]
 
+    def do_OPTIONS(self):
+        # Die Vorabfrage des Browsers: die App schickt eigene Kopfzeilen mit
+        # (Geräte-Signatur), also fragt er vorher, ob das erlaubt ist.
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "POST")
+        self.send_header("Access-Control-Allow-Headers", "*")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
     def do_POST(self):
         n = int(self.headers.get("Content-Length", 0))
         GESEHEN.append(self.rfile.read(n).decode("utf-8", "replace"))
+        GESEHEN_KOPF.append({k.lower(): v for k, v in self.headers.items()})
         self.send_response(200)
         self.send_header("Content-Type", "application/x-ndjson")
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -89,6 +110,17 @@ class Attrappe(http.server.BaseHTTPRequestHandler):
 
     def log_message(self, *a):
         pass
+
+
+def koppeln_mit_ki(dienst, dev):
+    """Wie HttpsDienst.koppeln(), aber mit dem Häkchen „KI-Erklärungen erlauben“:
+    ohne diese ausdrückliche Freigabe der Eltern lehnt der Dienst /erklaer ab
+    (das prüft der Test unten ebenfalls)."""
+    a = dienst.formular("/device/pair-code", {"dev": dev, "paid": "1"})
+    code = re.search(r"<strong>([A-Z2-7]+)</strong>", a.text).group(1)
+    r = dienst.anfrage("POST", "/pair", json.dumps({"dev": dev, "code": code}),
+                       {"Content-Type": "application/json"}, cookies=False)
+    return r.json()["key"]
 
 
 def main():
@@ -179,31 +211,39 @@ def main():
         "beispiel": {"frage": "Was ist 8 + 5?", "rechnung": "8+2+3", "ergebnis": 13},
         "ms": 1234, "aus_ablage": False}), "utf-8")
 
-    dienst = subprocess.Popen(
-        [sys.executable, str(ROOT / "tutor/server.py"),
-         "--port", str(PORT), "--host", "127.0.0.1"],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-        env=dict(os.environ, MC_TELE=str(tele), MC_ERK_CACHE=str(cache)))
-    attrappe = http.server.HTTPServer(("127.0.0.1", STUB), Attrappe)
-    threading.Thread(target=attrappe.serve_forever, daemon=True).start()
+    # Die Ablage des Erklärers liegt in dieser Wegwerf-Mappe; der Dienst erbt sie
+    # über die Umgebung (HttpsDienst gibt die eigene Umgebung weiter).
+    os.environ["MC_ERK_CACHE"] = str(cache)
+    dienst = HttpsDienst(PORT, tele)
+    dev = "aa11bb22cc33dd44"
+    attrappe = None
 
     try:
-        for _ in range(60):
-            try:
-                urllib.request.urlopen(f"http://127.0.0.1:{PORT}/health", timeout=1)
-                break
-            except Exception:
-                time.sleep(.2)
+        add("Der HTTPS-Dienst startet", dienst.start())
+        add("Die Elternanmeldung klappt mit dem Test-Passwort", dienst.anmelden())
+        # Ein Gerät ohne Freigabe der Eltern kommt nicht an den Erklärer (403);
+        # erst das Häkchen „KI-Erklärungen erlauben“ öffnet die Route.
+        ohne_freigabe = "ff00ee11dd22cc33"
+        r0 = dienst.signiert(ohne_freigabe, dienst.koppeln(ohne_freigabe), "/erklaer",
+                             {"u": "x@1", "i": 0})
+        add("Ohne Freigabe der Eltern ist /erklaer gesperrt", r0.status == 403, str(r0.status))
+        schluessel = koppeln_mit_ki(dienst, dev)
 
-        def post(pfad, daten, port=PORT):
-            """Der Dienst antwortet strömend: eine JSON-Zeile je Häppchen."""
-            r = urllib.request.Request(f"http://127.0.0.1:{port}{pfad}",
-                                       data=json.dumps(daten).encode(),
-                                       headers={"Content-Type": "text/plain"}, method="POST")
-            with urllib.request.urlopen(r, timeout=15) as resp:
-                zeilen = [json.loads(z) for z in resp.read().decode("utf-8").splitlines()
-                          if z.strip()]
-                return resp.status, zeilen
+        # Die Attrappe mit dem Wegwerf-Zertifikat des Dienstes: nur so nimmt die App
+        # die Adresse an (serverUrl() erzwingt https).
+        attrappe = http.server.HTTPServer(("127.0.0.1", STUB), Attrappe)
+        tls = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        tls.load_cert_chain(str(dienst.arbeit / "cert.pem"), str(dienst.arbeit / "key.pem"))
+        attrappe.socket = tls.wrap_socket(attrappe.socket, server_side=True)
+        threading.Thread(target=attrappe.serve_forever, daemon=True).start()
+
+        def post(pfad, daten):
+            """Eine signierte Geräteanfrage. Der Dienst antwortet strömend: eine
+            JSON-Zeile je Häppchen."""
+            r = dienst.signiert(dev, schluessel, pfad, daten)
+            zeilen = [json.loads(z) for z in r.text.splitlines() if z.strip()] \
+                if r.status == 200 else []
+            return r.status, zeilen
 
         t0 = time.time()
         status, m = post("/erklaer", {"u": unit_id, "i": 0})
@@ -222,26 +262,40 @@ def main():
         add("Eine unbekannte Aufgabe meldet keinen Fehler an das Kind",
             status == 200 and [x["t"] for x in m] == ["weg"], f'{status}')
 
-        status2 = None
-        try:
-            post("/erklaer", {"u": unit_id})
-        except urllib.error.HTTPError as e:
-            status2 = e.code
+        status2, _ = post("/erklaer", {"u": unit_id})
         add("Eine Anfrage ohne Aufgabennummer wird abgewiesen", status2 == 400, str(status2))
+
+        # Die Sicherheit bleibt: ohne Signatur kommt niemand an den Erklärer.
+        unsigniert = dienst.anfrage("POST", "/erklaer", json.dumps({"u": unit_id, "i": 0}),
+                                    {"Content-Type": "application/json"}, cookies=False)
+        add("Eine unsignierte Anfrage an /erklaer wird abgewiesen",
+            unsigniert.status in (401, 403), str(unsigniert.status))
 
         # ---------------------------------------------------- Die App dazu
         with sync_playwright() as pw:
             b = pw.chromium.launch()
-            page = b.new_context(viewport={"width": 393, "height": 873}).new_page()
+            # Das Wegwerf-Zertifikat der Attrappe ist selbstsigniert.
+            page = b.new_context(viewport={"width": 393, "height": 873},
+                                 ignore_https_errors=True).new_page()
             errs = []
             page.on("pageerror", lambda e: errs.append(str(e)))
             T.ohne_dienst(page)
             page.goto(APP.as_uri())
             page.wait_for_timeout(400)
 
+            # Das Gerät ist (wie nach dem Koppeln über die Elternseite) freigegeben:
+            # Kennung, Schlüssel und die Herkunft, für die er gilt. Die Attrappe
+            # prüft keine Signatur — dass die App signiert, sieht man an den
+            # Kopfzeilen weiter unten.
+            VERBINDE = f"""
+              const verbinde = server => {{ AUTH = {{dev: S.dev, key: 'ab'.repeat(32),
+                server: 'https://' + server, expires: Math.floor(Date.now()/1000) + 3600,
+                loaded: true, note: ''}}; }};"""
+
             # Eine Aufgabe zweimal falsch beantworten, gegen die Attrappe
-            lauf = page.evaluate(f"""async () => {{
+            lauf = page.evaluate(f"""async () => {{{VERBINDE}
               S = freshState(); S.server = '127.0.0.1:{STUB}'; S.profile.name = 'Alex'; save();
+              verbinde('127.0.0.1:{STUB}');
               const u = DATA.units.find(x => x.tasks.some(t => t.type === 'zahl'));
               startUnit(u.id);
               const i = SESS.tasks.findIndex(t => t.type === 'zahl');
@@ -279,6 +333,11 @@ def main():
                 json.dumps(lauf["beispiel"] or {}, ensure_ascii=False)[:50])
 
             add("Die App fragt überhaupt an", bool(GESEHEN))
+            if GESEHEN_KOPF:
+                kopf = GESEHEN_KOPF[-1]
+                add("Die Anfrage der App ist signiert (Gerät, Zeit, Nonce, Signatur)",
+                    all(kopf.get(k) for k in ("x-mc-device", "x-mc-time", "x-mc-nonce", "x-mc-signature"))
+                    and len(kopf.get("x-mc-signature", "")) == 64)
             if GESEHEN:
                 nutzlast = json.loads(GESEHEN[-1])
                 add("Geschickt werden nur Paket und Nummer",
@@ -295,8 +354,9 @@ def main():
             # wie man daraufkommt, soll nicht erst ein zweites Mal danebenliegen
             # müssen — aber auch nicht ungefragt aufgehalten werden, wenn er
             # sich nur vertippt hat.
-            knopf = page.evaluate(f"""() => {{
+            knopf = page.evaluate(f"""() => {{{VERBINDE}
               S = freshState(); S.server = '127.0.0.1:{STUB}'; save();
+              verbinde('127.0.0.1:{STUB}');
               ERK = {{fuer:'', laeuft:false, text:'', beispiel:null}};
               const u = DATA.units.find(x => x.tasks.some(t => t.type === 'zahl'));
               startUnit(u.id);
@@ -343,7 +403,7 @@ def main():
 
             # Dienst weg: der feste Tipp muss übernehmen, ohne Fehlermeldung
             zurueck = page.evaluate("""async () => {
-              S.server = '10.255.255.1:9'; save();
+              S.server = '10.255.255.1:9'; AUTH.server = 'https://10.255.255.1:9'; save();
               ERK = {fuer:'', laeuft:false, text:'', beispiel:null};
               const u = DATA.units.find(x => x.tasks.some(t => t.type === 'zahl' && t.hint));
               if(!u) return {ohne:true};
@@ -372,9 +432,10 @@ def main():
             add("keine JS-Fehler", not errs, errs[0][:70] if errs else "")
             b.close()
     finally:
-        attrappe.shutdown()
-        dienst.terminate()
-        dienst.wait(timeout=5)
+        if attrappe:
+            attrappe.shutdown()
+        dienst.stop()
+        os.environ.pop("MC_ERK_CACHE", None)
         shutil.rmtree(tele, ignore_errors=True)
         shutil.rmtree(cache, ignore_errors=True)
         E.CACHE = cache_alt

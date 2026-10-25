@@ -290,6 +290,62 @@ button.rob-chip:hover:not(:disabled){background:rgba(255,255,255,.18)}
 .bw-opt.right{border-color:var(--good);background:rgba(47,215,127,.18)}
 .bw-opt.wrong{border-color:var(--bad);background:rgba(255,90,104,.16)}
 
+.papier{margin:0 0 10px;padding:7px 12px;border-radius:11px;text-align:center;font-size:14.5px;
+  font-weight:700;color:var(--amber);background:rgba(255,178,56,.13);border:1px solid rgba(255,178,56,.45)}
+/* Merkbild: Balken läuft in merken_ms von voll auf leer */
+.merk-balken{height:9px;border-radius:99px;background:rgba(255,255,255,.11);overflow:hidden;margin:12px auto 0;max-width:62%}
+.merk-balken>i{display:block;height:100%;width:100%;border-radius:99px;transform-origin:left;
+  background:linear-gradient(90deg,var(--teal),var(--amber));animation:merkbalken linear forwards}
+@keyframes merkbalken{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.bw-frage.merk-weg{aspect-ratio:1/1;max-height:150px;border-radius:14px;border:2px dashed var(--line);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--dim);
+  font-weight:700;font-size:15.5px}
+.bw-frage.merk-weg b{font-size:34px;line-height:1}
+
+/* ---- Legen (V3/G1): Figurenkarten, Plätze, Gefunden-Liste ---- */
+.lg-figs,.lg-slots{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}  /* schmale Displays: lieber zwei Reihen als abgeschnitten */
+.lg-figs{margin-top:6px}
+.lg-fig{flex:1 1 0;min-width:44px;max-width:70px;min-height:62px;padding:5px 2px;border-radius:13px;
+  background:var(--card2);border:2px solid var(--line);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1px;transition:transform .1s,background .15s}
+.lg-fig:active:not(:disabled){transform:scale(.94)}
+.lg-fig.used{opacity:.25}
+.lg-e{font-size:28px;line-height:1.1}
+.lg-n{font-size:11px;font-weight:700;color:var(--dim);max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.lg-ziel{margin-top:10px}
+.lg-label{text-align:center;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+  color:var(--dim);margin-bottom:4px}
+.lg-slot{flex:1 1 0;min-width:44px;max-width:70px;min-height:56px;border-radius:13px;
+  border:2px dashed var(--line);display:grid;place-items:center;font-size:30px;font-weight:800;
+  color:rgba(255,255,255,.28);font-variant-numeric:tabular-nums}
+.lg-slot.set{border-style:solid;border-color:var(--teal);background:rgba(37,208,192,.12);color:var(--txt)}
+.lg-slot.bad,.lg-slot.dup{border-color:var(--amber);background:rgba(255,178,56,.16)}
+.lg-q{border-radius:var(--r);border:2px solid transparent}
+.lg-q.bad{border-color:var(--amber);background:rgba(255,178,56,.08)}
+.lg-msg{min-height:24px;margin:6px 0 6px;text-align:center;font-size:15px;font-weight:700;color:var(--dim)}
+.lg-msg.bad,.lg-msg.dup{color:var(--amber)}
+.lg-msg.neu{color:var(--teal)}
+.lg-gef{margin-top:10px;font-size:14.5px}
+.lg-minis{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.lg-mini{display:inline-flex;gap:2px;padding:3px 8px;border-radius:10px;font-size:18px;line-height:1.35;
+  background:rgba(255,255,255,.07);border:1px solid var(--line)}
+.lg-mini.dup{border-color:var(--amber);background:rgba(255,178,56,.2);animation:pulse .5s 2}
+.fb .lg-minis{margin-top:8px}
+
+/* ---- Denk-Check (V3/G4) ---- */
+.dc-karte{margin-bottom:12px;justify-content:flex-start;text-align:left;gap:13px;min-height:64px;
+  background:rgba(91,140,255,.16);border-color:rgba(91,140,255,.55)}
+.dc-e{font-size:30px;line-height:1;flex:none}
+.dc-txt{display:flex;flex-direction:column;line-height:1.3}
+.dc-txt b{font-weight:750}
+.dc-sub{font-size:13.5px;font-weight:600;color:var(--dim)}
+.dc-kraft{display:flex;align-items:center;gap:13px;text-align:left;padding:11px 13px;margin-bottom:9px;
+  border-radius:14px;background:rgba(255,178,56,.12);border:1px solid rgba(255,178,56,.42)}
+.dc-kraft b{font-size:17px}
+.dc-kraft .muted{font-size:14.5px;line-height:1.4}
+.dc-weiter{text-align:center;padding:10px 0 2px}
+.dc-weiter .dc-daumen{font-size:56px;line-height:1.1;margin-bottom:4px}
+
 /* --------------------------------------------------------- Ergebnis / Rest */
 .stars{font-size:56px;letter-spacing:10px;margin:8px 0 4px;line-height:1;color:var(--amber);
        text-shadow:0 0 26px rgba(255,178,56,.55)}
@@ -397,6 +453,10 @@ const PRE_LESSON_SKILLS = DISZIPLIN_DATEN.preLesson;
 /* Eigene Fassung und die voreingestellte Adresse des Heim-Dienstes. Beides
    setzt der Bau ein; die Adresse lässt sich in den Einstellungen ändern. */
 const BUILD = /*__BUILD__*/{code:0, name:"Entwicklung", server:""};
+/* V3/G4: die feste, geprüfte Aufgabenbank des Denk-Checks (data/denkcheck.json,
+   siehe build/denkcheck_bank.py). Ohne sie — ein Bau ohne die Datei — gibt es
+   den Denk-Check schlicht nicht: weder Karte noch Einstellung. */
+const DENKCHECK = /*__DENKCHECK__*/null;
 
 const AREAS  = DATA.areas;
 const SKILLS = DATA.skills;
@@ -413,6 +473,11 @@ const MAX_STAGE_ROH = Math.max(...Object.keys(STAGES).map(Number));
 const UNITS = {};                       // Schlüssel "skill@stufe" -> Paket
 DATA.units.forEach(u => { u.id = u.skill + "@" + u.stage; UNITS[u.id] = u; });
 const UNIT_IDS = Object.keys(UNITS);
+
+/* Fertigkeit -> Disziplin (nur die fünf Denkdisziplinen; Pre-Lesson-Stoff hat
+   keine). Gebraucht für den Boden, den der Denk-Check je Disziplin setzt. */
+const DISZIPLIN_VON = {};
+Object.entries(DISZIPLINEN).forEach(([key, d]) => (d.skills || []).forEach(id => { DISZIPLIN_VON[id] = key; }));
 
 const skillOf = id => SKILLS.find(s => s.id === id);
 const areaOf  = id => AREAS.find(a => a.id === id);
@@ -470,6 +535,12 @@ const LOG_MAX = 20000;      // Obergrenze des Puffers; 90 Tage passen weit darun
 const LOG_TAGE = 90;        // so lange darf er ohne WLAN sammeln
 const H_MAX = 12;           // so viele Antworten je Fertigkeit bleiben im Gedächtnis
 const TYP_FENSTER = 200;    // so weit zurück wird die Aufgabenmischung gemessen
+/* Denk-Check (V3/G4): die Zahlen stehen hier oben, weil load() sie schon beim
+   Start braucht — vor der Definition der Funktionen weiter unten. */
+const DC_N = 4;                    // Aufgaben je Dimension
+const DC_MIN = 2, DC_MAX = 8;      // Stufen des Treppenverfahrens
+const DC_LAEUFE_MAX = 10;
+const DC_BENUTZT_MAX = 600;
 
 const freshState = () => ({
   v:1,
@@ -478,7 +549,11 @@ const freshState = () => ({
   // Schulklasse abgeleitet (siehe KLASSEN und baseStage()). 0 heißt: nie
   // gesetzt, dann gilt Stufe 1 wie bisher.
   profile:{name:"", xp:0, streak:0, bestStreak:0, lastDay:0, goal:15, todayDay:0, todayCount:0,
-           badges:[], lastUnitId:"", einstieg:0, klasse:0},
+           badges:[], lastUnitId:"", einstieg:0, klasse:0,
+           // V3/G4: Boden je Disziplin, den der Denk-Check gesetzt hat —
+           // {disziplin: stufe}. Wie der Klassen-Einstieg nur ein Boden, nie eine
+           // Decke (siehe zielStufe()).
+           checkBoden:{}},
   // skillId -> {l:Level, d:fällig ab (ms), c:richtig, w:falsch, h:letzte Antworten}
   // h ist das Kurzzeitgedächtnis: c und w summieren über Monate und verdecken
   // damit genau das, worauf es ankommt — was zuletzt passiert ist.
@@ -491,7 +566,14 @@ const freshState = () => ({
   // Deckel des Spaß-Signals (siehe SPASS/finishSession()): es fragt höchstens
   // bei jedem zweiten Paketende, abwechselnd.
   spassZaehler:0,
-  stats:{packs:0, answers:0, correct:0, knobel:0, bestCombo:0},
+  // check: wie viele der answers aus dem Denk-Check stammen — sie zählen für den
+  // Abgleich mit dem Dienst, nicht für die Trefferquote auf „Dein Stand“.
+  stats:{packs:0, answers:0, correct:0, knobel:0, bestCombo:0, check:0},
+  // V3/G4: der Denk-Check. laeufe: ein Eintrag je Durchgang, der letzte darf
+  // offen sein (dann geht er nach einer Unterbrechung an derselben Stelle weiter).
+  // benutzt: Ids der schon gestellten Aufgaben — bei einer Wiederholung kommen
+  // unbenutzte zuerst. Siehe dcLauf() und die Denk-Check-Funktionen weiter unten.
+  denkcheck:{laeufe:[], benutzt:[]},
   typLog:[],  // die zuletzt vorgelegten Aufgabenarten, für die Mischung
   // D7: modus schaltet in diesem Schritt nur die Sichtbarkeit des Begleiters
   // um (begleiterAktiv()) — die eigentliche Denkschule-Kartenansicht (D1)
@@ -522,6 +604,42 @@ let S = load();
 // pruefeRevisionen() erst NACH den const-Definitionen (save, today) aufrufen —
 // es speichert bei geänderten Paket-Fassungen, und ein Aufruf vor der
 // Initialisierung von save legt die App bei bestehendem Lernstand komplett lahm.
+
+/* Der Denk-Check-Stand aus dem Speicher, vollständig gesäubert: nur bekannte
+   Dimensionen, Stufen 2..8, höchstens DC_N Antworten je Dimension. Ein
+   beschädigter Eintrag kostet höchstens den laufenden Check, nie die App. */
+function saeubereDenkcheck(raw){
+  const isObj = v => v !== null && typeof v === "object" && !Array.isArray(v);
+  const num = (v, def) => (typeof v === "number" && isFinite(v)) ? v : def;
+  const dims = DENKCHECK ? Object.keys(DENKCHECK.dimensionen || {}) : [];
+  const out = {laeufe:[], benutzt:[]};
+  if(Array.isArray(raw.benutzt))
+    out.benutzt = raw.benutzt.filter(v => typeof v === "string" && v.length <= 40).slice(-DC_BENUTZT_MAX);
+  if(!Array.isArray(raw.laeufe)) return out;
+  for(const l of raw.laeufe.slice(-DC_LAEUFE_MAX)){
+    if(!isObj(l) || !isObj(l.runde)) continue;
+    const lauf = {start:Math.max(0, num(l.start, 0)), fertig:Math.max(0, num(l.fertig, 0)),
+                  runde:{A:{fertig:0, dims:{}}, B:{fertig:0, dims:{}}}};
+    for(const r of ["A", "B"]){
+      const x = l.runde[r];
+      if(!isObj(x)) continue;
+      lauf.runde[r].fertig = Math.max(0, num(x.fertig, 0));
+      if(!isObj(x.dims)) continue;
+      for(const [dim, d] of Object.entries(x.dims)){
+        if(!dims.includes(dim) || !isObj(d) || !Array.isArray(d.folge)) continue;
+        const folge = d.folge.filter(a => isObj(a) && typeof a.id === "string" && a.id.length <= 40)
+          .map(a => ({id:a.id, stufe:Math.max(DC_MIN, Math.min(DC_MAX, num(a.stufe, DC_MIN)|0)),
+                      o:a.o === 1 ? 1 : 0, ms:Math.max(0, Math.min(600000, num(a.ms, 0)|0))}))
+          .slice(0, DC_N);
+        const z = num(d.z, 0);
+        lauf.runde[r].dims[dim] = {folge, e:d.e === null || d.e === undefined ? null : num(d.e, null),
+                                   z:(z === 1 || z === -1) ? z : 0};
+      }
+    }
+    out.laeufe.push(lauf);
+  }
+  return out;
+}
 
 /* Gespeicherter Stand wird feldweise übernommen und geprüft. Ein beschädigter
    Eintrag darf höchstens Fortschritt kosten, niemals die App lahmlegen. */
@@ -613,7 +731,14 @@ function load(){
         klasse: Math.max(0, Math.min(13, num(p.klasse, 0)|0)),
         badges: Array.isArray(p.badges) ? p.badges.filter(b => BADGES.some(x => x.id === b)) : [],
       });
+      // Boden je Disziplin: nur bekannte Disziplinen, Stufe 1..MAX_STAGE.
+      if(isObj(p.checkBoden)) for(const [k, v] of Object.entries(p.checkBoden)){
+        const stufe = num(v, 0)|0;
+        if(Object.prototype.hasOwnProperty.call(DISZIPLINEN, k) && stufe >= 1 && stufe <= MAX_STAGE_ROH)
+          s.profile.checkBoden[k] = stufe;
+      }
     }
+    if(isObj(raw.denkcheck)) s.denkcheck = saeubereDenkcheck(raw.denkcheck);
   }catch(e){ return freshState(); }
   return s;
 }
@@ -1082,7 +1207,14 @@ async function downloadUpdate(){
      "d" Entscheidung siehe protokolliere()
      "g" Abbruchgrund u Paket · w Grund (1–4, kein Freitext) — siehe nachAbbruchFragen()
      "f" Spaß-Signal  u Paket · w Bewertung (1 nicht gut, 2 ging so, 3 super,
-                      kein Freitext) — siehe gibSpassFeedback() */
+                      kein Freitext) — siehe gibSpassFeedback()
+     "c" Denk-Check   je abgeschlossener Dimension: k Dimension · g Schätzung E
+                      (Zahl, z. B. 6.5) · n Aufgaben · c richtig · ms Median-Dauer ·
+                      z (1 Decke nicht erreicht, −1 Boden nicht erreicht, 0 sonst).
+                      Die einzelnen Antworten des Checks sind gewöhnliche "a"-Ereignisse
+                      mit u:"denkcheck" (k = Fertigkeit der Aufgabe oder Dimension,
+                      g = Stufe); der Dienst zählt sie nicht in die Fertigkeiten-
+                      Statistik — siehe dcAntwort() und dcDimensionFertig() */
 let SITZUNG_ID = "";
 
 function neueSitzungsId(){
@@ -1219,10 +1351,10 @@ const erkSchluessel = t => (t.src || "") + "#" + (t.idx === undefined ? -1 : t.i
    Bedingungen, an denen holeErklaerung() sonst still abbricht — hier vorher
    gefragt, damit kein Knopf erscheint, der nichts tut.
 
-   Die vier neuen Typen (Roboter, Bildwahl, Bildzahl, Positionen) haben keinen
+   Die fünf neuen Typen (Roboter, Bildwahl, Bildzahl, Positionen, Legen) haben keinen
    Rechenterm — der Erklär-Dienst hätte nichts zu erklären, also erscheint der
    Knopf für sie erst gar nicht. */
-const OHNE_ERKLAERUNG = new Set(["roboter", "bildwahl", "bildzahl", "positionen"]);
+const OHNE_ERKLAERUNG = new Set(["roboter", "bildwahl", "bildzahl", "positionen", "legen"]);
 const kannErklaeren = t => !!(t && !OHNE_ERKLAERUNG.has(t.type) &&
   serverUrl("/erklaer") && t.src && t.idx !== undefined);
 
@@ -1351,6 +1483,18 @@ function areaStage(aid){
   return Math.min(MAX_STAGE, stufe);
 }
 
+/* V3/G4: die Stufe, auf die ein Paket zielt. Bisher allein das Weltniveau; seit
+   dem Denk-Check liegt darunter noch ein Boden je Disziplin (S.profile.checkBoden).
+   Er gilt nur in der Denkschule (Modus v2) und nur als Boden: wer in einer Welt
+   schon weiter ist, bleibt dort, wo er ist. Pakete ohne Disziplin (Schulstoff)
+   kennen keinen Check-Boden. */
+function zielStufe(u){
+  const stufe = areaStage((skillOf(u.skill) || {}).area);
+  if(S.settings.modus !== "v2") return stufe;
+  const boden = (S.profile.checkBoden || {})[DISZIPLIN_VON[u.skill]] || 0;
+  return Math.min(MAX_STAGE, Math.max(stufe, boden));
+}
+
 /* ====================================================== Langeweile und Frust
    Die Stufe allein trifft es nicht. Ein Kind kann auf seiner Stufe stehen und
    sich trotzdem langweilen, weil genau diese Fertigkeit längst sitzt — oder
@@ -1420,12 +1564,25 @@ const typAnteilIn = (u, typ) => !u.tasks.length ? 0
 /* B: Verweigerung pausiert das Vorziehen. Ein Sofort-Abbruch ist ein Paketlauf
    mit 0 Antworten (das bestehende Sitzungsende-Ereignis mit n=0) — das Kind hat
    das Paket gesehen und sich sofort abgewandt. Drei davon in Folge nehmen das
-   Paket für 24 Stunden aus dem Vorziehen heraus; die normale Niveau-Auswahl
-   greift weiter, denn dort widerspricht niemand aktiv. Ein Antwortlauf setzt
-   den Zähler zurück, ein weiterer Sofort-Abbruch nach Ablauf der 24 Stunden
-   verlängert sie erneut. */
+   Paket aus dem Vorziehen heraus; die normale Niveau-Auswahl greift weiter, denn
+   dort widerspricht niemand aktiv. Ein Antwortlauf setzt den Zähler zurück.
+
+   V3/G5, Wunsch-Bremse: Die Pause war früher immer 24 Stunden — und danach kam
+   ein per Elternwunsch vorgezogenes Paket sofort wieder (14 Wegtipper in Folge
+   bei einem Paket, 17.09.2026). Jetzt verdoppelt sich die Pause mit jedem
+   weiteren Sofort-Abbruch: ab dem 3. in Folge 24 h × 2^(Abbrüche − 3), also
+   1, 2, 4, 8 und höchstens 14 Tage. Ein Lauf mit Antworten setzt den Zähler (und
+   damit die Staffel) zurück. */
 const SOFORT_SCHWELLE = 3;
 const SOFORT_PAUSE_MS = 24 * 3600 * 1000;
+const SOFORT_PAUSE_MAX_TAGE = 14;
+
+/* Wie lange ein Paket nach so vielen Sofort-Abbrüchen in Folge pausiert (ms);
+   0 unterhalb der Schwelle. */
+function sofortPauseMs(sofort){
+  if(!(sofort >= SOFORT_SCHWELLE)) return 0;
+  return Math.min(SOFORT_PAUSE_MAX_TAGE, Math.pow(2, sofort - SOFORT_SCHWELLE)) * SOFORT_PAUSE_MS;
+}
 
 function vermerkeAbbruch(unitId, geantwortet){
   // Rückgabe: true, wenn DIESER Lauf ein Sofort-Abbruch war (0 Antworten) —
@@ -1434,7 +1591,7 @@ function vermerkeAbbruch(unitId, geantwortet){
   const x = S.units[unitId] || (S.units[unitId] = {stars:0, plays:0, sofort:0, pausiertBis:0});
   if(geantwortet > 0){ x.sofort = 0; return false; }
   x.sofort = (x.sofort || 0) + 1;
-  if(x.sofort >= SOFORT_SCHWELLE) x.pausiertBis = Date.now() + SOFORT_PAUSE_MS;
+  if(x.sofort >= SOFORT_SCHWELLE) x.pausiertBis = Date.now() + sofortPauseMs(x.sofort);
   return true;
 }
 
@@ -1498,7 +1655,7 @@ const planGrund = u => (planFuer(u) || {}).grund || "";
 /* ------------------------------------------------------------ Die Auswahl */
 function sortiere(pool, mehr){
   const letzteWelt = (skillOf((UNITS[S.profile.lastUnitId] || {}).skill) || {}).area;
-  const ziel = u => areaStage((skillOf(u.skill) || {}).area) + (mehr ? 1 : 0);
+  const ziel = u => zielStufe(u) + (mehr ? 1 : 0);
   const zuviel = ueberzogenerTyp();
   return pool.slice().sort((a, b) => {
     const wa = (skillOf(a.skill) || {}).area, wb = (skillOf(b.skill) || {}).area;
@@ -1656,10 +1813,10 @@ function waehleAus(mehr, scope){
     if(ohneNormal.length) offen = ohneNormal;
   }
 
-  const niveau = u => u.stage === areaStage((skillOf(u.skill) || {}).area) + (mehr ? 1 : 0);
+  const niveau = u => u.stage === zielStufe(u) + (mehr ? 1 : 0);
   const passend = offen.filter(niveau);
   const hoeher = offen.filter(u => !niveau(u) &&
-    u.stage > areaStage((skillOf(u.skill) || {}).area) + (mehr ? 1 : 0));
+    u.stage > zielStufe(u) + (mehr ? 1 : 0));
   const nachNiveau = passend.length ? passend : (hoeher.length ? hoeher : offen);
 
   // Was ohne jede Anpassung käme — daran misst sich, ob überhaupt abgewichen wurde.
@@ -1763,7 +1920,7 @@ function startNext(mehr){
 /* Gibt es überhaupt etwas Schwereres als sein aktuelles Niveau? */
 function hasHarder(){
   const u = nextUnit(true);
-  return u && u.stage > areaStage((skillOf(u.skill) || {}).area);
+  return u && u.stage > zielStufe(u);
 }
 
 /* Fällige Fertigkeiten nach dem Leitner-Prinzip. */
@@ -1875,6 +2032,8 @@ VIEWS.home = function(){
 
     ${hasHarder() ? `<button class="btn wide" style="margin-bottom:10px"
       onclick="startNext(true)">🔥 Gib mir was Schwereres</button>` : ""}
+
+    ${dcKarte()}
 
     <div class="row" style="margin-bottom:12px">
       <button class="btn grow" onclick="go('map')">🗺️ Karte</button>
@@ -2026,7 +2185,8 @@ VIEWS.badges = () =>
   }).join("");
 
 VIEWS.stats = function(){
-  const s = S.stats, quote = s.answers ? Math.round(s.correct/s.answers*100) : 0;
+  const s = S.stats, geuebt = s.answers - s.check,
+        quote = geuebt > 0 ? Math.round(s.correct/geuebt*100) : 0;
   const lv = [0,0,0,0,0,0];
   Object.values(S.skills).forEach(x => lv[Math.min(MAX_L, x.l)]++);
   const unberuehrt = SKILLS.length - Object.keys(S.skills).length;
@@ -2133,6 +2293,7 @@ VIEWS.settings = () =>
         onclick="S.settings.begleiter=!S.settings.begleiter;save();render()">
         ${S.settings.begleiter ? "🦊 Begleiter anzeigen: an" : "🚫 Begleiter anzeigen: aus"}</button>` : ""}
     </div>
+    ${dcEinstellung()}
     <div class="card" style="margin-bottom:12px">
       <h3>Ton</h3>
       <div class="row" style="margin-top:8px">
@@ -2213,7 +2374,7 @@ VIEWS.settings = () =>
 const TYPE_LABEL = {entdecken:"Neu entdecken", zahl:"Ausrechnen", wahl:"Auswählen",
   wahrfalsch:"Stimmt das?", ordnen:"Ordnen", zuordnen:"Zuordnen",
   mehrschritt:"Schritt für Schritt", gitter:"Hinschauen", logikgitter:"Logikrätsel",
-  roboter:"Roboter", bildwahl:"Hinschauen", bildzahl:"Zählen", positionen:"Wer steht wo?"};
+  roboter:"Roboter", bildwahl:"Hinschauen", bildzahl:"Zählen", positionen:"Wer steht wo?", legen:"Legen"};
 const KNOBEL_AREAS = ["logik", "komb", "muster"];
 
 let SESS = null;
@@ -2236,8 +2397,12 @@ function beginSession(cfg){
                         // (prog) und der Zustand der Ablauf-Animation (anim/
                         // animTimer) — siehe qRoboter()/starteRoboterAnimation().
                         prog:[], anim:null, animTimer:null,
+                        // legen: das Brett (lgZustand()); Merkbild: Phase und Zeitgeber
+                        lg:null, merkPhase:"", merkStart:0, merkTimer:null,
                         begonnen:Date.now(), gezeigt:Date.now()}, cfg);
-  touchDay(); save();
+  // Der Denk-Check zählt nicht als Übungstag: er ist eine Messung, kein Training.
+  if(cfg.kind !== "denkcheck") touchDay();
+  save();
   go("session");
 }
 
@@ -2293,6 +2458,8 @@ function startReview(){
 /* ------------------------------------------------------------- Bewertung */
 function grade(ok){
   if(SESS.answered) return;
+  // Der Denk-Check misst nur und rührt den Lernstand nicht an — eigener Weg.
+  if(SESS.kind === "denkcheck") return dcAntwort(ok);
   const t = curTask();
   SESS.answered = true; SESS.lastOk = ok;
 
@@ -2360,13 +2527,17 @@ function grade(ok){
 
 function nextTask(){
   // Ein laufender Roboter-Animationstimer darf nicht in die nächste Aufgabe
-  // hineinzeichnen — vor jedem Wechsel zuerst abbrechen.
+  // hineinzeichnen — vor jedem Wechsel zuerst abbrechen. Gleiches gilt für den
+  // Zeitgeber des Merkbilds.
   stopRoboterAnimation();
+  stopMerken();
   SESS.i++;
   Object.assign(SESS, {answered:false, lastOk:false, typed:"", chosen:-1, picked:[],
                        sel:-1, matched:[], step:0, stepVals:[], revealed:false,
                        denkOffen:false, denk:{}, prog:[], anim:null, animTimer:null,
+                       lg:null, merkPhase:"", merkStart:0, merkTimer:null,
                        gezeigt:Date.now()});
+  if(SESS.kind === "denkcheck") return dcWeiter();
   if(SESS.i >= SESS.tasks.length) return finishSession();
   render();
 }
@@ -2447,6 +2618,7 @@ function gibSpassFeedback(wert){
 
 function quitSession(){
   if(!SESS) return go("home");
+  if(SESS.kind === "denkcheck") return dcAbbrechen();
   if(SESS.i > 2 && !confirm("Wirklich abbrechen? Was du schon geschafft hast, bleibt gespeichert.")) return;
   // Ein Abbruch ist ein Messwert, kein Nichts: kurze Sitzungen sind das
   // Warnzeichen für Über- und Unterforderung.
@@ -2460,6 +2632,7 @@ function quitSession(){
   save();
   syncLeise();
   stopRoboterAnimation();
+  stopMerken();
   SESS = null;
   nachAbbruchFragen(unitId, kind === "unit" && (sofortAbbruch || wenigerAlsHaelfte));
   go("home");
@@ -2471,16 +2644,29 @@ function quitSession(){
 const RENDER = {entdecken:qEntdecken, zahl:qZahl, wahl:qWahl, wahrfalsch:qWahrFalsch,
                 ordnen:qOrdnen, zuordnen:qZuordnen, mehrschritt:qMehrschritt, gitter:qGitter,
                 logikgitter:qLogikgitter, roboter:qRoboter, bildwahl:qBildwahl,
-                bildzahl:qBildzahl, positionen:qPositionen};
+                bildzahl:qBildzahl, positionen:qPositionen, legen:qLegen};
 
 VIEWS.session = function(){
   if(!SESS) return VIEWS.home();
   const t = curTask();
-  const pct = Math.min(100, SESS.i/Math.max(1,SESS.total)*100);
+  // Denk-Check: Fortschritt als „Runde A · 7 von 20“ statt Treffer, keine Farben.
+  const dc = SESS.kind === "denkcheck";
+  let pct = Math.min(100, SESS.i/Math.max(1,SESS.total)*100), zaehler = SESS.asked ? SESS.right + "/" + SESS.asked : "";
+  if(dc){
+    const z = dcZaehlung(dcOffenerLauf(), SESS.dcRunde);
+    pct = Math.min(100, z.beantwortet / Math.max(1, z.gesamt) * 100);
+    zaehler = "Runde " + SESS.dcRunde + " · " + Math.min(z.gesamt, z.beantwortet + (SESS.answered ? 0 : 1)) +
+      " von " + z.gesamt;
+  }
+  // Nach der Antwort im Denk-Check: kein Richtig/Falsch, keine Lösung, kein Tipp —
+  // nur der Weg zur nächsten Aufgabe.
+  const inhalt = dc && SESS.answered
+    ? `<div class="dc-weiter"><div class="dc-daumen">👍</div></div>` + contBtn("👍 Weiter!")
+    : papierStreifen(t) + RENDER[t.type](t);
   return `<div class="stop">
       <button class="btn" style="min-height:44px;padding:10px 15px" onclick="quitSession()">✕</button>
       <div class="prog"><i style="width:${pct}%"></i></div>
-      <span class="combo">${SESS.asked ? SESS.right + "/" + SESS.asked : ""}</span>
+      <span class="combo">${esc(zaehler)}</span>
     </div>
     ${SESS.i === 0 && SESS.vorlaufFuer ? `<div class="muted" style="text-align:center;
         margin:2px 0 10px;font-size:14.5px">
@@ -2488,11 +2674,16 @@ VIEWS.session = function(){
         ${readBtn("Das hilft dir gleich bei " + SESS.vorlaufFuer)}</div>` : ""}
     <div id="fitwrap"><div>
       <div class="roundlbl">
-        <div class="eyebrow">${TYPE_LABEL[t.type] || ""}${t.redo ? " · nochmal" : ""}</div>
+        <div class="eyebrow">${dc ? "🧭 Denk-Check" : (TYPE_LABEL[t.type] || "")}${t.redo ? " · nochmal" : ""}</div>
       </div>
-      <div class="card">${RENDER[t.type](t)}</div>
+      <div class="card">${inhalt}</div>
     </div></div>`;
 };
+
+/* V3/G3: Aufgaben mit `papier: true` dürfen mit Skizzen und Zwischenergebnissen
+   auf Papier gelöst werden — der Streifen sagt es, bevor das Kind die Frage liest. */
+const papierStreifen = t => t.papier === true
+  ? `<div class="papier">📝 Papier und Stift erlaubt</div>` : "";
 
 function contBtn(label){
   return `<button class="btn primary wide" style="margin-top:14px" onclick="nextTask()" id="cont">
@@ -3105,6 +3296,8 @@ function stopRoboterAnimation(){
 }
 function starteRoboterAnimation(programm){
   const t = curTask();
+  // Im Denk-Check gibt es nach der Antwort nichts mehr zu zeigen (keine Lösung).
+  if(SESS.kind === "denkcheck") return;
   const {zustaende} = robSchritte(t, programm);
   stopRoboterAnimation();
   SESS.anim = {zustaende, schritt: REDUCED_MOTION ? zustaende.length - 1 : 0};
@@ -3141,7 +3334,31 @@ function bwIstBreit(svg){
   const m = /viewBox\s*=\s*["']\s*[\d.\-]+\s+[\d.\-]+\s+([\d.]+)\s+([\d.]+)/.exec(svg || "");
   return !!m && parseFloat(m[1]) > parseFloat(m[2]);
 }
+/* V3/G4: das Merkbild. Trägt eine bildwahl-Aufgabe `merken_ms`, sieht das Kind
+   zuerst nur das Fragebild und einen Balken, der abläuft; dann wird das Bild
+   durch einen Platzhalter ersetzt und erst jetzt erscheinen die Optionen. Die
+   Zeit für `ms` im Antwortereignis zählt ab diesem Moment (merkeAus() setzt
+   SESS.gezeigt neu) — gemessen wird das Wiedererkennen, nicht das Anschauen.
+   Der Balken rechnet mit dem Startzeitpunkt, damit ein zwischenzeitliches
+   Neuzeichnen ihn nicht von vorn beginnen lässt. */
+function merkeAus(){
+  if(!SESS || SESS.merkPhase === "weg") return;
+  SESS.merkTimer = null; SESS.merkPhase = "weg"; SESS.gezeigt = Date.now();
+  render();
+}
+function stopMerken(){
+  if(SESS && SESS.merkTimer){ clearTimeout(SESS.merkTimer); SESS.merkTimer = null; }
+}
+
 function qBildwahl(t){
+  const merken = t.merken_ms > 0 && !SESS.answered;
+  if(merken && SESS.merkPhase !== "weg"){
+    if(!SESS.merkStart) SESS.merkStart = Date.now();
+    return head(t) +
+      `<div class="bw-frage${bwIstBreit(t.svg) ? " breit" : ""}">${t.svg}</div>
+       <div class="merk-balken"><i style="animation-duration:${t.merken_ms}ms;
+         animation-delay:-${Math.max(0, Date.now() - SESS.merkStart)}ms"></i></div>`;
+  }
   const karten = t.optionen_svg.map((svg, i) => {
     let cls = "bw-opt";
     if(SESS.answered){
@@ -3150,19 +3367,22 @@ function qBildwahl(t){
     }
     return `<button class="${cls}" ${SESS.answered ? "disabled" : ""} onclick="chooseBild(${i})">${svg}</button>`;
   }).join("");
-  return head(t) +
-    `<div class="bw-frage${bwIstBreit(t.svg) ? " breit" : ""}">${t.svg}</div>
-     <div class="bw-grid">${karten}</div>` +
+  const frage = merken
+    ? `<div class="bw-frage merk-weg"><b>❓</b><span>Wie sah es aus?</span></div>`
+    : `<div class="bw-frage${bwIstBreit(t.svg) ? " breit" : ""}">${t.svg}</div>`;
+  return head(t) + frage + `<div class="bw-grid">${karten}</div>` +
     (SESS.answered ? feedback(t, "Das grün umrandete Bild ist richtig.") + contBtn() : "");
 }
 
-/* ============================================ Bildzahl (SPEC §4: Würfelgebäude)
+/* ============================================ Bildzahl (SPEC §4, V3: jede Kern-Art)
    Wie qZahl (Ziffernfeld, checkZahl()), nur mit dem Bild über dem Anzeigefeld —
-   kein Rechenterm, der Kern ist die Wahrheit (a). */
+   kein Rechenterm, der Kern ist die Wahrheit (a). Ob Würfelgebäude, Punktmuster,
+   Kästchenfigur, Quader oder Schatzkarte: der Renderer wertet kern.art nicht
+   aus und nimmt nirgends „Würfel“ an; Frage und Lösung kommen aus der Aufgabe. */
 function qBildzahl(t){
   const cls = SESS.answered ? (SESS.lastOk ? "right" : "wrong") : "";
   return head(t) +
-    `<div class="bw-frage">${t.svg}</div>` +
+    `<div class="bw-frage${bwIstBreit(t.svg) ? " breit" : ""}">${t.svg}</div>` +
     display(cls) +
     (SESS.answered
       ? feedback(t, `Richtig ist <b>${fmtNum(t.a)}</b>.`) + contBtn()
@@ -3245,6 +3465,215 @@ function qPositionen(t){
         Von links nach rechts: ${reihenfolge}.`) + contBtn() : "");
 }
 
+/* ==================================== Legen (V3/G1: Reihenfolgen und Auswahlen
+   zum Anfassen). Figuren werden auf Plätze gelegt; die App sammelt jede
+   gefundene Anordnung, erkennt Doppelte und Regelverstöße.
+
+   Die Regelsemantik steht in build/legen_kern.py (regel_erfuellt) und wird
+   hier buchstabengetreu nachgebaut — logic_test.py hält beide gegeneinander:
+   dieselbe Gesamtzahl für jede legen-Aufgabe im Bestand, jede Regelart einzeln
+   gegen die Python-Antwort. Ändert sich eine Seite, muss die andere mit.
+   Eine Regel, deren Figur nicht gelegt ist, gilt als erfüllt (außer `zusammen`
+   und `dabei`); eine unbekannte Regelart oder eine, die es im Modus nicht gibt,
+   gilt sicherheitshalber als NICHT erfüllt. */
+const LEGEN_REGELN_GEORDNET = ["nicht_platz", "auf_platz", "direkt_hinter", "nebeneinander",
+                               "nicht_nebeneinander"];
+const LEGEN_REGELN_UNGEORDNET = ["zusammen", "nicht_zusammen", "dabei", "nicht_dabei"];
+
+function legenRegelErfuellt(regel, anordnung, geordnet){
+  if(!regel || typeof regel !== "object" || Array.isArray(regel)) return false;
+  const art = regel.art;
+  if(!(geordnet ? LEGEN_REGELN_GEORDNET : LEGEN_REGELN_UNGEORDNET).includes(art)) return false;
+  const a = regel.a, b = regel.b, platz = regel.platz;
+  const pos = new Map();
+  anordnung.forEach((figur, i) => pos.set(figur, i));
+  switch(art){
+    case "nicht_platz": return !pos.has(a) || pos.get(a) !== platz;
+    case "auf_platz": return !pos.has(a) || pos.get(a) === platz;
+    case "direkt_hinter":
+    case "nebeneinander":
+    case "nicht_nebeneinander": {
+      if(!pos.has(a) || !pos.has(b)) return true;
+      if(art === "direkt_hinter") return pos.get(a) === pos.get(b) + 1;
+      const abstand = Math.abs(pos.get(a) - pos.get(b));
+      return art === "nebeneinander" ? abstand === 1 : abstand !== 1;
+    }
+    case "zusammen": return pos.has(a) === pos.has(b);
+    case "nicht_zusammen": return !(pos.has(a) && pos.has(b));
+    case "dabei": return pos.has(a);
+    default: return !pos.has(a);                 // nicht_dabei
+  }
+}
+
+/* Gilt jede Regel der Aufgabe für diese Anordnung? */
+const legenGueltig = (t, anordnung) =>
+  (t.regeln || []).every(r => legenRegelErfuellt(r, anordnung, t.geordnet === true));
+
+/* Alle gültigen Anordnungen, vollständig aufgezählt und in fester Reihenfolge
+   (wie itertools.permutations bzw. combinations im Kern): bei geordnet
+   Permutationen von `plaetze` aus n Figuren, sonst aufsteigende Kombinationen.
+   Das ist die Wahrheit für „Das sind alle!“ und für die Lösungsanzeige. */
+function legenAlle(t){
+  const n = (t.figuren || []).length, k = t.plaetze, geordnet = t.geordnet === true;
+  const out = [];
+  if(!(Number.isInteger(k) && k >= 1 && k <= n)) return out;
+  const cur = [], benutzt = new Array(n).fill(false);
+  const rec = start => {
+    if(cur.length === k){ if(legenGueltig(t, cur)) out.push(cur.slice()); return; }
+    for(let i = geordnet ? 0 : start; i < n; i++){
+      if(geordnet && benutzt[i]) continue;
+      cur.push(i); benutzt[i] = true;
+      rec(i + 1);
+      cur.pop(); benutzt[i] = false;
+    }
+  };
+  rec(0);
+  return out;
+}
+
+/* Zwei Anordnungen sind gleich: bei geordnet dieselbe Reihenfolge, sonst
+   dieselbe Menge. */
+const legenSchluessel = (t, a) =>
+  (t.geordnet === true ? a : a.slice().sort((x, y) => x - y)).join(",");
+
+/* Der Zustand des Bretts lebt in der Sitzung (SESS.lg, nextTask() setzt ihn
+   zurück): slots[p] ist die Figur auf Platz p oder -1, gefunden die bisher
+   gesammelten gültigen Anordnungen. */
+function lgZustand(t){
+  return SESS.lg || (SESS.lg = {slots:new Array(t.plaetze).fill(-1), gefunden:[],
+                                meldung:"", art:"", dup:-1});
+}
+
+/* Im Denk-Check bleibt es bei leisen Tönen: kein „falsch“-Klang. */
+const lgTon = art => { if(SESS.kind !== "denkcheck") sfx(art); };
+
+function legenLegen(i){
+  if(SESS.answered) return;
+  const lg = lgZustand(curTask());
+  if(lg.slots.includes(i)) return;
+  const frei = lg.slots.indexOf(-1);
+  if(frei < 0) return;
+  sfx("tap");
+  lg.slots[frei] = i; lg.meldung = ""; lg.art = ""; lg.dup = -1;
+  render();
+}
+function legenZurueck(p){
+  if(SESS.answered) return;
+  const lg = lgZustand(curTask());
+  if(lg.slots[p] < 0) return;
+  sfx("tap");
+  lg.slots[p] = -1; lg.meldung = ""; lg.art = ""; lg.dup = -1;
+  render();
+}
+function legenLeeren(){
+  if(SESS.answered) return;
+  const lg = lgZustand(curTask());
+  lg.slots.fill(-1); lg.meldung = ""; lg.art = ""; lg.dup = -1;
+  render();
+}
+
+/* „✓ Legen“: die Anordnung auf dem Brett übernehmen — oder erklären, warum
+   nicht. Bewertet wird hier nichts; erst „Das sind alle!“ bzw. die Zahl ist die
+   Antwort der Aufgabe. */
+function legenPruefen(){
+  if(SESS.answered) return;
+  const t = curTask(), lg = lgZustand(t);
+  if(lg.slots.includes(-1)) return;
+  const a = lg.slots.slice();
+  if(!legenGueltig(t, a)){
+    lgTon("near");
+    lg.meldung = "Das passt nicht zu den Regeln."; lg.art = "bad"; lg.dup = -1;
+  }else{
+    const schl = legenSchluessel(t, a);
+    const schon = lg.gefunden.findIndex(g => legenSchluessel(t, g) === schl);
+    if(schon >= 0){
+      lgTon("near");
+      lg.meldung = "Die hast du schon!"; lg.art = "dup"; lg.dup = schon;
+    }else{
+      lgTon("right");
+      lg.gefunden.push(a);
+      lg.slots.fill(-1);
+      lg.meldung = "Neu! Das ist Nummer " + lg.gefunden.length + "."; lg.art = "neu"; lg.dup = -1;
+    }
+  }
+  render();
+}
+
+/* Modus `alle`: „Das sind alle!“ — richtig genau dann, wenn jede gültige
+   Anordnung gefunden ist. Gefunden wird nur Gültiges und nur einmal, also
+   genügt der Vergleich der Anzahlen. */
+function legenFertig(){
+  if(SESS.answered) return;
+  const t = curTask(), lg = lgZustand(t);
+  if(!lg.gefunden.length) return;
+  grade(lg.gefunden.length === legenAlle(t).length);
+}
+
+/* Eine Anordnung als kleine Reihe aus Emoji. */
+function legenMini(t, a, cls){
+  const f = t.geordnet === true ? a : a.slice().sort((x, y) => x - y);
+  return `<span class="lg-mini${cls ? " " + cls : ""}">${f.map(i => t.figuren[i].bild).join("")}</span>`;
+}
+const legenMinis = (t, liste) =>
+  `<div class="lg-minis">${liste.map(a => legenMini(t, a)).join("")}</div>`;
+
+function qLegen(t){
+  const lg = lgZustand(t), alle = legenAlle(t);
+  const geordnet = t.geordnet === true;
+  const brett = !SESS.answered;
+  const gefunden = lg.gefunden.length
+    ? `<div class="lg-gef"><b>Gefunden: ${lg.gefunden.length}</b>
+         <div class="lg-minis">${lg.gefunden.map((a, i) =>
+           legenMini(t, a, i === lg.dup ? "dup" : "")).join("")}</div></div>`
+    : `<div class="lg-gef muted">Gefunden: 0</div>`;
+
+  let html = `<div class="lg-q${lg.art === "bad" ? " bad" : ""}">${head(t)}</div>`;
+
+  if(brett){
+    const karten = t.figuren.map((f, i) => {
+      const gelegt = lg.slots.includes(i);
+      return `<button class="lg-fig${gelegt ? " used" : ""}" ${gelegt ? "disabled" : ""}
+          onclick="legenLegen(${i})" aria-label="${esc(f.name)}">
+          <span class="lg-e">${f.bild}</span><span class="lg-n">${esc(f.name)}</span></button>`;
+    }).join("");
+    const voll = !lg.slots.includes(-1);
+    const plaetze = lg.slots.map((fig, p) => fig < 0
+      ? `<div class="lg-slot">${geordnet ? p + 1 : ""}</div>`
+      : `<button class="lg-slot set${lg.art === "bad" && voll ? " bad" : ""}${lg.art === "dup" && voll ? " dup" : ""}"
+           onclick="legenZurueck(${p})" aria-label="${esc(t.figuren[fig].name)} zurücknehmen">
+           ${t.figuren[fig].bild}</button>`).join("");
+    html += `<div class="lg-figs">${karten}</div>
+      <div class="lg-ziel">${geordnet ? "" : `<div class="lg-label">Auswahl</div>`}
+        <div class="lg-slots">${plaetze}</div></div>
+      <div class="lg-msg ${lg.art}">${esc(lg.meldung)}</div>
+      <div class="row">
+        <button class="btn" style="min-height:50px;padding:10px 16px" onclick="legenLeeren()"
+          aria-label="Leeren" ${lg.slots.every(f => f < 0) ? "disabled" : ""}>↺</button>
+        <button class="btn primary grow" style="min-height:50px;padding:10px 16px" onclick="legenPruefen()"
+          ${voll ? "" : "disabled"}>✓ Legen</button>
+      </div>` + gefunden;
+  }
+
+  if(t.modus === "zaehlen"){
+    const cls = SESS.answered ? (SESS.lastOk ? "right" : "wrong") : "";
+    html += display(cls);
+    if(!SESS.answered) return html + numpad("checkZahl()");
+    const liste = alle.length <= 24 && !SESS.lastOk ? legenMinis(t, alle) : "";
+    return html + feedback(t, `${SESS.lastOk ? "Richtig ist" : "Es gibt"} <b>${fmtNum(alle.length)}</b>.${liste}`)
+      + contBtn();
+  }
+
+  // Modus alle
+  if(!SESS.answered)
+    return html + `<button class="btn teal wide" style="margin-top:10px;min-height:50px"
+      onclick="legenFertig()" ${lg.gefunden.length ? "" : "disabled"}>Das sind alle!</button>`;
+  const schl = new Set(lg.gefunden.map(a => legenSchluessel(t, a)));
+  const fehlt = alle.filter(a => !schl.has(legenSchluessel(t, a)));
+  return html + gefunden + feedback(t, SESS.lastOk
+      ? `Genau, es gibt <b>${alle.length}</b>.`
+      : `Es gibt <b>${alle.length}</b>. Diese fehlen noch:${legenMinis(t, fehlt)}`) + contBtn();
+}
+
 /* ------------------------------------------------------------- Ergebnisbild */
 VIEWS.result = function(){
   const r = view.opts.res || {stars:1, pct:0, right:0, asked:0, title:""};
@@ -3290,6 +3719,373 @@ VIEWS.result = function(){
       <button class="btn grow" onclick="go('home')">🏠 Start</button>
     </div>`;
 };
+</script>
+
+<script>
+/* ================================================================ Denk-Check
+   V3/G4 (ZIELE-V3.md). Ein kurzes Screening in zwei Runden: je Dimension vier
+   Aufgaben aus der festen, geprüften Bank (DENKCHECK, data/denkcheck.json), im
+   beschleunigten Treppenverfahren. Es ist kein IQ-Test und vergleicht nicht mit
+   anderen Kindern — es liefert Startstufen je Disziplin und dem Kind seine
+   „Superkräfte“. Was es NICHT tut: Lernstand anfassen (S.skills, S.units,
+   Leitner, Sterne, XP, Kombo, Abzeichen, Tagesziel bleiben unberührt) und dem
+   Kind je eine Schwäche zeigen.
+
+   Der Stand steht in S.denkcheck.laeufe: je Dimension die Folge der Antworten
+   (Aufgaben-Id, Stufe, richtig, ms). Aus dieser Folge ergibt sich alles andere
+   — die nächste Stufe, die nächste Aufgabe, der Fortschritt —, deshalb geht
+   eine unterbrochene Runde an genau derselben Stelle weiter.
+
+   Treppenverfahren (je Dimension, DC_N = 4 Aufgaben):
+     Start    = max(2, min(8, Einstieg der Klasse − 1)); ohne Klasse gilt 3 als Einstieg
+     richtig  → +2, solange noch kein Fehler kam, danach +1
+     falsch   → −1;  Stufen immer in 2..8
+   Schätzung E = (höchste richtige Stufe + niedrigste darüberliegende falsche) / 2.
+   Gibt es über der höchsten richtigen keine falsche: höchste richtige + 0,5 und
+   z = 1 („Decke nicht erreicht“). Nie richtig: niedrigste versuchte − 0,5, z = −1. */
+const DC_TAGE = 90;               // so lange gilt ein fertiger Check als frisch
+const DC_DIMS = DENKCHECK ? Object.keys(DENKCHECK.dimensionen || {}) : [];
+const dcDimsVon = r => DC_DIMS.filter(k => DENKCHECK.dimensionen[k].runde === r);
+
+/* Emoji und lobender Satz je Dimension — für „Deine Superkräfte“. Nur Stärken. */
+const DC_KRAFT = {
+  strukturen:   ["🧩", "Du entdeckst die geheime Regel hinter Mustern."],
+  schlussketten:["🕵️", "Du knobelst Schritt für Schritt die Wahrheit heraus."],
+  algorithmik:  ["🤖", "Du denkst wie ein echter Roboter-Programmierer."],
+  darstellung:  ["🔢", "Du siehst ein Bild und denkst gleich in Zahlen."],
+  raum:         ["🧊", "Du drehst und faltest Formen ganz im Kopf."],
+  umkehren:     ["🔄", "Du kannst rückwärts denken."],
+  merken:       ["📸", "Du merkst dir Bilder richtig gut."],
+  systematik:   ["🎲", "Du probierst klug alles der Reihe nach durch."],
+  rechnen:      ["➕", "Du rechnest flink und sicher."],
+};
+
+/* ---------------------------------------------------------- Treppenverfahren */
+const dcStartStufe = () => Math.max(DC_MIN, Math.min(DC_MAX, (S.profile.einstieg || 3) - 1));
+
+/* Die Stufe der nächsten Aufgabe aus der bisherigen Folge. */
+function dcNaechsteStufe(folge, start){
+  if(!folge.length) return start;
+  const letzte = folge[folge.length - 1];
+  const fehlerSchon = folge.some(a => !a.o);
+  const schritt = letzte.o ? (fehlerSchon ? 1 : 2) : -1;
+  return Math.max(DC_MIN, Math.min(DC_MAX, letzte.stufe + schritt));
+}
+
+/* Schätzung E und Vermerk z aus der Folge einer Dimension (siehe oben). */
+function dcSchaetzung(folge){
+  const richtige = folge.filter(a => a.o).map(a => a.stufe);
+  if(!richtige.length) return {e:Math.min(...folge.map(a => a.stufe)) - 0.5, z:-1};
+  const hoechste = Math.max(...richtige);
+  const darueber = folge.filter(a => !a.o && a.stufe > hoechste).map(a => a.stufe);
+  if(!darueber.length) return {e:hoechste + 0.5, z:1};
+  return {e:(hoechste + Math.min(...darueber)) / 2, z:0};
+}
+
+function dcMedian(zahlen){
+  if(!zahlen.length) return 0;
+  const a = zahlen.slice().sort((x, y) => x - y), m = a.length >> 1;
+  return a.length % 2 ? a[m] : Math.round((a[m - 1] + a[m]) / 2);
+}
+
+/* -------------------------------------------------------------- Läufe, Runden */
+const dcOffenerLauf = () => {
+  const l = S.denkcheck.laeufe[S.denkcheck.laeufe.length - 1];
+  return l && !l.fertig ? l : null;
+};
+const dcLetzterFertiger = () => S.denkcheck.laeufe.filter(l => l.fertig).slice(-1)[0] || null;
+
+/* Soll die Startseite den Check anbieten? Solange kein Lauf fertig ist oder der
+   letzte fertige älter als 90 Tage ist. Nur in der Denkschule: der Boden wirkt
+   nur dort (zielStufe()). */
+function dcFaellig(){
+  if(!DENKCHECK || S.settings.modus !== "v2") return false;
+  if(dcOffenerLauf()) return true;
+  const l = dcLetzterFertiger();
+  return !l || Date.now() - l.fertig > DC_TAGE * DAY;
+}
+
+function dcNeuerLauf(){
+  const lauf = {start:Date.now(), fertig:0, runde:{A:{fertig:0, dims:{}}, B:{fertig:0, dims:{}}}};
+  S.denkcheck.laeufe.push(lauf);
+  if(S.denkcheck.laeufe.length > DC_LAEUFE_MAX) S.denkcheck.laeufe.shift();
+  return lauf;
+}
+
+function dcDim(lauf, r, dim){
+  const dims = lauf.runde[r].dims;
+  return dims[dim] || (dims[dim] = {folge:[], e:null, z:0});
+}
+
+const dcNaechsteRunde = lauf => !lauf.runde.A.fertig ? "A" : !lauf.runde.B.fertig ? "B" : null;
+
+/* Wie weit eine Runde ist: beantwortet von gesamt (ohne die Aufgabe, die gerade
+   noch offen ist). */
+function dcZaehlung(lauf, r){
+  const dims = dcDimsVon(r);
+  const beantwortet = lauf
+    ? dims.reduce((s, k) => s + ((lauf.runde[r].dims[k] || {folge:[]}).folge.length), 0) : 0;
+  return {beantwortet, gesamt:dims.length * DC_N};
+}
+
+/* Die Aufgabe, die bei dieser Folge als nächste kommt: passende Dimension und
+   Stufe, unbenutzte (S.denkcheck.benutzt, aus früheren Läufen) zuerst, dann
+   solche, die in DIESEM Lauf noch nicht dran waren, sonst zufällig unter den
+   übrigen. Fehlt die Stufe in der Bank, gilt die nächstgelegene. */
+function dcWaehle(dim, stufe, folge){
+  const alle = DENKCHECK.aufgaben.filter(a => a.dim === dim);
+  if(!alle.length) return null;
+  const naechste = alle.reduce((m, a) => Math.min(m, Math.abs(a.stufe - stufe)), 99);
+  const kand = alle.filter(a => Math.abs(a.stufe - stufe) === naechste);
+  const imLauf = new Set(folge.map(a => a.id));
+  const frisch = kand.filter(a => !S.denkcheck.benutzt.includes(a.id) && !imLauf.has(a.id));
+  const pool = frisch.length ? frisch
+    : (kand.filter(a => !imLauf.has(a.id)).length ? kand.filter(a => !imLauf.has(a.id)) : kand);
+  return pool[(Math.random() * pool.length) | 0];
+}
+
+/* Die nächste Aufgabe der Runde samt Dimension — oder null, wenn alle Dimensionen
+   der Runde ihre vier Antworten haben. */
+function dcNaechsteAufgabe(lauf, r){
+  for(const dim of dcDimsVon(r)){
+    const d = dcDim(lauf, r, dim);
+    if(d.folge.length >= DC_N) continue;
+    const a = dcWaehle(dim, dcNaechsteStufe(d.folge, dcStartStufe()), d.folge);
+    if(a) return {dim, eintrag:a};
+  }
+  return null;
+}
+
+/* Die Aufgabe für die Sitzungsansicht: eine Kopie mit den Merkmalen, an denen
+   dcAntwort() sie wiedererkennt. Bewusst ohne `skill`/`src`: so greifen weder
+   Leitner noch die Erklärhilfe. */
+const dcAufgabe = n => Object.assign({}, n.eintrag.task,
+  {dcId:n.eintrag.id, dcDim:n.dim, dcStufe:n.eintrag.stufe});
+
+/* ------------------------------------------------------------------- Ablauf */
+function dcOeffnen(){
+  if(!DENKCHECK) return;
+  const lauf = dcOffenerLauf();
+  const r = lauf ? dcNaechsteRunde(lauf) : "A";
+  dcIntro(r, !!lauf && dcZaehlung(lauf, r).beantwortet > 0);
+}
+
+function dcIntroText(r, weiter){
+  const n = dcZaehlung(null, r).gesamt;
+  if(weiter) return "Schön, dass du weitermachst! Wir machen genau da weiter, wo du aufgehört hast.";
+  if(r === "B") return "Runde B! Wieder kleine Rätsel, wieder ohne Punkte. Los geht's!";
+  return "Willkommen beim Denk-Check! Hier knobelst du " + n + " kleine Rätsel. " +
+    "Es gibt keine Noten und keine Punkte. Manche Rätsel sind leicht und manche richtig knifflig. " +
+    "Das ist so gewollt. Mach einfach so gut du kannst. " +
+    "Du kannst jederzeit aufhören und später weitermachen.";
+}
+
+function dcIntro(r, weiter){
+  go("denkcheck", {phase:"intro", runde:r, weiter:!!weiter});
+  if(S.settings.speech) setTimeout(() => { if(view.name === "denkcheck") speak(dcIntroText(r, weiter)); }, 320);
+}
+
+/* „Los geht's“: die Sitzung der Runde beginnen (bei Bedarf einen neuen Lauf). */
+function dcLos(r){
+  const lauf = dcOffenerLauf() || dcNeuerLauf();
+  const n = dcNaechsteAufgabe(lauf, r);
+  if(!n) return dcRundeAbschluss(lauf, r);
+  beginSession({kind:"denkcheck", unitId:null, title:"Denk-Check", intro:"", dcRunde:r,
+                total:dcZaehlung(lauf, r).gesamt, tasks:[dcAufgabe(n)]});
+}
+
+/* Eine Antwort festhalten. Aus grade() heraus aufgerufen: Der Denk-Check zählt
+   nur die Antwort selbst — kein XP, kein Kombo, keine Sterne, kein Tagesziel,
+   kein Leitner, keine Wiederholung. Nur die Zahl der Antworten wächst
+   (S.stats.answers), weil der Dienst sie mit der Zahl der "a"-Ereignisse
+   abgleicht. */
+function dcAntwort(ok){
+  if(SESS.answered) return;
+  const t = curTask(), lauf = dcOffenerLauf();
+  SESS.answered = true; SESS.lastOk = ok;
+  const dauer = Math.max(0, Math.min(600000, Date.now() - (SESS.gezeigt || Date.now())));
+  if(lauf){
+    const d = dcDim(lauf, SESS.dcRunde, t.dcDim);
+    d.folge.push({id:t.dcId, stufe:t.dcStufe, o:ok ? 1 : 0, ms:dauer});
+    if(!S.denkcheck.benutzt.includes(t.dcId)){
+      S.denkcheck.benutzt.push(t.dcId);
+      if(S.denkcheck.benutzt.length > DC_BENUTZT_MAX) S.denkcheck.benutzt.shift();
+    }
+    // k: die Fertigkeit der Aufgabe, falls sie eine hat — sonst die Dimension.
+    logEvent("a", {u:"denkcheck", k:t.skill || t.dcDim, g:t.dcStufe, y:t.type,
+                   o:ok ? 1 : 0, ms:dauer, r:0, h:0});
+    S.stats.answers++; S.stats.check++;
+    if(d.folge.length >= DC_N) dcDimensionFertig(lauf, SESS.dcRunde, t.dcDim);
+  }
+  save();
+  render();
+}
+
+/* Vier Antworten sind da: die Schätzung steht fest und geht als "c"-Ereignis an
+   den Dienst (ZIELE-V3.md, Ereignisse). */
+function dcDimensionFertig(lauf, r, dim){
+  const d = dcDim(lauf, r, dim);
+  const {e, z} = dcSchaetzung(d.folge);
+  d.e = e; d.z = z;
+  logEvent("c", {k:dim, g:e, n:d.folge.length, c:d.folge.filter(a => a.o).length,
+                 ms:dcMedian(d.folge.map(a => a.ms)), z});
+}
+
+/* Nach der letzten Antwort einer Aufgabe: die nächste zeigen oder die Runde
+   abschließen. Aus nextTask() aufgerufen (SESS.i ist schon weitergezählt). */
+function dcWeiter(){
+  const lauf = dcOffenerLauf(), r = SESS.dcRunde;
+  const n = lauf ? dcNaechsteAufgabe(lauf, r) : null;
+  if(!n) return dcRundeAbschluss(lauf, r);
+  SESS.tasks[SESS.i] = dcAufgabe(n);
+  SESS.tasks.length = SESS.i + 1;
+  render();
+}
+
+/* Der Boden je Disziplin aus den Schätzungen einer Runde: ⌊E⌋ − 1, mindestens 1
+   — eine Stufe unter dem Gezeigten, wie beim Klassen-Einstieg. */
+function dcBodenSetzen(lauf, r){
+  dcDimsVon(r).forEach(dim => {
+    const boden = DENKCHECK.dimensionen[dim].boden;
+    const d = lauf.runde[r].dims[dim];
+    if(!boden || !d || d.e === null || !Object.prototype.hasOwnProperty.call(DISZIPLINEN, boden)) return;
+    S.profile.checkBoden[boden] = Math.max(1, Math.min(MAX_STAGE, Math.floor(d.e) - 1));
+  });
+}
+
+function dcRundeAbschluss(lauf, r){
+  stopRoboterAnimation(); stopMerken();
+  if(lauf){
+    lauf.runde[r].fertig = Date.now();
+    dcBodenSetzen(lauf, r);
+    if(lauf.runde.A.fertig && lauf.runde.B.fertig) lauf.fertig = Date.now();
+  }
+  SESS = null;
+  GEF.reaktion = "jubelt"; GEF.reaktionBis = Date.now() + 5000;
+  sfx("done"); confetti(110);
+  save(); syncLeise();
+  go("denkcheck", {phase:lauf && lauf.fertig ? "ergebnis" : "rundeFertig", runde:r,
+                   lauf:lauf});
+}
+
+/* ✕ im Denk-Check: jederzeit erlaubt, ohne Rückfrage — alles Beantwortete ist
+   schon gespeichert und die Runde geht später an derselben Stelle weiter. Es gibt
+   bewusst kein "s"-Ereignis und keine Abbruch-Nachfrage: ein Abbruch hier sagt
+   nichts über ein Lernpaket aus. */
+function dcAbbrechen(){
+  stopRoboterAnimation(); stopMerken();
+  save(); syncLeise();
+  SESS = null;
+  go("home");
+}
+
+/* ---------------------------------------------------------- Superkräfte */
+/* Die zwei Dimensionen mit dem höchsten E — bei Gleichstand um den zweiten Platz
+   alle gleichauf, aber höchstens drei: Wer überall gleich stark ist, bekäme sonst
+   neun „Superkräfte“, und das Lob sagte nichts mehr. Bei Gleichstand gewinnt die
+   Reihenfolge der Runden. Dimensionen, in denen nichts gelang (z = −1), sind
+   keine Stärke und kommen nie vor; ebenso wird nirgends eine Schwäche genannt. */
+function dcSuperkraefte(lauf){
+  if(!lauf) return [];
+  const liste = [];
+  for(const r of ["A", "B"]) for(const dim of dcDimsVon(r)){
+    const d = lauf.runde[r].dims[dim];
+    if(d && d.e !== null && d.z !== -1) liste.push({dim, e:d.e});
+  }
+  liste.sort((a, b) => b.e - a.e);
+  if(!liste.length) return [];
+  const grenze = liste[Math.min(1, liste.length - 1)].e;
+  return liste.filter(x => x.e >= grenze).slice(0, 3);
+}
+
+function dcKraftHtml(k){
+  const [emoji, satz] = DC_KRAFT[k.dim] || ["⭐", "Du hast richtig mitgedacht."];
+  const titel = (DENKCHECK.dimensionen[k.dim] || {}).titel || k.dim;
+  return `<div class="dc-kraft"><span class="dc-e">${emoji}</span>
+      <div><b>${esc(titel)}</b><div class="muted">${esc(satz)}</div></div></div>`;
+}
+
+const dcLobText = lauf => {
+  const k = dcSuperkraefte(lauf);
+  return k.length ? "Das sind deine Superkräfte: " + k.map(x =>
+    ((DENKCHECK.dimensionen[x.dim] || {}).titel || "") + ". " + (DC_KRAFT[x.dim] || ["", ""])[1]).join(" ")
+    : "Du hast richtig gut mitgedacht!";
+};
+
+/* ------------------------------------------------------------------ Ansicht */
+VIEWS.denkcheck = function(){
+  const o = view.opts, lauf = o.lauf || dcOffenerLauf() || dcLetzterFertiger();
+  const kopf = `<div class="row" style="align-items:center;gap:12px;padding:16px 0 12px">
+      <button class="btn" onclick="go('home')">←</button>
+      <h2 style="margin:0">🧭 Denk-Check</h2></div>`;
+
+  if(o.phase === "intro"){
+    const text = dcIntroText(o.runde, o.weiter);
+    return kopf + `<div class="card center" style="margin-bottom:12px">
+        <div style="font-size:54px;line-height:1.1;margin-bottom:6px">🧭</div>
+        <h2>${o.runde === "B" ? "Runde B" : "Runde A"}</h2>
+        <div style="font-size:17px;line-height:1.55;text-align:left;margin-top:8px">${esc(text)}</div>
+        ${readBtn(text)}
+      </div>
+      <button class="btn primary wide" style="min-height:62px" onclick="dcLos('${o.runde}')">
+        ▶ ${o.weiter ? "Weiter geht's" : "Los geht's"}</button>`;
+  }
+
+  // Zwischenstand nach Runde A und Ergebnis nach Runde B: dieselbe Ansicht,
+  // dasselbe Prinzip — nur Stärken, keine Zahlen, kein Wort über Schwächen.
+  const fertig = o.phase === "ergebnis";
+  const kraefte = dcSuperkraefte(lauf);
+  const lob = dcLobText(lauf);
+  if(S.settings.speech && !o.gesprochen){
+    o.gesprochen = true;
+    setTimeout(() => { if(view.name === "denkcheck") speak(lob); }, 500);
+  }
+  return kopf + `<div class="card center" style="margin-bottom:12px">
+      <div style="font-size:54px;line-height:1.1;margin-bottom:6px">${fertig ? "🏆" : "🎉"}</div>
+      <h2>${fertig ? "Deine Superkräfte" : "Runde " + o.runde + " geschafft!"}</h2>
+      ${kraefte.length ? `<div class="muted" style="margin-bottom:8px">
+        ${fertig ? "Darin bist du richtig stark:" : "Das sieht bis jetzt richtig stark aus:"}</div>
+        ${kraefte.map(dcKraftHtml).join("")}`
+        : `<div style="margin:8px 0">Du hast richtig gut mitgedacht!</div>`}
+      ${readBtn(lob)}
+      <div class="tip" style="text-align:center">🦊 ${esc(gefName())} freut sich riesig mit dir!</div>
+      ${fertig ? `<div class="muted" style="font-size:14.5px;margin-top:10px">
+        Mit diesen Rätseln sucht dir MathCraft jetzt passende Aufgaben aus.</div>` : ""}
+    </div>` +
+    (!fertig ? `<button class="btn primary wide" style="min-height:62px;margin-bottom:9px"
+        onclick="dcIntro('B', false)">▶ Weiter mit Runde B</button>
+      <button class="btn wide" onclick="go('home')">Später weitermachen</button>`
+      : `<button class="btn primary wide" style="min-height:62px" onclick="go('home')">Fertig</button>`);
+};
+
+/* Die Karte auf der Startseite. */
+function dcKarte(){
+  if(!dcFaellig()) return "";
+  const lauf = dcOffenerLauf();
+  const r = lauf ? dcNaechsteRunde(lauf) : "A";
+  const stand = lauf && dcZaehlung(lauf, r).beantwortet > 0 ? `<div class="dc-sub">Weiter bei Runde ${r}</div>`
+    : lauf && r === "B" ? `<div class="dc-sub">Weiter bei Runde B</div>` : "";
+  return `<button class="btn wide dc-karte" onclick="dcOeffnen()">
+      <span class="dc-e">🧭</span>
+      <span class="dc-txt"><b>Denk-Check — finde deine Superkräfte</b>
+        <span class="dc-sub">(2 kurze Runden)</span>${stand}</span></button>`;
+}
+
+/* Der Eintrag in den Einstellungen — auch für eine vorzeitige Wiederholung. */
+function dcEinstellung(){
+  if(!DENKCHECK || S.settings.modus !== "v2") return "";
+  const lauf = dcOffenerLauf(), fertig = dcLetzterFertiger();
+  const datum = fertig ? new Date(fertig.fertig).toLocaleDateString("de-DE") : "";
+  const text = lauf ? "Du bist mittendrin — hier geht es an derselben Stelle weiter."
+    : fertig ? `Zuletzt gemacht am ${datum}. Du kannst ihn jederzeit noch einmal machen; nach etwa drei Monaten ist ein guter Zeitpunkt.`
+    : "Zwei kurze Runden mit kleinen Rätseln. Sie zeigen, was dir besonders liegt.";
+  return `<div class="card" style="margin-bottom:12px">
+      <h3>🧭 Denk-Check</h3>
+      <div class="muted" style="font-size:14.5px;margin-bottom:8px">${esc(text)}</div>
+      <button class="btn wide" onclick="dcOeffnen()">${lauf ? "▶ Weitermachen"
+        : fertig ? "🔁 Noch einmal machen" : "▶ Starten"}</button>
+    </div>`;
+}
 </script>
 
 <script>
@@ -3784,9 +4580,18 @@ function mountSession(){
   // erscheinen — bei Logikgittern deckt das Rahmengeschichte, alle Hinweise
   // und die Frage ab (logikVorlesetext()), nicht nur ein einzelnes t.q.
   const t = curTask();
+  // Merkbild: der Zeitgeber läuft ab dem ersten Zeigen und wird nur einmal gesetzt.
+  if(t.merken_ms > 0 && !SESS.answered && SESS.merkPhase !== "weg" && !SESS.merkTimer){
+    const rest = Math.max(0, t.merken_ms - (Date.now() - (SESS.merkStart || Date.now())));
+    SESS.merkTimer = setTimeout(merkeAus, rest);
+  }
+  // Im Denk-Check wird jede Aufgabe vorgelesen (V3/G4: „alles vorgelesen“); sonst
+  // nur, was lang ist oder nicht aus einem kurzen Satz besteht. Bei legen stehen
+  // die Regeln im Satz selbst.
   if(!SESS.answered && SESS.spokenFor !== SESS.i && S.settings.speech
-     && (t.type === "mehrschritt" || t.type === "logikgitter" || t.type === "roboter"
-         || t.type === "positionen" || String(t.q||"").length > 70)){
+     && (SESS.kind === "denkcheck" || t.type === "mehrschritt" || t.type === "logikgitter"
+         || t.type === "roboter" || t.type === "positionen" || t.type === "legen"
+         || String(t.q||"").length > 70)){
     SESS.spokenFor = SESS.i;
     setTimeout(() => speak(
       t.type === "logikgitter" ? logikVorlesetext(t) :

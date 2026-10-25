@@ -9,27 +9,26 @@ Geprüft wird:
      (crc32 über die normalisierte Kette) — die JS-Seite läuft dabei echt im
      Browser gegen die gebaute index.html, nicht nachgebaut.
   2. Die /audio-Route liefert eine hingelegte Testdatei mit korrektem
-     Content-Type und Cache-Header aus und weist ungültige Pfade ab.
+     Content-Type und Cache-Header aus und weist ungültige Pfade ab. Der Dienst
+     spricht seit der Sicherheitsumstellung nur noch HTTPS; ihn startet
+     HttpsDienst aus eltern_test.py (localhost, Dummy-Geheimnisse, wie in
+     wunsch_test.py).
   3. speak() versucht bei gewählter Stimme die richtige URL und fällt bei
      einem Abspielfehler auf die Systemstimme (speechSynthesis) zurück.
   4. waehleUnit(true) liefert ein anderes Paket als waehleUnit(false), wenn
      ein "jetzt"-Wunsch zufällig genau das Paket trifft, das der Normal-Pfad
      ohnehin gewählt hätte — außer es gäbe gar kein anderes Paket mehr.
 """
-import os
 import shutil
 import socket
-import subprocess
 import sys
 import tempfile
-import time
-import urllib.error
-import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import testhilfe as T
 import tts_erzeugen as TTS
+from eltern_test import HttpsDienst
 
 ROOT = Path(__file__).resolve().parent.parent
 APP = ROOT / "index.html"
@@ -52,24 +51,6 @@ def frei(port):
         return False
     finally:
         s.close()
-
-
-def warte_auf_dienst(url, sekunden=15):
-    for _ in range(sekunden * 5):
-        try:
-            urllib.request.urlopen(url, timeout=1)
-            return True
-        except Exception:
-            time.sleep(.2)
-    return False
-
-
-def status_von(url):
-    try:
-        with urllib.request.urlopen(url, timeout=5) as r:
-            return r.status
-    except urllib.error.HTTPError as e:
-        return e.code
 
 
 # 20 Beispieltexte für die Audio-ID, mit Umlauten, ß, Satzzeichen und
@@ -143,11 +124,49 @@ def teste_im_browser():
         page.wait_for_timeout(200)
         gemessen = page.evaluate("() => ({url: window.__url, text: window.__systemText})")
         erwartete_id = TTS.audio_id("Testsatz für Puck")
-        erwartete_url = f"http://127.0.0.1:9/audio/puck/{erwartete_id}.opus"
+        # Die App spricht den Dienst nur noch über HTTPS an (serverUrl()), auch bei
+        # einer eingetragenen Adresse ohne Schema.
+        erwartete_url = f"https://127.0.0.1:9/audio/puck/{erwartete_id}.opus"
         add("speak() mit Stimme versucht die richtige URL",
             gemessen["url"] == erwartete_url, f'{gemessen["url"]!r}')
         add("speak() fällt bei einem Abspielfehler auf speechSynthesis zurück",
             gemessen["text"] == "Testsatz für Puck", f'{gemessen["text"]!r}')
+
+        # ------------------------------ (3b) V3-Texte ohne vorproduzierten Clip
+        # Für Legen-Aufgaben und den Denk-Check gibt es (noch) keine Aufnahmen:
+        # der Dienst antwortet 404, und die Systemstimme muss den Satz sprechen.
+        v3 = page.evaluate("""async () => {
+          S = freshState(); S.settings.modus = 'v2'; S.settings.stimme = 'puck';
+          S.settings.speech = true; S.server = '127.0.0.1:9'; save();
+          const gesagt = [], urls = [];
+          window.speechSynthesis.speak = u => gesagt.push(u.text);
+          window.fetch = url => { urls.push(String(url));
+            return Promise.resolve({ok: false, status: 404, blob: () => Promise.reject(new Error('404'))}); };
+          const schlaf = ms => new Promise(r => setTimeout(r, ms));
+          const legen = DATA.units.flatMap(u => u.tasks).find(x => x.type === 'legen');
+          beginSession({kind:'unit', unitId:null, title:'T', intro:'', tasks:[legen]});
+          await schlaf(700);
+          const nachLegen = gesagt.slice();
+          SESS = null; gesagt.length = 0;
+          dcIntro('A', false);
+          await schlaf(900);
+          const nachIntro = gesagt.slice();
+          gesagt.length = 0;
+          dcLos('A');
+          await schlaf(700);
+          const aufgabe = SESS.tasks[SESS.i];
+          return {legenQ: legen.q, nachLegen, intro: dcIntroText('A', false), nachIntro,
+                  dcQ: aufgabe.q, nachDc: gesagt.slice(), urls};
+        }""")
+        add("Legen: der Satz q wird bei fehlendem Clip (404) mit der Systemstimme gesprochen",
+            v3["legenQ"] in v3["nachLegen"], str(v3["nachLegen"])[:90])
+        add("Denk-Check: die Einleitung wird bei fehlendem Clip mit der Systemstimme gesprochen",
+            v3["intro"] in v3["nachIntro"], str(v3["nachIntro"])[:90])
+        add("Denk-Check: jede Aufgabe wird vorgelesen (Systemstimme als Rückfall)",
+            v3["dcQ"] in v3["nachDc"], str(v3["nachDc"])[:90])
+        add("Alle Clip-Anfragen gehen über HTTPS an die kennungsbasierte Route",
+            v3["urls"] and all(u.startswith("https://127.0.0.1:9/audio/puck/") and u.endswith(".opus")
+                               for u in v3["urls"]), str(v3["urls"][:2]))
 
         # ---------------------------------------------------- (4) Auftrag B
         b_erg = page.evaluate("""() => {
@@ -186,42 +205,37 @@ def teste_im_browser():
 
 def teste_audio_route():
     tele = Path(tempfile.mkdtemp(prefix="mathcraft_tts_tele_"))
-    umgebung = dict(os.environ, MC_TELE=str(tele))
-    dienst = subprocess.Popen(
-        [sys.executable, str(ROOT / "tutor/server.py"),
-         "--port", str(PORT), "--host", "127.0.0.1"],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=umgebung)
+    dienst = HttpsDienst(PORT, tele)
 
     testdatei = ROOT / "data" / "audio" / "leda" / "deadbeef.opus"
     testinhalt = b"OggS-Testinhalt-fuer-den-Audio-Routentest"
     try:
-        add("Dienst startet", warte_auf_dienst(f"http://127.0.0.1:{PORT}/health"))
+        add("Dienst startet (HTTPS)", dienst.start())
 
         testdatei.parent.mkdir(parents=True, exist_ok=True)
         testdatei.write_bytes(testinhalt)
 
-        with urllib.request.urlopen(f"http://127.0.0.1:{PORT}/audio/leda/deadbeef.opus") as r:
-            inhalt, kopf = r.read(), r.headers
-        add("Die Audio-Route liefert die hingelegte Testdatei aus", inhalt == testinhalt)
-        add("Content-Type ist audio/ogg", kopf.get("Content-Type", "").startswith("audio/ogg"),
-            kopf.get("Content-Type"))
+        r = dienst.get("/audio/leda/deadbeef.opus")
+        add("Die Audio-Route liefert die hingelegte Testdatei aus",
+            r.status == 200 and r.body == testinhalt, str(r.status))
+        add("Content-Type ist audio/ogg", (r.header.get("Content-Type") or "").startswith("audio/ogg"),
+            r.header.get("Content-Type"))
         add("Cache-Control ist unbegrenzt und inhaltsadressiert",
-            kopf.get("Cache-Control") == "public, max-age=31536000, immutable",
-            kopf.get("Cache-Control"))
+            r.header.get("Cache-Control") == "public, max-age=31536000, immutable",
+            r.header.get("Cache-Control"))
 
         add('Ein Pfadangriff über ".." bei der Stimme wird nicht ausgeliefert',
-            status_von(f"http://127.0.0.1:{PORT}/audio/../deadbeef.opus") != 200)
+            dienst.get("/audio/../deadbeef.opus").status != 200)
         add("Eine Kennung ohne 8-Hex-Form wird abgewiesen",
-            status_von(f"http://127.0.0.1:{PORT}/audio/leda/xyz.opus") == 400)
+            dienst.get("/audio/leda/xyz.opus").status == 400)
         add("Eine falsche Dateiendung wird abgewiesen",
-            status_von(f"http://127.0.0.1:{PORT}/audio/leda/deadbeef.mp3") == 400)
+            dienst.get("/audio/leda/deadbeef.mp3").status == 400)
         add("Großschreibung bei der Stimme wird abgewiesen",
-            status_von(f"http://127.0.0.1:{PORT}/audio/LEDA/deadbeef.opus") == 400)
+            dienst.get("/audio/LEDA/deadbeef.opus").status == 400)
         add("Eine gültige, aber fehlende Kennung ergibt 404",
-            status_von(f"http://127.0.0.1:{PORT}/audio/leda/00000000.opus") == 404)
+            dienst.get("/audio/leda/00000000.opus").status == 404)
     finally:
-        dienst.terminate()
-        dienst.wait(timeout=5)
+        dienst.stop()
         shutil.rmtree(tele, ignore_errors=True)
         try:
             testdatei.unlink()
