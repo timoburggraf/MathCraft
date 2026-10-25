@@ -1,0 +1,149 @@
+{
+ "skill": "log_reihen",
+ "stage": 4,
+ "world": "clash",
+ "title": "Reihenfolge auf der Baustelle",
+ "intro": "In deiner Burg wird überall gebaut – finde heraus, wer wann dran ist.",
+ "tasks": [
+  {
+   "type": "wahl",
+   "q": "Die Mauer ist vor dem Turm fertig. Der Turm ist vor der Mine fertig. Auf welchem Platz wird der Turm fertig?",
+   "opts": [
+    "Platz 1",
+    "Platz 2",
+    "Platz 3",
+    "Platz 4"
+   ],
+   "correct": 1,
+   "check": {
+    "expr": "3-1"
+   },
+   "hint": "Schreibe die drei Namen von links nach rechts auf und schaue, wer in der Mitte landet."
+  },
+  {
+   "type": "zuordnen",
+   "q": "Die Kaserne braucht 4 Tage. Der Turm braucht doppelt so lang. Die Mine braucht 3 Tage weniger als der Turm. Ordne die Bauzeiten zu.",
+   "pairs": [
+    [
+     "Kaserne",
+     "4 Tage"
+    ],
+    [
+     "Turm",
+     "8 Tage"
+    ],
+    [
+     "Mine",
+     "5 Tage"
+    ]
+   ],
+   "hint": "Rechne zuerst den Turm aus, danach kannst du die Mine bestimmen."
+  },
+  {
+   "type": "wahl",
+   "q": "In der Kaserne warten 4 Truppen in einer Reihe. Der Riese steht ganz hinten, der Bogenschütze direkt vor ihm. Auf welchem Platz steht der Bogenschütze?",
+   "opts": [
+    "Platz 1",
+    "Platz 2",
+    "Platz 3",
+    "Platz 4"
+   ],
+   "correct": 2,
+   "check": {
+    "expr": "4-1"
+   },
+   "hint": "Der Riese hat den letzten Platz – direkt davor ist ein Platz weniger."
+  },
+  {
+   "type": "zuordnen",
+   "q": "Vier Truppen warten am Rathaus. Der Riese ist zuerst dran, der Heiler direkt danach. Der Bogenschütze ist Letzter von vier, der Zauberer steht direkt vor ihm. Ordne jedem seinen Platz zu.",
+   "pairs": [
+    [
+     "Riese",
+     "Platz 1"
+    ],
+    [
+     "Heiler",
+     "Platz 2"
+    ],
+    [
+     "Zauberer",
+     "Platz 3"
+    ],
+    [
+     "Bogenschütze",
+     "Platz 4"
+    ]
+   ],
+   "hint": "Fange vorne mit dem Riesen an und arbeite dich nach hinten durch."
+  },
+  {
+   "type": "wahl",
+   "q": "Arbeiter A baut 3 Tage. Arbeiter B braucht 4-mal so lang wie A. Arbeiter C braucht 5 Tage weniger als B. Wie lange baut der, der als Zweiter fertig wird?",
+   "opts": [
+    "5 Tage",
+    "7 Tage",
+    "9 Tage",
+    "12 Tage"
+   ],
+   "correct": 1,
+   "check": {
+    "expr": "3*4-5"
+   },
+   "hint": "Rechne alle drei Zeiten aus und ordne sie von klein nach groß."
+  },
+  {
+   "type": "zuordnen",
+   "q": "Die Falle braucht 2*4 Stunden, die Mine 3*5, der Turm 4*4, die Mauer 5*5. Ordne zu: Platz 1 wird als Erstes fertig.",
+   "pairs": [
+    [
+     "Falle",
+     "Platz 1"
+    ],
+    [
+     "Mine",
+     "Platz 2"
+    ],
+    [
+     "Turm",
+     "Platz 3"
+    ],
+    [
+     "Mauer",
+     "Platz 4"
+    ]
+   ],
+   "hint": "Rechne erst jede Bauzeit aus, dann vergleiche die vier Stundenzahlen."
+  },
+  {
+   "type": "wahl",
+   "q": "Fünf Truppen stehen in einer Reihe. Der Riese steht genau in der Mitte, der Heiler direkt vor dem Riesen. Auf welchem Platz steht der Heiler?",
+   "opts": [
+    "Platz 1",
+    "Platz 2",
+    "Platz 3",
+    "Platz 4"
+   ],
+   "correct": 1,
+   "check": {
+    "expr": "(5-1)/2"
+   },
+   "hint": "Bei fünf Plätzen liegt die Mitte auf Platz 3 – ein Platz davor ist der Heiler."
+  },
+  {
+   "type": "wahl",
+   "q": "Mine A macht 6 Gold pro Stunde und läuft 8 Stunden. Mine B macht 9 Gold in 5 Stunden, Mine C 7 Gold in 7 Stunden. Wie viel Gold hat die Mine auf Platz 2, wenn du von groß nach klein ordnest?",
+   "opts": [
+    "45 Gold",
+    "48 Gold",
+    "49 Gold",
+    "52 Gold"
+   ],
+   "correct": 1,
+   "check": {
+    "expr": "6*8"
+   },
+   "hint": "Rechne für jede Mine Gold pro Stunde mal Stunden und stelle die drei Summen der Größe nach auf."
+  }
+ ]
+}

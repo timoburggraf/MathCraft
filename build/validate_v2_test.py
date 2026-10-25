@@ -107,6 +107,35 @@ ok("disziplin_von() findet die Zuordnungen aus der Tabelle wieder",
 ok("disziplin_von() liefert None für Pre-Lesson-Fertigkeiten",
    D.disziplin_von("zahl_bis20") is None and D.disziplin_von("geo_umfang") is None)
 
+# V3 (ZIELE-V3.md): die fünf Geometrie-Fertigkeiten gehören zu "raum", die
+# umgestellten Bestandsfertigkeiten bleiben in ihrer Disziplin, und curriculum
+# kennt Typ und Stufe wie in G1-G3 beschlossen.
+V3_GEO = ["geo_ansicht", "geo_netzfalten", "geo_flaeche_umfang", "geo_quader", "geo_karte"]
+ok("die fünf V3-Geometrie-Fertigkeiten gehören zur Disziplin 'raum'",
+   all(D.disziplin_von(sid) == "raum" for sid in V3_GEO),
+   str({sid: D.disziplin_von(sid) for sid in V3_GEO}))
+
+ok("die umgestellten Bestandsfertigkeiten bleiben in ihren Disziplinen",
+   D.disziplin_von("komb_reihen") == "kombinatorik" and D.disziplin_von("komb_paare") == "kombinatorik"
+   and D.disziplin_von("log_reihen") == "logik" and D.disziplin_von("must_figur") == "muster")
+
+ok("V3-Geometrie: Stufen und Typen wie in ZIELE-V3 G3",
+   {s["id"]: (s["stage"], s["types"]) for s in C.SKILLS if s["id"] in V3_GEO}
+   == {"geo_ansicht": (4, ["bildwahl"]), "geo_netzfalten": (4, ["bildwahl"]),
+       "geo_flaeche_umfang": (4, ["bildzahl", "zahl"]), "geo_quader": (5, ["bildzahl"]),
+       "geo_karte": (5, ["bildwahl", "bildzahl"])})
+
+ok("komb_reihen liegt auf Stufe 4 und beide Kombinatorik-Fertigkeiten sind legen-Aufgaben",
+   C.stage_of("komb_reihen") == 4 and C.skill("komb_reihen")["types"] == ["legen"]
+   and C.skill("komb_paare")["types"] == ["legen"])
+
+ok("log_reihen ist positionen, must_figur bildzahl",
+   C.skill("log_reihen")["types"] == ["positionen"] and C.skill("must_figur")["types"] == ["bildzahl"])
+
+ok("TASK_TYPES kennt 'legen' und jede Fertigkeit nutzt nur bekannte Typen",
+   "legen" in C.TASK_TYPES and all(t in C.TASK_TYPES for s in C.SKILLS for t in s["types"]),
+   str({s["id"] for s in C.SKILLS for t in s["types"] if t not in C.TASK_TYPES}))
+
 
 # ============================================== Fake-Sprachmodell (offline)
 

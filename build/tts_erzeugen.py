@@ -42,6 +42,9 @@ import curriculum as C
 
 ROOT = Path(__file__).resolve().parent.parent
 UNITS = ROOT / "data" / "units_seed.json"
+# V3 (ZIELE-V3.md, G4): die Aufgaben des Denk-Checks werden vollständig
+# vorgelesen ("alles vorgelesen"), brauchen also auch Clips.
+DENKCHECK = ROOT / "data" / "denkcheck.json"
 AUDIO_DIR = ROOT / "data" / "audio"
 KORPUS = AUDIO_DIR / "korpus.json"
 
@@ -232,6 +235,13 @@ def _statische_oberflaechentexte():
     ]
 
 
+def _lade_denkcheck():
+    """Die Aufgaben des Denk-Checks (leer, wenn data/denkcheck.json fehlt)."""
+    if not DENKCHECK.exists():
+        return []
+    return json.loads(DENKCHECK.read_text("utf-8")).get("aufgaben", [])
+
+
 def sammle_korpus():
     """Alle Texte, die readBtn()/speak() in src/app.html vorlesen kann (bzw.
     laut Auftrag vorlesen könnte, siehe html_zu_sprechtext()) — dedupliziert
@@ -255,73 +265,87 @@ def sammle_korpus():
         if quelle not in vorhanden["quellen"]:
             vorhanden["quellen"].append(quelle)
 
+    def sammle_aufgabe(t, ort, intro="", mit_feedback=True):
+        """Alle Vorlesetexte EINER Aufgabe. `intro` ist die Einleitung des Pakets
+        (Ersatz für eine fehlende Rahmengeschichte), `mit_feedback` schaltet die
+        Feedbacksätze zu: der Denk-Check gibt keine Rückmeldung zu richtig oder
+        falsch (neutral, ZIELE-V3.md), braucht sie also nicht."""
+        typ = t.get("type")
+
+        if typ == "logikgitter":
+            # Kein "q" — Rahmengeschichte, Hinweise und Frage stattdessen
+            # (siehe qLogikgitter()/logikVorlesetext() in src/app.html).
+            rahmen = t.get("rahmen") or intro or ""
+            hinweise = " ".join(h.get("text", "") for h in (t.get("hinweise") or []))
+            frage = t.get("frage_text") or ""
+            if rahmen:
+                hinzu(rahmen, f"{ort}:rahmen")
+            if hinweise:
+                hinzu(hinweise, f"{ort}:hinweise")
+            if frage:
+                hinzu(frage, f"{ort}:frage_text")
+            # Die automatische Gesamtvorlesung beim Erscheinen der Aufgabe
+            # (mountSession() -> logikVorlesetext()) ist ein EIGENER Text.
+            voll = " ".join(x for x in (rahmen, hinweise, frage) if x)
+            if voll:
+                hinzu(voll, f"{ort}:logik_gesamt")
+        elif typ == "positionen":
+            # Wie logikgitter: kein "q" — Rahmen, Hinweise und Frage
+            # stattdessen (siehe qPositionen()/positionenVorlesetext()).
+            rahmen = t.get("rahmen") or intro or ""
+            hinweise = " ".join(h.get("text", "") for h in (t.get("hinweise") or []))
+            frage = t.get("frage_text") or ""
+            if rahmen:
+                hinzu(rahmen, f"{ort}:rahmen")
+            if hinweise:
+                hinzu(hinweise, f"{ort}:hinweise")
+            if frage:
+                hinzu(frage, f"{ort}:frage_text")
+            # Die automatische Gesamtvorlesung beim Erscheinen der Aufgabe
+            # (mountSession() -> positionenVorlesetext()) ist ein EIGENER Text.
+            voll = positionen_vorlesetext(t)
+            if voll:
+                hinzu(voll, f"{ort}:positionen_gesamt")
+        else:
+            # Auch `legen` (V3): q trägt den Auftrag UND die Regelsätze
+            # ("Lege alle Reihenfolgen mit 3 Figuren. Der Golem steht nie ganz
+            # vorne.", legen_kern._frage) — q ist also schon der ganze Vorlesetext.
+            q = t.get("q")
+            if q:
+                hinzu(q, f"{ort}:q")
+            if typ == "entdecken":
+                info = t.get("info")
+                if info:
+                    hinzu(info, f"{ort}:info")
+            if typ == "roboter":
+                # Wie bei logikgitter/positionen: die automatische
+                # Gesamtvorlesung (mountSession() -> roboterVorlesetext())
+                # ist ein EIGENER Text — bei modus "programm" identisch
+                # mit "q" (hinzu() dedupliziert das automatisch über die
+                # Audio-ID), sonst q + gesprochenes Programm.
+                vorlesetext = roboter_vorlesetext(t)
+                if vorlesetext:
+                    hinzu(vorlesetext, f"{ort}:roboter_gesamt")
+
+        # Feedbacksätze je Aufgabe — nicht für "Neu entdecken" (dort gibt
+        # es keine Rückmeldung, siehe qEntdecken()). Siehe html_zu_sprech-
+        # text() für den Vorbehalt, warum das heute noch kein Aufrufer
+        # tatsächlich vorliest.
+        if mit_feedback and typ != "entdecken":
+            loesung = _loesung_html(t)
+            if loesung:
+                text = html_zu_sprechtext(loesung)
+                hinzu(f"{LOB[0]} {text}", f"{ort}:feedback_ok")
+                hinzu(f"{NOPE[0]} {text}", f"{ort}:feedback_falsch")
+
     for u in _lade_einheiten():
         uid = f'{u.get("skill")}@{u.get("stage")}'
         for idx, t in enumerate(u.get("tasks") or []):
-            typ, ort = t.get("type"), f"{uid}#{idx}"
+            sammle_aufgabe(t, f"{uid}#{idx}", u.get("intro") or "")
 
-            if typ == "logikgitter":
-                # Kein "q" — Rahmengeschichte, Hinweise und Frage stattdessen
-                # (siehe qLogikgitter()/logikVorlesetext() in src/app.html).
-                rahmen = t.get("rahmen") or u.get("intro") or ""
-                hinweise = " ".join(h.get("text", "") for h in (t.get("hinweise") or []))
-                frage = t.get("frage_text") or ""
-                if rahmen:
-                    hinzu(rahmen, f"{ort}:rahmen")
-                if hinweise:
-                    hinzu(hinweise, f"{ort}:hinweise")
-                if frage:
-                    hinzu(frage, f"{ort}:frage_text")
-                # Die automatische Gesamtvorlesung beim Erscheinen der Aufgabe
-                # (mountSession() -> logikVorlesetext()) ist ein EIGENER Text.
-                voll = " ".join(x for x in (rahmen, hinweise, frage) if x)
-                if voll:
-                    hinzu(voll, f"{ort}:logik_gesamt")
-            elif typ == "positionen":
-                # Wie logikgitter: kein "q" — Rahmen, Hinweise und Frage
-                # stattdessen (siehe qPositionen()/positionenVorlesetext()).
-                rahmen = t.get("rahmen") or u.get("intro") or ""
-                hinweise = " ".join(h.get("text", "") for h in (t.get("hinweise") or []))
-                frage = t.get("frage_text") or ""
-                if rahmen:
-                    hinzu(rahmen, f"{ort}:rahmen")
-                if hinweise:
-                    hinzu(hinweise, f"{ort}:hinweise")
-                if frage:
-                    hinzu(frage, f"{ort}:frage_text")
-                # Die automatische Gesamtvorlesung beim Erscheinen der Aufgabe
-                # (mountSession() -> positionenVorlesetext()) ist ein EIGENER Text.
-                voll = positionen_vorlesetext(t)
-                if voll:
-                    hinzu(voll, f"{ort}:positionen_gesamt")
-            else:
-                q = t.get("q")
-                if q:
-                    hinzu(q, f"{ort}:q")
-                if typ == "entdecken":
-                    info = t.get("info")
-                    if info:
-                        hinzu(info, f"{ort}:info")
-                if typ == "roboter":
-                    # Wie bei logikgitter/positionen: die automatische
-                    # Gesamtvorlesung (mountSession() -> roboterVorlesetext())
-                    # ist ein EIGENER Text — bei modus "programm" identisch
-                    # mit "q" (hinzu() dedupliziert das automatisch über die
-                    # Audio-ID), sonst q + gesprochenes Programm.
-                    vorlesetext = roboter_vorlesetext(t)
-                    if vorlesetext:
-                        hinzu(vorlesetext, f"{ort}:roboter_gesamt")
-
-            # Feedbacksätze je Aufgabe — nicht für "Neu entdecken" (dort gibt
-            # es keine Rückmeldung, siehe qEntdecken()). Siehe html_zu_sprech-
-            # text() für den Vorbehalt, warum das heute noch kein Aufrufer
-            # tatsächlich vorliest.
-            if typ != "entdecken":
-                loesung = _loesung_html(t)
-                if loesung:
-                    text = html_zu_sprechtext(loesung)
-                    hinzu(f"{LOB[0]} {text}", f"{ort}:feedback_ok")
-                    hinzu(f"{NOPE[0]} {text}", f"{ort}:feedback_falsch")
+    # Der Denk-Check (V3): jede Aufgabe der festen Bank, ohne Feedbacksätze.
+    for a in _lade_denkcheck():
+        sammle_aufgabe(a.get("task") or {}, f'denkcheck:{a.get("id")}', mit_feedback=False)
 
     # "Das hilft dir gleich bei …" (SESS.vorlaufFuer, siehe startUnit()/VIEWS.
     # session in src/app.html) — das Ziel ist ein beliebiger Lehrplan-Eintrag,

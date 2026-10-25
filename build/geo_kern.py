@@ -317,13 +317,22 @@ def _ansicht_richtung(stage, index):
 _ANSICHT_Q = {
     "oben": ["Wie sieht das Gebäude von oben aus? Die linke Wand ist unten.",
              "Du schaust von oben auf das Gebäude. Die linke Wand ist unten.",
-             "Welches Bild zeigt das Gebäude von oben? Die linke Wand ist unten."],
+             "Welches Bild zeigt das Gebäude von oben? Die linke Wand ist unten.",
+             "Ein Vogel fliegt über das Gebäude. Was sieht er? Linke Wand unten.",
+             "Blick von oben auf das Gebäude: Welches Bild stimmt? Linke Wand unten.",
+             "Von oben betrachtet, linke Wand unten: Welches Bild passt?"],
     "vorne": ["Du schaust auf die linke Wand. Welches Bild zeigt sie?",
               "Wie sieht das Gebäude von vorne aus? Schau auf die linke Wand.",
-              "Welches Bild zeigt die linke Wand des Gebäudes?"],
+              "Welches Bild zeigt die linke Wand des Gebäudes?",
+              "Stell dich vor die linke Wand. Was siehst du?",
+              "Welches Bild passt zur linken Wand?",
+              "Von vorne auf die linke Wand geschaut: Welches Bild stimmt?"],
     "rechts": ["Du schaust auf die rechte Wand. Welches Bild zeigt sie?",
                "Wie sieht das Gebäude von rechts aus? Schau auf die rechte Wand.",
-               "Welches Bild zeigt die rechte Wand des Gebäudes?"],
+               "Welches Bild zeigt die rechte Wand des Gebäudes?",
+               "Stell dich vor die rechte Wand. Was siehst du?",
+               "Welches Bild passt zur rechten Wand?",
+               "Von rechts auf die rechte Wand geschaut: Welches Bild stimmt?"],
 }
 _ANSICHT_HINT = {
     "oben": "Welche Felder sind besetzt, wenn du von oben schaust?",
@@ -656,10 +665,16 @@ def _wuerfelbild(farbe):
 
 _NETZ_Q_WUERFEL = ["Welches Netz lässt sich zu einem Würfel falten?",
                    "Aus welchem Netz kannst du einen Würfel falten?",
-                   "Nur eins der Netze faltet sich zum Würfel. Welches?"]
+                   "Nur eins der Netze faltet sich zum Würfel. Welches?",
+                   "Welches Netz wird beim Falten ein Würfel?",
+                   "Drei Netze klappen nicht. Welches wird ein Würfel?",
+                   "Falte im Kopf: Welches Netz ergibt einen Würfel?"]
 _NETZ_Q_GEGEN = ["Was liegt gegenüber {dativ}? Falte das Netz im Kopf.",
                  "Das Netz wird zum Würfel. Was liegt gegenüber {dativ}?",
-                 "Falte im Kopf: Welches Zeichen liegt gegenüber {dativ}?"]
+                 "Falte im Kopf: Welches Zeichen liegt gegenüber {dativ}?",
+                 "Welches Zeichen ist am fertigen Würfel gegenüber {dativ}?",
+                 "Der Würfel ist gefaltet. Was liegt gegenüber {dativ}?",
+                 "Welches Zeichen liegt gegenüber {dativ}?"]
 
 
 def _lage_zufall(rng, form):
@@ -1141,7 +1156,10 @@ def _quader_masse(stage, index):
 
 _QUADER_Q = ["Wie viele Würfel fehlen noch bis zum vollen Quader?",
              "Der gestrichelte Quader soll ganz voll werden. Wie viele Würfel fehlen?",
-             "Wie viele Würfel musst du noch dazulegen, bis der Quader voll ist?"]
+             "Wie viele Würfel musst du noch dazulegen, bis der Quader voll ist?",
+             "Bis zum vollen Quader: Wie viele Würfel fehlen noch?",
+             "Fülle den gestrichelten Quader. Wie viele Würfel brauchst du noch?",
+             "Wie viele Würfel passen noch in den Quader?"]
 
 
 def _erzeuge_quader(rng, stage, index):
@@ -1367,8 +1385,14 @@ def _karte_schritte(rng, stage, index):
 
 
 _WEG_Q = ["Wie viele Schritte sind es vom Anker zum Schatz? Nicht schräg, Felsen umgehen.",
-          "Kürzester Weg vom Anker zum Schatz: Wie viele Schritte? Nicht schräg, nicht über Felsen."]
-_MASSSTAB_Q = "Kürzester Weg ohne Felsen, nicht schräg. 1 Kästchen = {m} m. Wie viele Meter?"
+          "Kürzester Weg vom Anker zum Schatz: Wie viele Schritte? Nicht schräg, nicht über Felsen.",
+          "Vom Anker zum Schatz, ohne Felsen und nicht schräg: wie viele Schritte?",
+          "Wie kurz ist der Weg vom Anker zum Schatz? Felsen umgehen, nicht schräg.",
+          "Zähl die Schritte vom Anker zum Schatz. Nicht schräg, nicht über Felsen.",
+          "Anker zum Schatz: Wie viele Schritte mindestens? Felsen umgehen, nicht schräg."]
+_MASSSTAB_Q = ["Kürzester Weg ohne Felsen, nicht schräg. 1 Kästchen = {m} m. Wie viele Meter?",
+               "1 Kästchen sind {m} m. Wie viele Meter vom Anker zum Schatz? Nicht schräg.",
+               "Wie viele Meter läufst du zum Schatz? 1 Kästchen = {m} m, Felsen umgehen."]
 
 
 def _karte_weg(rng, stage, index, modus):
@@ -1394,7 +1418,7 @@ def _karte_weg(rng, stage, index, modus):
         meter = rng.choice({5: (10,), 6: (10, 20), 7: (10, 20, 5), 8: (10, 20, 5)}[stage])
         kern["meter"] = meter
         kern["anzahl"] = weg * meter
-        q, hint = _MASSSTAB_Q.format(m=meter), "Zähl erst die Kästchen, dann rechne mal so viele Meter."
+        q, hint = _vorlage(_MASSSTAB_Q, index).format(m=meter), "Zähl erst die Kästchen, dann rechne mal so viele Meter."
     else:
         q, hint = _vorlage(_WEG_Q, index), "Zähl die Schritte um die Felsen herum."
     aufgabe = {"type": "bildzahl", "q": q, "svg": _render_karte(n, symbole), "a": kern["anzahl"],

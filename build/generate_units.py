@@ -351,7 +351,7 @@ FOLGEN_REGEL = {
 
 def pfad_von(sid):
     """Welchen Erzeugungspfad eine Fertigkeit nimmt (D4/SPEC_lektionen_v2.md
-    §8): 'logikgitter', 'folgen', 'kern' (die zwölf neuen Denkschule-
+    §8): 'logikgitter', 'folgen', 'kern' (die Denkschule- und V3-
     Fertigkeiten aus kern_pakete.py) oder 'standard' (das bisherige freie
     Sprachmodell). Reine Nachschlagefunktion, kein CLI-Schalter nötig –
     main() nutzt sie sowohl für --dry-run als auch (über make_unit) für den
@@ -359,10 +359,15 @@ def pfad_von(sid):
     """
     if sid == LOGIKGITTER_SKILL:
         return "logikgitter"
-    if sid in FOLGEN_REGEL:
-        return "folgen"
+    # Die Kern-Prüfung kommt VOR der Folgen-Regel: seit V3 (ZIELE-V3.md, G2)
+    # baut kern_pakete.py auch die reinen Zahlenfolgen (must_einfach … must_fibo)
+    # und die Punktmuster von must_figur ohne Sprachmodell-Geschichte. Der alte
+    # 'folgen'-Pfad mit der Verkleidung bleibt für jede Fertigkeit erhalten, die
+    # in FOLGEN_REGEL steht, aber keinen Kern-Bauer hat.
     if KP.hat_kern(sid):
         return "kern"
+    if sid in FOLGEN_REGEL:
+        return "folgen"
     return "standard"
 
 

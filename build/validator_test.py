@@ -19,6 +19,10 @@ import raetsel_kern as K
 import grafik_kern as GK
 import muster_kern as MK
 import algo_kern as AK
+import geo_kern as GEO
+import legen_kern as LK
+import figur_kern as FK
+import kern_pakete as KP
 import validate as V
 
 RESULTS = []
@@ -535,9 +539,16 @@ rejects("bildzahl: Höhe außerhalb 0..4 fällt auf", _hoehe_kaputt, stage=5,
         types=["bildzahl"])
 
 _falsche_art = copy.deepcopy(_bz)
-_falsche_art["kern"]["art"] = "quader"
-rejects("bildzahl: falsche kern.art fällt auf", _falsche_art, stage=5,
-        types=["bildzahl"], expect="wuerfelgebaeude")
+_falsche_art["kern"]["art"] = "zauberei"
+rejects("bildzahl: unbekannte kern.art fällt auf", _falsche_art, stage=5,
+        types=["bildzahl"], expect="unbekannt")
+
+# Seit V3 ist 'quader' eine gültige Art – aber nicht mit den Daten eines
+# Würfelgebäudes: der Prüfer der Art lehnt ab.
+_falsche_art_quader = copy.deepcopy(_bz)
+_falsche_art_quader["kern"]["art"] = "quader"
+rejects("bildzahl: Würfelgebäude-Daten unter kern.art 'quader' fallen auf", _falsche_art_quader,
+        stage=5, types=["bildzahl"], expect="kern lehnt")
 
 _bz_script = copy.deepcopy(_bz)
 _bz_script["svg"] = _bz_script["svg"] + "<script>böse()</script>"
@@ -818,6 +829,282 @@ _ROBOTER_UNIT = {
 p = V.check_unit(_ROBOTER_UNIT)
 ok("sauberes Roboter-Paket geht durch", not p, "; ".join(p[:2]))
 
+
+
+# ======================================================= V3: legen, Geometrie, Merkbild
+# (ZIELE-V3.md, G1/G3/G4). Erst der Gegenbeweis: echte Aufgaben aus den Kernen
+# gehen durch; dann je eine absichtlich kaputte Fassung, die abgelehnt werden MUSS.
+
+def _legen(skill="komb_reihen", stage=5, index=0, seed=21):
+    return LK.baue_aufgabe(skill, stage, index, seed)
+
+
+def _geo(skill, stage, index, seed=22):
+    return GEO.baue_aufgabe(skill, stage, index, seed)
+
+
+_L = _legen()
+accepts("legen · Reihenfolgen mit Regeln gehen durch", _L, stage=5, types=["legen"])
+accepts("legen · Modus zaehlen geht durch", _legen("komb_reihen", 5, 4), stage=5, types=["legen"])
+accepts("legen · Auswahl (ungeordnet) geht durch", _legen("komb_paare", 4, 2), stage=4,
+        types=["legen"])
+_alle_legen = [(sk, st, i) for (sk, st) in LK.PAKETE for i in range(6)]
+_legen_mangel = [f"{sk}@{st}#{i}: {m}" for sk, st, i in _alle_legen
+                 for m in V.check_task(_legen(sk, st, i), st, ["legen"])]
+ok(f"legen · alle {len(_alle_legen)} Paketaufgaben (komb_reihen/komb_paare, Stufe 4 und 5) gehen durch",
+   not _legen_mangel, "; ".join(_legen_mangel[:2]))
+
+_l_a = copy.deepcopy(_L)
+_l_a["a"] = _L["a"] + 1
+rejects("legen: falsche Gesamtzahl a fällt auf", _l_a, stage=5, types=["legen"],
+        expect="stimmt nicht mit kern.anzahl")
+
+_l_kern_anzahl = copy.deepcopy(_L)
+_l_kern_anzahl["a"] = _L["a"] + 1
+_l_kern_anzahl["kern"]["anzahl"] = _L["a"] + 1
+rejects("legen: Kern behauptet eine falsch gezählte Anzahl", _l_kern_anzahl, stage=5,
+        types=["legen"], expect="aufzählung")
+
+_l_regel = copy.deepcopy(_L)
+_l_regel["regeln"][0] = dict(_l_regel["regeln"][0])
+_l_regel["regeln"][0]["a"] = (_l_regel["regeln"][0]["a"] + 1) % len(_l_regel["figuren"])
+rejects("legen: Regel der Aufgabe weicht vom Kern ab", _l_regel, stage=5, types=["legen"],
+        expect="weicht vom kern ab")
+
+_l_regel_kern = copy.deepcopy(_L)
+_l_regel_kern["regeln"] = []
+_l_regel_kern["kern"]["regeln"] = []
+rejects("legen: Regel gestrichen, Zahl bleibt – die Aufzählung widerspricht", _l_regel_kern,
+        stage=5, types=["legen"], expect="aufzählung")
+
+_l_art = copy.deepcopy(_L)
+_l_art["regeln"][0]["art"] = "zauberei"
+_l_art["kern"]["regeln"][0]["art"] = "zauberei"
+rejects("legen: unbekannte Regelart fällt auf", _l_art, stage=5, types=["legen"],
+        expect="unbekannte regelart")
+
+_l_modus_art = copy.deepcopy(_legen("komb_paare", 5, 0))
+_l_modus_art["regeln"] = [{"art": "nebeneinander", "a": 0, "b": 1}]
+_l_modus_art["kern"]["regeln"] = [{"art": "nebeneinander", "a": 0, "b": 1}]
+rejects("legen: Reihenfolge-Regel in einer Auswahl-Aufgabe fällt auf", _l_modus_art, stage=5,
+        types=["legen"], expect="ungeordneten")
+
+_l_index = copy.deepcopy(_L)
+_l_index["regeln"][0]["a"] = 9
+_l_index["kern"]["regeln"][0]["a"] = 9
+rejects("legen: Regel zeigt auf eine Figur, die es nicht gibt", _l_index, stage=5,
+        types=["legen"], expect="zeigt auf keine figur")
+
+_l_modus = copy.deepcopy(_L)
+_l_modus["modus"] = "sofort"
+rejects("legen: unbekannter Modus fällt auf", _l_modus, stage=5, types=["legen"],
+        expect="weder 'alle' noch 'zaehlen'")
+
+_l_viele = copy.deepcopy(_legen("komb_reihen", 5, 5))     # 5 Figuren, 120 Anordnungen
+_l_viele["modus"] = "alle"
+rejects("legen: Modus 'alle' bei 120 Anordnungen fällt auf", _l_viele, stage=5, types=["legen"],
+        expect="nur bei 2..8")
+
+_l_figuren = copy.deepcopy(_L)
+_l_figuren["figuren"] = _l_figuren["figuren"][:-1]
+rejects("legen: zu wenige Figuren für den Kern fallen auf", _l_figuren, stage=5, types=["legen"],
+        expect="figuren")
+
+_l_doppelt = copy.deepcopy(_L)
+_l_doppelt["figuren"][1] = dict(_l_doppelt["figuren"][0])
+rejects("legen: dieselbe Figur zweimal fällt auf", _l_doppelt, stage=5, types=["legen"],
+        expect="zweimal")
+
+_l_fremd = copy.deepcopy(_L)
+_l_fremd["figuren"][0] = {"name": "Drachenlord", "bild": "🐉"}
+rejects("legen: Figur außerhalb des Vorrats fällt auf", _l_fremd, stage=5, types=["legen"],
+        expect="vorrat")
+
+_l_ohne_bild = copy.deepcopy(_L)
+del _l_ohne_bild["figuren"][0]["bild"]
+rejects("legen: Figur ohne Bild fällt auf", _l_ohne_bild, stage=5, types=["legen"],
+        expect="namen und ein bild")
+
+_l_plaetze = copy.deepcopy(_L)
+_l_plaetze["plaetze"] = len(_L["figuren"]) + 1
+rejects("legen: mehr Plätze als Figuren fällt auf", _l_plaetze, stage=5, types=["legen"],
+        expect="plaetze")
+
+_l_geordnet = copy.deepcopy(_L)
+_l_geordnet["geordnet"] = "ja"
+rejects("legen: geordnet kein Wahrheitswert fällt auf", _l_geordnet, stage=5, types=["legen"],
+        expect="geordnet")
+
+_l_ohne_kern = copy.deepcopy(_L)
+del _l_ohne_kern["kern"]
+rejects("legen: ohne Kern fällt auf", _l_ohne_kern, stage=5, types=["legen"], expect="kern")
+
+_l_text = copy.deepcopy(_L)
+_l_text["q"] = _L["q"] + " [TODO]"
+rejects("legen: Platzhalter im Text fällt auf", _l_text, stage=5, types=["legen"],
+        expect="platzhalter")
+
+_l_typ = {"type": "zahl", "q": "Wie viele Reihenfolgen gibt es?", "a": 6, "check": {"expr": "3*2"}}
+rejects("legen-Fertigkeit: eine zahl-Aufgabe ist nicht vorgesehen", _l_typ, stage=4,
+        types=["legen"], expect="nicht vorgesehen")
+
+# ---- Geometrie (geo_kern): bildwahl / bildzahl / zahl mit Kern
+_A = _geo("geo_ansicht", 4, 1)
+_N = _geo("geo_netzfalten", 4, 0)
+_K = _geo("geo_karte", 5, 0)
+_G = _geo("geo_flaeche_umfang", 4, 0)
+_Q = _geo("geo_quader", 5, 0)
+_KW = _geo("geo_karte", 5, 2)
+_R = _geo("geo_flaeche_umfang", 4, 4)
+accepts("bildwahl · Ansicht geht durch", _A, stage=4, types=["bildwahl"])
+accepts("bildwahl · Würfelnetz geht durch", _N, stage=4, types=["bildwahl"])
+accepts("bildwahl · Schatzkarte (Koordinaten) geht durch", _K, stage=5, types=["bildwahl"])
+accepts("bildzahl · Fläche einer Kästchenfigur geht durch", _G, stage=4, types=["bildzahl"])
+accepts("bildzahl · Quader geht durch", _Q, stage=5, types=["bildzahl"])
+accepts("bildzahl · Schatzkarte (Weg) geht durch", _KW, stage=5, types=["bildzahl"])
+accepts("zahl mit Kern · Rechteck-Rätsel (mit Papier) geht durch", _R, stage=4,
+        types=["bildzahl", "zahl"])
+accepts("zahl ohne Kern geht weiter durch (wie bisher)",
+        {"type": "zahl", "q": "Wie viel ist 7 plus 6?", "a": 13, "check": {"expr": "7+6"}})
+
+_a_richtig = copy.deepcopy(_A)
+_a_richtig["richtig"] = (_A["richtig"] + 1) % 4
+_a_richtig["kern"]["richtig"] = (_A["richtig"] + 1) % 4
+rejects("bildwahl: Ansicht mit falscher richtiger Option fällt auf", _a_richtig, stage=4,
+        types=["bildwahl"], expect="kern lehnt")
+
+_a_hoehen = copy.deepcopy(_A)
+_a_hoehen["kern"]["hoehen"][0][0] = 9
+rejects("bildwahl: Ansicht mit kaputter Höhenkarte fällt auf", _a_hoehen, stage=4,
+        types=["bildwahl"], expect="kern lehnt")
+
+_n_richtig = copy.deepcopy(_N)
+_n_richtig["richtig"] = (_N["richtig"] + 1) % 4
+_n_richtig["kern"]["richtig"] = (_N["richtig"] + 1) % 4
+rejects("bildwahl: Netz, das sich nicht faltet, als richtig fällt auf", _n_richtig, stage=4,
+        types=["bildwahl"], expect="kern lehnt")
+
+_k_abw = copy.deepcopy(_K)
+_k_abw["richtig"] = (_K["richtig"] + 1) % 4
+rejects("bildwahl: Karte, richtig weicht vom Kern ab", _k_abw, stage=5, types=["bildwahl"],
+        expect="stimmt nicht mit kern.richtig")
+
+_g_anzahl = copy.deepcopy(_G)
+_g_anzahl["a"] = _G["a"] + 1
+_g_anzahl["kern"]["anzahl"] = _G["a"] + 1
+rejects("bildzahl: Kästchenfigur mit falsch gezählter Fläche fällt auf", _g_anzahl, stage=4,
+        types=["bildzahl"], expect="kern lehnt")
+
+_q_a = copy.deepcopy(_Q)
+_q_a["a"] = _Q["a"] + 1
+rejects("bildzahl: Quader, a weicht vom Kern ab", _q_a, stage=5, types=["bildzahl"],
+        expect="stimmt nicht mit kern.anzahl")
+
+_kw_anzahl = copy.deepcopy(_KW)
+_kw_anzahl["a"] = _KW["a"] + 2
+_kw_anzahl["kern"]["anzahl"] = _KW["a"] + 2
+rejects("bildzahl: Karte mit falschem kürzestem Weg fällt auf", _kw_anzahl, stage=5,
+        types=["bildzahl"], expect="kern lehnt")
+
+_r_anzahl = copy.deepcopy(_R)
+_r_anzahl["a"] = _R["a"] + 1
+rejects("zahl mit Kern: a weicht vom Kern ab", _r_anzahl, stage=4, types=["zahl"],
+        expect="stimmt nicht mit kern.anzahl")
+
+_r_kern_falsch = copy.deepcopy(_R)
+_r_kern_falsch["a"] = _R["a"] + 1
+_r_kern_falsch["kern"]["anzahl"] = _R["a"] + 1
+_r_kern_falsch["check"] = {"expr": str(_R["a"] + 1)}
+rejects("zahl mit Kern: falsch durchprobiertes Rätsel fällt auf", _r_kern_falsch, stage=4,
+        types=["zahl"], expect="kern lehnt")
+
+_r_art = copy.deepcopy(_R)
+_r_art["kern"]["art"] = "zauberei"
+rejects("zahl mit Kern: unbekannte kern.art fällt auf", _r_art, stage=4, types=["zahl"],
+        expect="unbekannte kern.art")
+
+_r_kern_kein_objekt = copy.deepcopy(_R)
+_r_kern_kein_objekt["kern"] = "oje"
+rejects("zahl mit Kern: Kern kein Objekt fällt auf", _r_kern_kein_objekt, stage=4,
+        types=["zahl"], expect="kein objekt")
+
+_a_art = copy.deepcopy(_A)
+_a_art["kern"]["art"] = "hexagon"
+rejects("bildwahl: unbekannte V3-Art fällt auf", _a_art, stage=4, types=["bildwahl"],
+        expect="unbekannte kern.art")
+
+_q_in_bildwahl = copy.deepcopy(_Q)
+_q_in_bildwahl["type"] = "bildwahl"
+_q_in_bildwahl["optionen_svg"] = [_Q["svg"]] * 4
+_q_in_bildwahl["richtig"] = 0
+rejects("bildwahl: eine Zahl-Art (quader) gehört nicht in eine Auswahlaufgabe", _q_in_bildwahl,
+        stage=5, types=["bildwahl"], expect="kein 'richtig'")
+
+_a_in_bildzahl = copy.deepcopy(_A)
+_a_in_bildzahl["type"] = "bildzahl"
+_a_in_bildzahl["a"] = 3
+for k in ("optionen_svg", "richtig"):
+    del _a_in_bildzahl[k]
+rejects("bildzahl: eine Auswahl-Art (ansicht) gehört nicht in eine Zahlaufgabe", _a_in_bildzahl,
+        stage=4, types=["bildzahl"], expect="keine 'anzahl'")
+
+# ---- Punktmuster (bildzahl) und Merkbild (bildwahl mit merken_ms)
+_P = FK.baue_aufgabe("must_figur", 7, 0, 23)
+_M = FK.denkcheck_merkbild(5, 24)
+accepts("bildzahl · Punktmuster geht durch", _P, stage=7, types=["bildzahl"])
+accepts("bildwahl · Merkbild mit merken_ms geht durch", _M, stage=5, types=["bildwahl"])
+
+_p_a = copy.deepcopy(_P)
+_p_a["a"] = _P["a"] + 1
+rejects("bildzahl: Punktmuster, a weicht vom Kern ab", _p_a, stage=7, types=["bildzahl"],
+        expect="stimmt nicht mit kern.anzahl")
+
+_p_kern = copy.deepcopy(_P)
+_p_kern["a"] = _P["a"] + 1
+_p_kern["kern"]["anzahl"] = _P["a"] + 1
+rejects("bildzahl: Punktmuster, das nicht zur Formel passt, fällt auf", _p_kern, stage=7,
+        types=["bildzahl"], expect="kern lehnt")
+
+_m_richtig = copy.deepcopy(_M)
+_m_richtig["richtig"] = (_M["richtig"] + 1) % 4
+_m_richtig["kern"]["richtig"] = (_M["richtig"] + 1) % 4
+rejects("bildwahl: Merkbild mit falscher richtiger Option fällt auf", _m_richtig, stage=5,
+        types=["bildwahl"], expect="kern lehnt")
+
+# ---- die neuen optionalen Felder papier und merken_ms
+_papier = copy.deepcopy(_R)
+accepts("papier: true geht durch", dict(_papier, papier=True), stage=4, types=["zahl"])
+rejects("papier: kein Wahrheitswert fällt auf", dict(_papier, papier="ja"), stage=4,
+        types=["zahl"], expect="papier")
+rejects("papier: 1 statt true fällt auf", dict(_papier, papier=1), stage=4, types=["zahl"],
+        expect="papier")
+
+for _ms, _name in ((500, "zu kurz"), (20000, "zu lang"), ("5000", "als Text"), (True, "als bool"),
+                   (5000.5, "als Kommazahl")):
+    rejects(f"merken_ms {_name} fällt auf", dict(_M, merken_ms=_ms), stage=5,
+            types=["bildwahl"], expect="merken_ms")
+accepts("merken_ms=1000 an einer bildwahl-Aufgabe ist als Feld gültig",
+        dict(_A, merken_ms=1000), stage=4, types=["bildwahl"])
+rejects("merken_ms bei bildzahl fällt auf", dict(_P, merken_ms=5000), stage=7,
+        types=["bildzahl"], expect="nur bei bildwahl")
+rejects("Merkbild: merken_ms weicht vom Kern ab", dict(_M, merken_ms=_M["merken_ms"] + 1000),
+        stage=5, types=["bildwahl"], expect="merken_ms")
+
+# ---- ganze V3-Pakete über check_unit (Fertigkeit, Typen, Stufe)
+for _sid, _stage, _wid in (("komb_reihen", 4, "weltraum"), ("geo_karte", 5, "dino"),
+                           ("must_figur", 7, "ninja"), ("log_reihen", 4, "minecraft"),
+                           ("must_rueck", 3, "fussball")):
+    _u, _log = KP.baue_paket(_sid, _stage, _wid)
+    ok(f"V3-Paket {_sid}@{_stage} besteht check_unit", _u is not None and not V.check_unit(_u),
+       "; ".join(_log[-1:]))
+
+_u_falsch, _ = KP.baue_paket("komb_reihen", 4, "weltraum")
+_u_falsch = copy.deepcopy(_u_falsch)
+_u_falsch["tasks"][2] = {"type": "zahl", "q": "Wie viele Reihenfolgen gibt es?", "a": 6,
+                         "check": {"expr": "3*2"}}
+_p = V.check_unit(_u_falsch)
+ok("komb_reihen-Paket mit einer zahl-Aufgabe fällt auf", any("nicht vorgesehen" in x for x in _p),
+   _p[0] if _p else "durchgewinkt")
 
 # ================================================================ ganze Pakete
 

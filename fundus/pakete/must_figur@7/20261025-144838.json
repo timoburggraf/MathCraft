@@ -1,0 +1,73 @@
+{
+ "skill": "must_figur",
+ "stage": 7,
+ "world": "pokemon",
+ "title": "Muster · Sammelmonster",
+ "intro": "Findest du die geheime Regel hinter jeder Reihe?",
+ "tasks": [
+  {
+   "type": "zahl",
+   "q": "Dein Monster legt seine Bonbons auf jeder Stufe als volles Quadrat aus. Welche Zahl kommt als Nächstes?",
+   "a": 25921,
+   "check": {
+    "expr": "25600+321"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "Dein Sammelmonster entwickelt sich weiter, und nach jeder Stufe zeigt die Anzeige neue Kraftpunkte. Welche Zahl kommt als Nächstes?",
+   "a": 88209,
+   "check": {
+    "expr": "87616+593"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "Dein Monster wird stärker, und nach jedem Kampf kommen ein paar Bonbons mehr dazu als beim Kampf davor. Welche Zahl kommt als Nächstes?",
+   "a": 76245,
+   "check": {
+    "expr": "75855+390"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "Dein Sammelmonster steigt Stufe um Stufe auf, und die Bonbons im Beutel werden jedes Mal mehr. Welche Zahl kommt als Nächstes?",
+   "a": 25200,
+   "check": {
+    "expr": "24976+224"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "Dein Sammelmonster legt seine Bonbons bei jeder Entwicklungsstufe zu einem immer größeren Quadrat aus. Welche Zahl kommt als Nächstes?",
+   "a": 17161,
+   "check": {
+    "expr": "16900+261"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "Dein Monster sammelt jeden Tag ein paar Bonbons mehr als am Tag davor, und die App zeigt dir seinen Stand. Welche Zahl kommt als Nächstes?",
+   "a": 595,
+   "check": {
+    "expr": "561+34"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "Nach jedem Tausch steigt dein Bonbon-Vorrat, und die Anzeige im Sammelbuch springt jedes Mal ein Stück weiter. Welche Zahl kommt als Nächstes?",
+   "a": 35511,
+   "check": {
+    "expr": "35245+266"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "Dein Trainerkonto zeigt nach jedem Tausch einen neuen Bonbon-Stand an. Welche Zahl kommt als Nächstes?",
+   "a": 52326,
+   "check": {
+    "expr": "52003+323"
+   }
+  }
+ ]
+}

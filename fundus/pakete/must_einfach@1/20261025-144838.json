@@ -1,0 +1,105 @@
+{
+ "skill": "must_einfach",
+ "stage": 1,
+ "world": "clash",
+ "title": "Bau auf der Burg",
+ "intro": "Deine Burg wächst Stück für Stück – schau genau, wie viel jedes Mal dazukommt.",
+ "tasks": [
+  {
+   "type": "zahl",
+   "q": "Deine Mauer ist 3, 4, 5, 6 Steine hoch gewachsen. Wie hoch ist sie beim nächsten Bau?",
+   "a": 7,
+   "check": {
+    "expr": "6+1"
+   },
+   "hint": "Jedes Mal kommt genau ein Stein dazu."
+  },
+  {
+   "type": "zahl",
+   "q": "Der Goldspeicher füllt sich: 2, 4, 6, 8. Wie viel Gold liegt danach drin?",
+   "a": 10,
+   "check": {
+    "expr": "8+2"
+   },
+   "hint": "Von 2 auf 4 sind es zwei Schritte – immer zwei mehr."
+  },
+  {
+   "type": "wahl",
+   "q": "Deine Truppen sind 5, 6, 7, 8 Mann stark geworden. Wie viele sind es beim nächsten Mal?",
+   "opts": [
+    "9",
+    "10",
+    "4",
+    "11"
+   ],
+   "correct": 0,
+   "check": {
+    "expr": "8+1"
+   },
+   "hint": "Zähle einen einzigen Schritt weiter."
+  },
+  {
+   "type": "wahl",
+   "q": "Das Elixier steigt so: 4, 6, 8, 10. Um wie viel steigt es jedes Mal?",
+   "opts": [
+    "um 1",
+    "um 2",
+    "um 3",
+    "um 4"
+   ],
+   "correct": 1,
+   "check": {
+    "expr": "6-4"
+   },
+   "hint": "Rechne 6 minus 4, dann siehst du den Schritt."
+  },
+  {
+   "type": "zahl",
+   "q": "Im Rathaus warten 11, 13, 15 Arbeiter. Wie viele warten als Nächstes?",
+   "a": 17,
+   "check": {
+    "expr": "15+2"
+   },
+   "hint": "Von 13 auf 15 sind zwei Schritte – mach genauso weiter."
+  },
+  {
+   "type": "wahl",
+   "q": "Die Bauzeit wird länger: 1, 3, 5, 7, 9 Minuten. Wie lang ist die nächste?",
+   "opts": [
+    "10 Minuten",
+    "11 Minuten",
+    "12 Minuten",
+    "13 Minuten"
+   ],
+   "correct": 1,
+   "check": {
+    "expr": "9+2"
+   },
+   "hint": "Alle Zahlen sind ungerade, der Schritt ist 2."
+  },
+  {
+   "type": "wahl",
+   "q": "Auf den Fahnen steht 6, ?, 10, 12. Welche Zahl fehlt in der Mitte?",
+   "opts": [
+    "7",
+    "8",
+    "9",
+    "11"
+   ],
+   "correct": 1,
+   "check": {
+    "expr": "6+2"
+   },
+   "hint": "Prüfe erst, wie groß der Schritt von 10 auf 12 ist."
+  },
+  {
+   "type": "zahl",
+   "q": "Deine Kanonen schießen 5, 7, 9 ... immer zwei mehr. Wie stark ist der siebte Schuss?",
+   "a": 17,
+   "check": {
+    "expr": "5+2+2+2+2+2+2"
+   },
+   "hint": "Zähle die Folge laut weiter und tippe bei jeder Zahl einen Finger mit."
+  }
+ ]
+}

@@ -202,8 +202,8 @@ _S = [
   "Folgen, die sich verdoppeln oder halbieren."),
  ("must_fibo",      "muster", 7, "Zahlen bauen aufeinander",["zahl","wahl"],
   "Folgen, bei denen sich jede Zahl aus den beiden davor ergibt."),
- ("must_figur",     "muster", 7, "Figurierte Zahlen",      ["zahl","gitter"],
-  "Dreieckszahlen und Quadratzahlen als wachsende Muster erkennen."),
+ ("must_figur",     "muster", 7, "Figurierte Zahlen",      ["bildzahl"],
+  "Punktmuster, die Bild für Bild wachsen: die Regel erkennen und ein weit entferntes Bild vorhersagen."),
  ("must_matrix",     "muster", 4, "Bildmatrix",             ["bildwahl"],
   "In einem 3×3-Bildmuster die Regeln erkennen und das fehlende Bild finden."),
  ("must_analogie",   "muster", 6, "Analogien",              ["bildwahl"],
@@ -232,14 +232,27 @@ _S = [
   "Eine Figur gedanklich drehen und das richtige Bild erkennen."),
  ("geo_wuerfel",    "geo",    5, "Würfelgebäude",          ["bildzahl"],
   "Würfel in einem Gebäude zählen, auch die verdeckten."),
+ # V3 (ZIELE-V3.md, G3): Geometrie der Klassen 3-5, deterministisch aus
+ # geo_kern.py. Aufgaben mit Papier-Hinweis ("papier": true) sind die einzigen,
+ # bei denen Skizzen ausdrücklich erlaubt sind; die Zahlen bleiben klein.
+ ("geo_ansicht",    "geo",    4, "Gebäude von allen Seiten", ["bildwahl"],
+  "Ein Würfelgebäude von oben, von vorne und von rechts im Kopf betrachten und die passende Ansicht erkennen."),
+ ("geo_netzfalten", "geo",    4, "Netze falten",           ["bildwahl"],
+  "Erkennen, welches Netz sich zu einem Würfel falten lässt und welche Fläche gegenüberliegt."),
+ ("geo_flaeche_umfang","geo", 4, "Fläche und Umfang",      ["bildzahl","zahl"],
+  "Fläche und Umfang von Kästchenfiguren bestimmen; Rechtecke mit vorgegebener Fläche oder vorgegebenem Umfang finden (Papier erlaubt)."),
+ ("geo_quader",     "geo",    5, "Quader füllen",          ["bildzahl"],
+  "Zählen, wie viele Würfel bis zum vollen Quader fehlen."),
+ ("geo_karte",      "geo",    5, "Schatzkarte",            ["bildwahl","bildzahl"],
+  "Auf einer Schatzkarte Wege und Orte lesen, den kürzesten Weg finden und mit dem Maßstab rechnen (Papier erlaubt)."),
 
  # ---- Knobelwelt ----------------------------------------------------------
  ("log_paare",      "logik",  2, "Was passt zusammen?",    ["zuordnen","wahl"],
   "Einfache Zuordnungen nach einer erkennbaren Regel."),
  ("log_waage",      "logik",  3, "Die Waage",              ["zahl","wahl"],
   "Gleichgewichtsaufgaben: Wie viele Klötze wiegen gleich viel?"),
- ("log_reihen",     "logik",  4, "Wer steht wo?",          ["wahl","zuordnen"],
-  "Aus zwei bis drei Hinweisen die richtige Reihenfolge ableiten."),
+ ("log_reihen",     "logik",  4, "Wer steht wo?",          ["positionen"],
+  "Aus Hinweisen ohne Zahlen die Reihenfolge von drei bis vier Figuren ableiten."),
  ("log_wahrheit",   "logik",  5, "Wahr oder falsch?",      ["wahrfalsch","wahl"],
   "Aussagen über Zahlen auf ihren Wahrheitsgehalt prüfen."),
  ("log_ruecklauf",  "logik",  5, "Rückwärts denken",       ["zahl","mehrschritt"],
@@ -266,10 +279,10 @@ _S = [
   "Programme mit Wiederholungen lesen und ihr Ende vorhersagen."),
 
  # ---- Möglichkeiten -------------------------------------------------------
- ("komb_paare",     "komb",   4, "Kombinationen zählen",   ["zahl","wahl"],
-  "Wie viele Paare lassen sich aus zwei kleinen Mengen bilden?"),
- ("komb_reihen",    "komb",   5, "Reihenfolgen",           ["zahl"],
-  "Wie viele Reihenfolgen gibt es für drei oder vier Dinge?"),
+ ("komb_paare",     "komb",   4, "Kombinationen zählen",   ["legen"],
+  "Paare und Auswahlen aus kleinen Mengen durch Legen finden, alle sammeln und zählen."),
+ ("komb_reihen",    "komb",   4, "Reihenfolgen",           ["legen"],
+  "Alle Reihenfolgen von zwei bis vier Figuren durch Legen finden, auch mit Regeln, und sie zählen."),
  ("komb_wege",      "komb",   6, "Wege zählen",            ["gitter","zahl"],
   "Wege in einem kleinen Gitter zählen, nur nach rechts und unten."),
  ("komb_zufall",    "komb",   6, "Wie wahrscheinlich?",    ["wahl","wahrfalsch"],
@@ -338,12 +351,13 @@ _S = [
 
 SKILLS = [dict(id=i, area=a, stage=s, title=t, types=ty, brief=b) for i, a, s, t, ty, b in _S]
 
-# Alle vorkommenden Aufgabentypen. Die App kennt genau diese zwölf (die
-# ursprünglichen acht plus die vier neuen Denkschule-Typen der Roboterwerkstatt/
-# Raum & Form/Logik: roboter, bildwahl, bildzahl, positionen).
+# Alle vorkommenden Aufgabentypen. Die App kennt genau diese dreizehn (die
+# ursprünglichen acht, die vier Denkschule-Typen der Roboterwerkstatt/
+# Raum & Form/Logik: roboter, bildwahl, bildzahl, positionen, und seit V3
+# `legen`: Figuren auf Plätze legen und alle Anordnungen sammeln).
 TASK_TYPES = ["entdecken", "zahl", "wahl", "wahrfalsch", "ordnen",
               "zuordnen", "mehrschritt", "gitter",
-              "roboter", "bildwahl", "bildzahl", "positionen"]
+              "roboter", "bildwahl", "bildzahl", "positionen", "legen"]
 
 
 # ------------------------------------------------------------- Nachschlagen

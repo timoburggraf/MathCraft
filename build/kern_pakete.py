@@ -24,6 +24,16 @@ Kind").
   .venv/bin/python build/kern_pakete.py --alle --dry-run
       Zeigt nur den Bauplan, ohne zu bauen oder zu schreiben.
 
+  .venv/bin/python build/kern_pakete.py --alle --force --nur geo_karte,must_fibo
+      Beschränkt --alle auf die genannten Fertigkeiten (Komma getrennt). Die
+      Welt rotiert trotzdem über den GESAMTEN Plan, damit eine Fertigkeit
+      immer dieselbe Welt bekommt, egal ob alles oder nur ein Teil gebaut wird.
+
+Seit V3 (ZIELE-V3.md) laufen auch die Geometrie-Fertigkeiten (geo_kern.py),
+die Legeaufgaben (legen_kern.py), die Punktmuster von must_figur
+(figur_kern.py), die reinen Zahlenfolgen (raetsel_kern.erzeuge_folge) und das
+Positionsrätsel von log_reihen über diesen Pfad.
+
 Seeds ausschließlich über zlib.crc32(f"{art}|{skill}|{stage}|{world}|{index}")
 (Leitplanke §0.3) — kein hash(), kein eval(), kein LLM in diesem Pfad.
 """
@@ -43,6 +53,9 @@ import muster_kern as MK
 import raetsel_kern as K
 import spiel_kern as SP
 import algo_kern as AK
+import geo_kern as GEO
+import legen_kern as LK
+import figur_kern as FK
 # generate_units.py importiert seinerseits kern_pakete (pfad_von/make_unit) —
 # um den daraus entstehenden Ringimport nie zum Problem zu machen, wird
 # generate_units hier bewusst erst innerhalb von main() geladen, nicht auf
@@ -467,7 +480,23 @@ def _positionen_hinweistext(typ, a_nom, b_dat=None, c_dat=None):
 
 def _bauer_log_position(stage, wid, index):
     n = 4 if stage == 5 else 5   # SPEC §6: Stufe 5 -> n=4, Stufe 6 -> n=5
-    seed = _seed("position", "log_position", stage, wid, index)
+    return positionen_aufgabe("log_position", n, stage, wid, index)
+
+
+def _bauer_log_reihen(stage, wid, index):
+    """log_reihen (V3, ZIELE-V3.md G2): dasselbe Positionsrätsel wie
+    log_position, aber mit weniger Figuren, weil die Fertigkeit eine Stufe
+    früher liegt: Stufe 4 -> drei, Stufe 5 -> vier Figuren. Die Denktiefe
+    steigt dazu mit dem Index (mehr und schwierigere Hinweise)."""
+    n = 3 if stage == 4 else 4
+    return positionen_aufgabe("log_reihen", n, stage, wid, index)
+
+
+def positionen_aufgabe(sid, n, stage, wid, index):
+    """Das Positionsrätsel mit n Figuren (3..5). `sid` und `index` gehen nur in
+    den Seed ein; `index` ist zugleich die Schwierigkeit (0..5) des Kerns. Öffentlich,
+    weil auch der Denk-Check (denkcheck_bank.py) dasselbe Rätsel braucht."""
+    seed = _seed("position", sid, stage, wid, index)
     rollen = THEMEN[wid]["rollen"][:n]
     namen = [r["nom"] for r in rollen]
 
@@ -749,6 +778,172 @@ def _bauer_algo_maschine(stage, wid, index):
     return {"type": "zahl", "q": q, "a": erz["antwort"], "check": {"expr": erz["term"]}, "hint": hint}
 
 
+# ================================================================= V3-Bauer
+# Ab hier die Bauer der V3 (ZIELE-V3.md): Geometrie, Legen, Punktmuster und
+# reine Zahlenfolgen. Sie tragen zusätzlich einen Wiederholungsparameter
+# `versuch`: Gleicht der Fragetext einer Aufgabe zufällig dem einer anderen im
+# selben Paket (check_unit lehnt das ab), würfelt baue_paket sie mit einem
+# anderen, ebenfalls festen Seed neu — Versuch 0 ist immer der Grundseed.
+
+def _mit_versuch(fn):
+    """Markiert einen Bauer als wiederholbar (siehe baue_paket)."""
+    fn.mit_versuch = True
+    return fn
+
+
+def _seed_index(index, versuch):
+    """Der Index im Seed-Text: bei Versuch 0 unverändert (derselbe Aufruf
+    liefert dasselbe Paket wie ohne Wiederholungslogik), sonst mit Marke."""
+    return index if versuch == 0 else f"{index}#{versuch}"
+
+
+def _geo_bauer(sid):
+    @_mit_versuch
+    def bauer(stage, wid, index, versuch=0):
+        seed = _seed("geo", sid, stage, wid, _seed_index(index, versuch))
+        return GEO.baue_aufgabe(sid, stage, index, seed)
+    bauer.__name__ = f"_bauer_{sid}"
+    return bauer
+
+
+def _legen_bauer(sid):
+    @_mit_versuch
+    def bauer(stage, wid, index, versuch=0):
+        seed = _seed("legen", sid, stage, wid, _seed_index(index, versuch))
+        return LK.baue_aufgabe(sid, stage, index, seed)
+    bauer.__name__ = f"_bauer_{sid}"
+    return bauer
+
+
+@_mit_versuch
+def _bauer_must_figur(stage, wid, index, versuch=0):
+    seed = _seed("figur", "must_figur", stage, wid, _seed_index(index, versuch))
+    return FK.baue_aufgabe("must_figur", stage, index, seed)
+
+
+# ------------------------------------------------------- reine Zahlenfolgen
+# Frage ohne Geschichte (ZIELE-V3.md G2): "3, 5, 9, 17, … Welche Zahl kommt als
+# Nächstes?". Glieder, Fortsetzung und Ablenker kommen aus
+# raetsel_kern.erzeuge_folge, der Prüfterm aus generate_units._folge_term —
+# dieselben Helfer wie der alte Folgen-Pfad, nur ohne Sprachmodell-Verkleidung.
+
+# Fertigkeit -> (Regeltyp, kürzeste erlaubte Folge, Bedingung an die Regel).
+# Die Bedingung schärft die Beschreibung der Fertigkeit nach: der Kern würfelt
+# die Schrittweite von +2 bis +9, "Schritt +1 oder +2" (must_einfach) und
+# "Schrittweite finden" (must_schritt) sind aber zwei verschiedene Dinge.
+_FOLGEN = {
+    "must_einfach": ("plus", 4, lambda regel: regel["d"] <= 3),
+    "must_schritt": ("plus", 4, lambda regel: regel["d"] >= 3),
+    "must_rueck": ("plus", 4, lambda regel: True),
+    "must_wechsel": ("wechsel", 5, lambda regel: True),
+    "must_verdopp": ("mal", 4, lambda regel: True),
+    "must_fibo": ("fibo", 5, lambda regel: True),
+}
+
+# Größter Wert, der in einer Folge vorkommt (Glieder, Fortsetzung, Ablenker).
+# Der Zahlenraum der Stufe wäre bei Stufe 5-6 bis 1000 bzw. 10000 und ließe den
+# Kern vierstellige Startwerte würfeln ("9176, 9183, 9191, …"): das wäre
+# Leselast und Rechenlast statt Denkaufgabe (Schwierigkeit ist Denktiefe, nie
+# Zahlengröße, ZIELE-V2.md D2). Die Stufe bleibt die Obergrenze, wo sie kleiner
+# ist (Stufe 1-2: bis 20). Nur das Verdoppeln braucht mehr Luft: bei 100 gäbe es
+# nur eine Handvoll verschiedener Folgen, und die Pakete wiederholten sich.
+FOLGEN_ZAHLENRAUM = 100
+FOLGEN_ZAHLENRAUM_MAL = 1000
+
+_FOLGEN_HINT = {
+    "must_einfach": "Wie viel kommt von Zahl zu Zahl dazu?",
+    "must_schritt": "Wie groß ist der Sprung von einer Zahl zur nächsten?",
+    "must_rueck": "Um wie viel wird es von Zahl zu Zahl weniger?",
+    "must_wechsel": "Die Sprünge wechseln sich ab. Welcher ist als Nächstes dran?",
+    "must_verdopp": "Mit welcher Zahl wird von Glied zu Glied malgenommen?",
+    "must_fibo": "Wie ergibt sich jede Zahl aus den beiden davor?",
+}
+
+
+def _folgen_max(sid, stage):
+    raum = FOLGEN_ZAHLENRAUM_MAL if sid == "must_verdopp" else FOLGEN_ZAHLENRAUM
+    return min(C.max_value(stage), raum)
+
+
+def _folge_frage(glieder):
+    return ", ".join(str(g) for g in glieder) + ", … Welche Zahl kommt als Nächstes?"
+
+
+def _rueck_ablenker(glieder, naechstes, d, max_wert, seed):
+    """Drei falsche Fortsetzungen für eine absteigende Folge: typische
+    Kinderfehler zuerst (um eins daneben, Sprung vergessen, Sprung doppelt),
+    nie negativ, nie die Lösung."""
+    letztes = glieder[-1]
+    kandidaten = [naechstes - 1, naechstes + 1, letztes, naechstes - d, letztes - 2 * d,
+                  letztes + d, naechstes + 2]
+    gewaehlt = []
+    for k in kandidaten:
+        if k != naechstes and 0 <= k <= max_wert and k not in gewaehlt:
+            gewaehlt.append(k)
+        if len(gewaehlt) == 3:
+            break
+    if len(gewaehlt) < 3:
+        raise ValueError(f"zu wenige Ablenker für {glieder} -> {naechstes}")
+    random.Random(seed).shuffle(gewaehlt)
+    return gewaehlt
+
+
+def _folge_kern(sid, stage, seed_basis, index, versuch):
+    """Sucht (deterministisch, mit wachsendem Seed-Versatz) eine Folge, die
+    lang genug ist und die Bedingung der Fertigkeit erfüllt. Rückgabe: der
+    Kern aus raetsel_kern (für must_rueck: die VORWÄRTS-Folge mit einem Glied
+    mehr, sie wird erst beim Bauen umgedreht)."""
+    import generate_units as GU   # erst hier: Ringimport vermeiden (siehe Kopf)
+    regeltyp, mindest, bedingung = _FOLGEN[sid]
+    max_wert = _folgen_max(sid, stage)
+    for versatz in range(400):
+        seed = seed_basis + 7919 * versuch + versatz
+        try:
+            # Für must_rueck eine Stelle länger: das vorderste Glied der
+            # Vorwärtsfolge ist am Ende die gesuchte Fortsetzung.
+            kern = GU._erzeuge_folge_sicher(regeltyp, seed, max_wert,
+                                            laenge_start=6 if sid == "must_rueck" else 5)
+        except ValueError:
+            continue
+        laenge = len(kern["glieder"]) - (1 if sid == "must_rueck" else 0)
+        if laenge >= mindest and bedingung(kern["regel"]):
+            return kern
+    raise ValueError(f"{sid}@{stage}: keine passende Folge gefunden")
+
+
+def _folgen_bauer(sid):
+    @_mit_versuch
+    def bauer(stage, wid, index, versuch=0):
+        import generate_units as GU
+        seed = _seed("folge", sid, stage, wid, index)
+        kern = _folge_kern(sid, stage, seed, index, versuch)
+        max_wert = _folgen_max(sid, stage)
+        if sid == "must_rueck":
+            vorwaerts = kern["glieder"]
+            if not K.pruefe_folge(vorwaerts, kern["naechstes"], kern["regel"]):
+                raise ValueError(f"{sid}: Kern prüft die eigene Folge nicht")
+            d = kern["regel"]["d"]
+            glieder = vorwaerts[:0:-1]          # absteigend, ohne das vorderste Glied
+            naechstes = vorwaerts[0]
+            term = f"{glieder[-1]}-{d}"
+            ablenker = _rueck_ablenker(glieder, naechstes, d, max_wert, seed + versuch)
+        else:
+            glieder, naechstes = kern["glieder"], kern["naechstes"]
+            term = GU._folge_term(kern)
+            ablenker = kern["ablenker"]
+        q = _folge_frage(glieder)
+        hint = _FOLGEN_HINT[sid]
+        if index % 2 == 0:       # abwechselnd wahl und zahl, wie bisher
+            optionen = [str(naechstes)] + [str(a) for a in ablenker]
+            reihenfolge = list(range(len(optionen)))
+            random.Random(seed + 1).shuffle(reihenfolge)
+            return {"type": "wahl", "q": q, "opts": [optionen[i] for i in reihenfolge],
+                    "correct": reihenfolge.index(0), "check": {"expr": term}, "hint": hint}
+        return {"type": "zahl", "q": q, "a": naechstes, "check": {"expr": term}, "hint": hint}
+    bauer.__name__ = f"_bauer_{sid}"
+    return bauer
+
+
 # --------------------------------------------------------- Titel und Einstieg
 
 _TITEL = {
@@ -759,6 +954,15 @@ _TITEL = {
     "algo_befolgen": "Befehle befolgen", "algo_finden": "Weg programmieren",
     "algo_reparieren": "Fehler reparieren", "algo_maschine": "Zahlenmaschine",
     "algo_schleife": "Wiederholen",
+    # V3 (ZIELE-V3.md)
+    "geo_ansicht": "Von allen Seiten", "geo_netzfalten": "Netze falten",
+    "geo_flaeche_umfang": "Fläche und Umfang", "geo_quader": "Quader füllen",
+    "geo_karte": "Schatzkarte",
+    "komb_reihen": "Reihenfolgen legen", "komb_paare": "Paare und Auswahlen",
+    "must_figur": "Punktmuster", "log_reihen": "Wer steht wo?",
+    "must_einfach": "Was kommt danach?", "must_schritt": "Schrittweite finden",
+    "must_rueck": "Rückwärts zählen", "must_wechsel": "Wechselnde Regel",
+    "must_verdopp": "Verdoppeln", "must_fibo": "Zahlen bauen Zahlen",
 }
 
 # {willkommen} kommt aus THEMEN[wid]["willkommen"] – ein je Welt von Hand
@@ -779,6 +983,22 @@ _INTRO = {
     "algo_reparieren": "{willkommen} Finde den einen falschen Befehl.",
     "algo_maschine": "{willkommen} Knack die Regel der Maschine.",
     "algo_schleife": "{willkommen} Lies Programme mit Wiederholungen.",
+    # V3 (ZIELE-V3.md)
+    "geo_ansicht": "{willkommen} Sieh das Gebäude von oben, vorne und rechts.",
+    "geo_netzfalten": "{willkommen} Falte Netze im Kopf zu Würfeln.",
+    "geo_flaeche_umfang": "{willkommen} Miss Fläche und Umfang. Papier ist erlaubt.",
+    "geo_quader": "{willkommen} Finde heraus, was zum vollen Quader fehlt.",
+    "geo_karte": "{willkommen} Finde den Schatz auf der Karte. Papier ist erlaubt.",
+    "komb_reihen": "{willkommen} Lege alle Reihenfolgen und finde keine doppelt.",
+    "komb_paare": "{willkommen} Lege alle Paare und Auswahlen und zähle sie.",
+    "must_figur": "{willkommen} Erkenne, wie die Punktbilder wachsen.",
+    "log_reihen": "{willkommen} Finde heraus, wer wo in der Reihe steht.",
+    "must_einfach": "{willkommen} Setze die Zahlenreihe fort.",
+    "must_schritt": "{willkommen} Finde den Sprung in der Zahlenreihe.",
+    "must_rueck": "{willkommen} Zähle in der Zahlenreihe rückwärts.",
+    "must_wechsel": "{willkommen} Die Sprünge in der Reihe wechseln sich ab.",
+    "must_verdopp": "{willkommen} Die Zahlen wachsen immer schneller.",
+    "must_fibo": "{willkommen} Jede Zahl entsteht aus den beiden davor.",
 }
 
 
@@ -797,13 +1017,74 @@ KERN_SKILLS = {
     "algo_reparieren": _bauer_algo_reparieren,
     "algo_maschine": _bauer_algo_maschine,
     "algo_schleife": _bauer_algo_schleife,
+    # V3 (ZIELE-V3.md). Die Reihenfolge steht fest: _alle_pakete_plan() lässt
+    # die Welt über den Plan rotieren, neue Einträge gehören ans Ende, damit
+    # die Welten schon gebauter Pakete nicht verrutschen.
+    "geo_ansicht": _geo_bauer("geo_ansicht"),
+    "geo_netzfalten": _geo_bauer("geo_netzfalten"),
+    "geo_flaeche_umfang": _geo_bauer("geo_flaeche_umfang"),
+    "geo_quader": _geo_bauer("geo_quader"),
+    "geo_karte": _geo_bauer("geo_karte"),
+    "komb_reihen": _legen_bauer("komb_reihen"),
+    "komb_paare": _legen_bauer("komb_paare"),
+    "must_figur": _bauer_must_figur,
+    "log_reihen": _bauer_log_reihen,
+    "must_einfach": _folgen_bauer("must_einfach"),
+    "must_schritt": _folgen_bauer("must_schritt"),
+    "must_rueck": _folgen_bauer("must_rueck"),
+    "must_wechsel": _folgen_bauer("must_wechsel"),
+    "must_verdopp": _folgen_bauer("must_verdopp"),
+    "must_fibo": _folgen_bauer("must_fibo"),
 }
+
+# Die V3-Fertigkeiten, die neu gebaut oder auf den Kern umgestellt wurden
+# (bei den umgestellten liegt eine alte Fassung im Bestand: --force + Fundus).
+V3_SKILLS = ("geo_ansicht", "geo_netzfalten", "geo_flaeche_umfang", "geo_quader", "geo_karte",
+             "komb_reihen", "komb_paare", "must_figur", "log_reihen",
+             "must_einfach", "must_schritt", "must_rueck", "must_wechsel", "must_verdopp",
+             "must_fibo")
 
 
 def hat_kern(sid):
     """True, wenn diese Fertigkeit über diesen deterministischen Pfad läuft
     (generate_units.pfad_von() fragt genau das ab)."""
     return sid in KERN_SKILLS
+
+
+VERSUCHE = 12   # höchstens so viele Seeds pro Aufgabe, wenn die Frage schon vorkommt
+
+
+def _frage_von(task):
+    """Der Fragetext, wie check_unit ihn vergleicht (None bei Typen ohne q)."""
+    q = task.get("q") if isinstance(task, dict) else None
+    return q.strip().lower() if isinstance(q, str) else None
+
+
+# Der Geometrie-Kern kennt für manche Fragen nur drei Schablonen, die über den
+# Paket-Index rotieren (geo_kern._vorlage): Aufgabe 0 und 3 lauten dann
+# wortgleich, obwohl die Bilder verschieden sind. check_unit lehnt zwei gleiche
+# Fragen im Paket aber ab, und ein anderer Seed ändert an der Schablone nichts.
+# Deshalb bekommt die zweite (dritte, …) Aufgabe einen kurzen Vorspann; der
+# Kern bleibt unberührt, die Wahrheit steht nicht im Fragetext.
+_VORSPANN = ["Noch eins: ", "Und jetzt: ", "Nächstes Bild: ", "Weiter geht's: ", "Probier das: ",
+             "Zum Schluss: "]
+
+
+def _fragen_unterscheiden(tasks):
+    """Macht wortgleiche Fragen im Paket unterscheidbar (siehe oben).
+    Die erste Aufgabe mit einem Fragetext behält ihn unverändert."""
+    gesehen, neu = set(), []
+    for task in tasks:
+        q = task.get("q") if isinstance(task, dict) else None
+        if isinstance(q, str) and q.strip().lower() in gesehen:
+            for vorspann in _VORSPANN:
+                if (vorspann + q).strip().lower() not in gesehen:
+                    task = dict(task, q=vorspann + q)
+                    break
+        if isinstance(task, dict) and isinstance(task.get("q"), str):
+            gesehen.add(task["q"].strip().lower())
+        neu.append(task)
+    return neu
 
 
 def baue_paket(sid, stage, wid):
@@ -823,7 +1104,20 @@ def baue_paket(sid, stage, wid):
         return None, [f"unbekannte Themenwelt {wid!r}"]
 
     try:
-        tasks = [bauer(stage, wid, index) for index in range(6)]
+        tasks, fragen = [], set()
+        for index in range(6):
+            task = bauer(stage, wid, index)
+            # Zwei Aufgaben mit demselben Fragetext lehnt check_unit ab. Wo der
+            # Bauer wiederholbar ist, wird die doppelte Aufgabe mit einem anderen
+            # (festen) Seed neu gewürfelt, statt das ganze Paket zu verwerfen.
+            if getattr(bauer, "mit_versuch", False):
+                for versuch in range(1, VERSUCHE):
+                    if _frage_von(task) not in fragen:
+                        break
+                    task = bauer(stage, wid, index, versuch=versuch)
+            fragen.add(_frage_von(task))
+            tasks.append(task)
+        tasks = _fragen_unterscheiden(tasks)
     except (ValueError, KeyError) as e:
         return None, [f"{sid}@{stage}·{wid}: Kern konnte keine gültige Aufgabe erzeugen: {e}"]
 
@@ -869,6 +1163,8 @@ def main():
                     help="auch schon vorhandene Pakete ersetzen; die alte Fassung "
                          "wandert dabei in den Fundus, sie geht nicht verloren")
     ap.add_argument("--dry-run", action="store_true", help="nur den Bauplan zeigen")
+    ap.add_argument("--nur", help="mit --alle nur diese Fertigkeiten (Komma getrennt); "
+                                  "die Welt rotiert trotzdem über den ganzen Plan")
     a = ap.parse_args()
 
     # Ein Tippfehler in --world lief bisher bis in ein 'NoneType'-Problem
@@ -879,6 +1175,12 @@ def main():
 
     if a.alle:
         plan = _alle_pakete_plan()
+        if a.nur:
+            nur = {x.strip() for x in a.nur.split(",") if x.strip()}
+            unbekannt = sorted(nur - set(KERN_SKILLS))
+            if unbekannt:
+                raise SystemExit(f"--nur: keine Kern-Fertigkeit: {', '.join(unbekannt)}")
+            plan = [e for e in plan if e[0] in nur]
         if a.klasse:
             band = set(C.klasse_band(a.klasse))
             plan = [e for e in plan if e[1] in band]

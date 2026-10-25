@@ -376,9 +376,12 @@ for (skill, stage, index, seed), (aufgabe, kern) in ALLE.items():
     alle_probleme += pruefe_aufgabe_form(skill, stage, index, seed, aufgabe, kern)
 ok(f"{len(ALLE)} Aufgaben (5 Fertigkeiten x Stufe 3..8 x Index 0..5 x 3 Seeds): Form, Prüfer, "
    f"validate.check_task ohne Mängel", not alle_probleme, "; ".join(alle_probleme[:3]))
-MIT_KERN = sum(1 for a, k in ALLE.values() if a["type"] != "zahl")
-ok("ausgefiltert wird genau eine Meldung je Aufgabe mit Kern: 'kern.art unbekannt' (trägt AP-3 nach)",
-   GEMELDET["filter"] == MIT_KERN, f"{GEMELDET['filter']} von {MIT_KERN} Meldungen ausgefiltert")
+# validate.py kennt die Arten inzwischen: Es darf nichts mehr ausgefiltert werden.
+ok("validate.py kennt alle fünf Arten: keine Meldung musste ausgefiltert werden",
+   GEMELDET["filter"] == 0, f"{GEMELDET['filter']} Meldungen ausgefiltert")
+ok("jede Frage eines Pakets ist anders (genug Schablonen, kein Vorspann nötig)",
+   all(len({ALLE[(sk, st, ix, sd)][0]["q"] for ix in range(6)}) == 6
+       for sk in G.SKILLS for st in range(3, 9) for sd in range(3)))
 
 
 # ============================================================ Stufenhülle (G3)

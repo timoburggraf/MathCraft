@@ -1,0 +1,97 @@
+{
+ "skill": "must_verdopp",
+ "stage": 5,
+ "world": "roblox",
+ "title": "Muster · Baukasten",
+ "intro": "Findest du die geheime Regel hinter jeder Reihe?",
+ "tasks": [
+  {
+   "type": "wahl",
+   "q": "In deinem Obby lädt jeder Freund im nächsten Level dreimal so viele neue Freunde ein. Welche Zahl kommt als Nächstes?",
+   "opts": [
+    "242",
+    "243",
+    "244",
+    "81"
+   ],
+   "correct": 1,
+   "check": {
+    "expr": "81*3"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "In deinem Obby verdoppelt sich der Münzhaufen bei jedem Level, das du schaffst. Welche Zahl kommt als Nächstes?",
+   "a": 224,
+   "check": {
+    "expr": "112*2"
+   }
+  },
+  {
+   "type": "wahl",
+   "q": "Jede Runde im Obby lädt jeder Freund noch einen Freund ein, und die Gruppe wird immer größer. Welche Zahl kommt als Nächstes?",
+   "opts": [
+    "257",
+    "255",
+    "128",
+    "256"
+   ],
+   "correct": 3,
+   "check": {
+    "expr": "128*2"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "In deinem Obby verdreifachen sich die Münzen bei jedem Level, das du schaffst. Welche Zahl kommt als Nächstes?",
+   "a": 486,
+   "check": {
+    "expr": "162*3"
+   }
+  },
+  {
+   "type": "wahl",
+   "q": "In deinem Obby gibt es nach jedem geschafften Abschnitt doppelt so viele Münzen wie davor. Welche Zahl kommt als Nächstes?",
+   "opts": [
+    "321",
+    "160",
+    "319",
+    "320"
+   ],
+   "correct": 3,
+   "check": {
+    "expr": "160*2"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "Jeder Freund, den du in dein Obby einlädst, bringt doppelt so viele Münzen wie der davor. Welche Zahl kommt als Nächstes?",
+   "a": 928,
+   "check": {
+    "expr": "464*2"
+   }
+  },
+  {
+   "type": "wahl",
+   "q": "In deinem Obby gibt jede Etage dreimal so viele Münzen wie die Etage davor. Welche Zahl kommt als Nächstes?",
+   "opts": [
+    "972",
+    "971",
+    "324",
+    "973"
+   ],
+   "correct": 0,
+   "check": {
+    "expr": "324*3"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "Jeder Freund, den du in dein Obby einlädst, verdoppelt deine Münzen. Welche Zahl kommt als Nächstes?",
+   "a": 736,
+   "check": {
+    "expr": "368*2"
+   }
+  }
+ ]
+}

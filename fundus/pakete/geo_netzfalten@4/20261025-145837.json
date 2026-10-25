@@ -1,0 +1,759 @@
+{
+ "skill": "geo_netzfalten",
+ "stage": 4,
+ "world": "weltraum",
+ "title": "Netze falten · Weltraum",
+ "intro": "Willkommen im Weltraum! Falte Netze im Kopf zu Würfeln.",
+ "tasks": [
+  {
+   "type": "bildwahl",
+   "q": "Welches Netz lässt sich zu einem Würfel falten?",
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 104\"><g transform=\"translate(52,69)\"><polygon points=\"0,-15 30,0 0,15 -30,0\" fill=\"none\" stroke=\"#26334a\" stroke-width=\"1\"/><polygon points=\"-30,-34 0,-19 0,15 -30,0\" fill=\"#0d1420\"/><polygon points=\"-30,-34 0,-19 0,15 -30,0\" fill=\"#59c37a\" fill-opacity=\"0.52\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"30,-34 0,-19 0,15 30,0\" fill=\"#0d1420\"/><polygon points=\"30,-34 0,-19 0,15 30,0\" fill=\"#59c37a\" fill-opacity=\"0.78\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"0,-49 30,-34 0,-19 -30,-34\" fill=\"#0d1420\"/><polygon points=\"0,-49 30,-34 0,-19 -30,-34\" fill=\"#59c37a\" fill-opacity=\"1.0\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></g></svg>",
+   "optionen_svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 160 160\"><g transform=\"translate(48,16)\"><rect x=\"0\" y=\"0\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"32\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"64\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"64\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"96\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 160 160\"><g transform=\"translate(16,32)\"><rect x=\"64\" y=\"0\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"96\" y=\"0\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"32\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"32\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"64\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 160 160\"><g transform=\"translate(16,48)\"><rect x=\"32\" y=\"0\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"0\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"96\" y=\"0\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"32\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"32\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 128 128\"><g transform=\"translate(16,16)\"><rect x=\"0\" y=\"0\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"0\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"0\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"32\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"64\" width=\"32\" height=\"32\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>"
+   ],
+   "richtig": 1,
+   "kern": {
+    "art": "netzfalten",
+    "modus": "wuerfel",
+    "optionen": [
+     [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       0
+      ]
+     ],
+     [
+      [
+       0,
+       2
+      ],
+      [
+       0,
+       3
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       1
+      ]
+     ],
+     [
+      [
+       0,
+       1
+      ],
+      [
+       0,
+       2
+      ],
+      [
+       0,
+       3
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ]
+     ],
+     [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       0,
+       2
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       2
+      ]
+     ]
+    ],
+    "richtig": 1,
+    "stufe": 4
+   },
+   "hint": "Stell dir vor, du klappst die Quadrate nacheinander hoch."
+  },
+  {
+   "type": "bildwahl",
+   "q": "Aus welchem Netz kannst du einen Würfel falten?",
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 104\"><g transform=\"translate(52,69)\"><polygon points=\"0,-15 30,0 0,15 -30,0\" fill=\"none\" stroke=\"#26334a\" stroke-width=\"1\"/><polygon points=\"-30,-34 0,-19 0,15 -30,0\" fill=\"#0d1420\"/><polygon points=\"-30,-34 0,-19 0,15 -30,0\" fill=\"#f08b3e\" fill-opacity=\"0.52\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"30,-34 0,-19 0,15 30,0\" fill=\"#0d1420\"/><polygon points=\"30,-34 0,-19 0,15 30,0\" fill=\"#f08b3e\" fill-opacity=\"0.78\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"0,-49 30,-34 0,-19 -30,-34\" fill=\"#0d1420\"/><polygon points=\"0,-49 30,-34 0,-19 -30,-34\" fill=\"#f08b3e\" fill-opacity=\"1.0\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></g></svg>",
+   "optionen_svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 192 192\"><g transform=\"translate(64,16)\"><rect x=\"32\" y=\"0\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"64\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"96\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"128\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"128\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 160 160\"><g transform=\"translate(32,16)\"><rect x=\"32\" y=\"0\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"32\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"32\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"64\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"96\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 192 192\"><g transform=\"translate(16,64)\"><rect x=\"0\" y=\"0\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"0\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"0\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"96\" y=\"0\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"128\" y=\"0\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"32\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 224 224\"><g transform=\"translate(96,16)\"><rect x=\"0\" y=\"0\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"32\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"64\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"96\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"128\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"160\" width=\"32\" height=\"32\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>"
+   ],
+   "richtig": 1,
+   "kern": {
+    "art": "netzfalten",
+    "modus": "wuerfel",
+    "optionen": [
+     [
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ],
+      [
+       4,
+       0
+      ],
+      [
+       4,
+       1
+      ]
+     ],
+     [
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ]
+     ],
+     [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       0,
+       2
+      ],
+      [
+       0,
+       3
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       1,
+       2
+      ]
+     ],
+     [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       4,
+       0
+      ],
+      [
+       5,
+       0
+      ]
+     ]
+    ],
+    "richtig": 1,
+    "stufe": 4
+   },
+   "hint": "Stell dir vor, du klappst die Quadrate nacheinander hoch."
+  },
+  {
+   "type": "bildwahl",
+   "q": "Nur eins der Netze faltet sich zum Würfel. Welches?",
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 104\"><g transform=\"translate(52,69)\"><polygon points=\"0,-15 30,0 0,15 -30,0\" fill=\"none\" stroke=\"#26334a\" stroke-width=\"1\"/><polygon points=\"-30,-34 0,-19 0,15 -30,0\" fill=\"#0d1420\"/><polygon points=\"-30,-34 0,-19 0,15 -30,0\" fill=\"#e9ecef\" fill-opacity=\"0.52\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"30,-34 0,-19 0,15 30,0\" fill=\"#0d1420\"/><polygon points=\"30,-34 0,-19 0,15 30,0\" fill=\"#e9ecef\" fill-opacity=\"0.78\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"0,-49 30,-34 0,-19 -30,-34\" fill=\"#0d1420\"/><polygon points=\"0,-49 30,-34 0,-19 -30,-34\" fill=\"#e9ecef\" fill-opacity=\"1.0\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></g></svg>",
+   "optionen_svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 160 160\"><g transform=\"translate(16,32)\"><rect x=\"0\" y=\"0\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"0\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"96\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"64\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 192 192\"><g transform=\"translate(64,16)\"><rect x=\"0\" y=\"0\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"64\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"96\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"128\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"128\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 160 160\"><g transform=\"translate(48,16)\"><rect x=\"0\" y=\"0\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"64\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"64\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"96\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 128 128\"><g transform=\"translate(16,16)\"><rect x=\"32\" y=\"0\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"64\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"64\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>"
+   ],
+   "richtig": 0,
+   "kern": {
+    "art": "netzfalten",
+    "modus": "wuerfel",
+    "optionen": [
+     [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       2,
+       1
+      ]
+     ],
+     [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       4,
+       0
+      ],
+      [
+       4,
+       1
+      ]
+     ],
+     [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       0
+      ]
+     ],
+     [
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       2,
+       2
+      ]
+     ]
+    ],
+    "richtig": 0,
+    "stufe": 4
+   },
+   "hint": "Stell dir vor, du klappst die Quadrate nacheinander hoch."
+  },
+  {
+   "type": "bildwahl",
+   "q": "Noch eins: Welches Netz lässt sich zu einem Würfel falten?",
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 104\"><g transform=\"translate(52,69)\"><polygon points=\"0,-15 30,0 0,15 -30,0\" fill=\"none\" stroke=\"#26334a\" stroke-width=\"1\"/><polygon points=\"-30,-34 0,-19 0,15 -30,0\" fill=\"#0d1420\"/><polygon points=\"-30,-34 0,-19 0,15 -30,0\" fill=\"#e9ecef\" fill-opacity=\"0.52\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"30,-34 0,-19 0,15 30,0\" fill=\"#0d1420\"/><polygon points=\"30,-34 0,-19 0,15 30,0\" fill=\"#e9ecef\" fill-opacity=\"0.78\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"0,-49 30,-34 0,-19 -30,-34\" fill=\"#0d1420\"/><polygon points=\"0,-49 30,-34 0,-19 -30,-34\" fill=\"#e9ecef\" fill-opacity=\"1.0\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></g></svg>",
+   "optionen_svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 128 128\"><g transform=\"translate(16,16)\"><rect x=\"32\" y=\"0\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"0\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"64\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 128 128\"><g transform=\"translate(16,16)\"><rect x=\"32\" y=\"0\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"0\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"64\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"64\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 160 160\"><g transform=\"translate(32,16)\"><rect x=\"32\" y=\"0\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"64\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"64\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"96\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 128 128\"><g transform=\"translate(16,16)\"><rect x=\"32\" y=\"0\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"0\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"64\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>"
+   ],
+   "richtig": 2,
+   "kern": {
+    "art": "netzfalten",
+    "modus": "wuerfel",
+    "optionen": [
+     [
+      [
+       0,
+       1
+      ],
+      [
+       0,
+       2
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       1
+      ]
+     ],
+     [
+      [
+       0,
+       1
+      ],
+      [
+       0,
+       2
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       2,
+       2
+      ]
+     ],
+     [
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ]
+     ],
+     [
+      [
+       0,
+       1
+      ],
+      [
+       0,
+       2
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       2
+      ]
+     ]
+    ],
+    "richtig": 2,
+    "stufe": 4
+   },
+   "hint": "Stell dir vor, du klappst die Quadrate nacheinander hoch."
+  },
+  {
+   "type": "bildwahl",
+   "q": "Noch eins: Aus welchem Netz kannst du einen Würfel falten?",
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 104\"><g transform=\"translate(52,69)\"><polygon points=\"0,-15 30,0 0,15 -30,0\" fill=\"none\" stroke=\"#26334a\" stroke-width=\"1\"/><polygon points=\"-30,-34 0,-19 0,15 -30,0\" fill=\"#0d1420\"/><polygon points=\"-30,-34 0,-19 0,15 -30,0\" fill=\"#e9ecef\" fill-opacity=\"0.52\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"30,-34 0,-19 0,15 30,0\" fill=\"#0d1420\"/><polygon points=\"30,-34 0,-19 0,15 30,0\" fill=\"#e9ecef\" fill-opacity=\"0.78\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"0,-49 30,-34 0,-19 -30,-34\" fill=\"#0d1420\"/><polygon points=\"0,-49 30,-34 0,-19 -30,-34\" fill=\"#e9ecef\" fill-opacity=\"1.0\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></g></svg>",
+   "optionen_svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 128 128\"><g transform=\"translate(16,16)\"><rect x=\"64\" y=\"0\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"64\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"64\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"64\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 128 128\"><g transform=\"translate(16,16)\"><rect x=\"32\" y=\"0\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"64\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"64\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 160 160\"><g transform=\"translate(16,32)\"><rect x=\"64\" y=\"0\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"96\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"64\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 128 128\"><g transform=\"translate(16,16)\"><rect x=\"0\" y=\"0\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"0\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"32\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"64\" width=\"32\" height=\"32\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>"
+   ],
+   "richtig": 2,
+   "kern": {
+    "art": "netzfalten",
+    "modus": "wuerfel",
+    "optionen": [
+     [
+      [
+       0,
+       2
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       2,
+       2
+      ]
+     ],
+     [
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       2,
+       2
+      ]
+     ],
+     [
+      [
+       0,
+       2
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       2,
+       1
+      ]
+     ],
+     [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       2
+      ]
+     ]
+    ],
+    "richtig": 2,
+    "stufe": 4
+   },
+   "hint": "Stell dir vor, du klappst die Quadrate nacheinander hoch."
+  },
+  {
+   "type": "bildwahl",
+   "q": "Noch eins: Nur eins der Netze faltet sich zum Würfel. Welches?",
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 104\"><g transform=\"translate(52,69)\"><polygon points=\"0,-15 30,0 0,15 -30,0\" fill=\"none\" stroke=\"#26334a\" stroke-width=\"1\"/><polygon points=\"-30,-34 0,-19 0,15 -30,0\" fill=\"#0d1420\"/><polygon points=\"-30,-34 0,-19 0,15 -30,0\" fill=\"#4cc9f0\" fill-opacity=\"0.52\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"30,-34 0,-19 0,15 30,0\" fill=\"#0d1420\"/><polygon points=\"30,-34 0,-19 0,15 30,0\" fill=\"#4cc9f0\" fill-opacity=\"0.78\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"0,-49 30,-34 0,-19 -30,-34\" fill=\"#0d1420\"/><polygon points=\"0,-49 30,-34 0,-19 -30,-34\" fill=\"#4cc9f0\" fill-opacity=\"1.0\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></g></svg>",
+   "optionen_svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 160 160\"><g transform=\"translate(32,16)\"><rect x=\"0\" y=\"0\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"32\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"64\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"96\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"96\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"96\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 128 128\"><g transform=\"translate(16,16)\"><rect x=\"32\" y=\"0\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"32\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"64\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"64\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"64\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 160 160\"><g transform=\"translate(32,16)\"><rect x=\"0\" y=\"0\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"0\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"64\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"96\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"96\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 192 192\"><g transform=\"translate(16,64)\"><rect x=\"128\" y=\"0\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"0\" y=\"32\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"32\" y=\"32\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"64\" y=\"32\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"96\" y=\"32\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/><rect x=\"128\" y=\"32\" width=\"32\" height=\"32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"2\"/></g></svg>"
+   ],
+   "richtig": 2,
+   "kern": {
+    "art": "netzfalten",
+    "modus": "wuerfel",
+    "optionen": [
+     [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       3,
+       1
+      ],
+      [
+       3,
+       2
+      ]
+     ],
+     [
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       2,
+       2
+      ]
+     ],
+     [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ],
+      [
+       3,
+       2
+      ]
+     ],
+     [
+      [
+       0,
+       4
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       1,
+       4
+      ]
+     ]
+    ],
+    "richtig": 2,
+    "stufe": 4
+   },
+   "hint": "Stell dir vor, du klappst die Quadrate nacheinander hoch."
+  }
+ ]
+}

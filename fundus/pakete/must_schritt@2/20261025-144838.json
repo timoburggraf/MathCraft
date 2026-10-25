@@ -1,0 +1,97 @@
+{
+ "skill": "must_schritt",
+ "stage": 2,
+ "world": "fussball",
+ "title": "Muster · Fußball",
+ "intro": "Findest du die geheime Regel hinter jeder Reihe?",
+ "tasks": [
+  {
+   "type": "wahl",
+   "q": "Nach jedem Spieltag schreibt der Trainer die Punkte deines Teams an die Tafel. Welche Zahl kommt als Nächstes?",
+   "opts": [
+    "16",
+    "18",
+    "17",
+    "12"
+   ],
+   "correct": 2,
+   "check": {
+    "expr": "12+5"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "Im Trainingslager schießt du in jeder Runde gleich viele Tore und zählst sie zusammen. Welche Zahl kommt als Nächstes?",
+   "a": 20,
+   "check": {
+    "expr": "15+5"
+   }
+  },
+  {
+   "type": "wahl",
+   "q": "Im Trainingslager schießt du in jeder Runde mehr Tore als davor. Welche Zahl kommt als Nächstes?",
+   "opts": [
+    "19",
+    "20",
+    "17",
+    "12"
+   ],
+   "correct": 1,
+   "check": {
+    "expr": "12+8"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "Im Trainingslager schießt du jeden Tag mehr Tore als am Tag davor. Welche Zahl kommt als Nächstes?",
+   "a": 19,
+   "check": {
+    "expr": "10+9"
+   }
+  },
+  {
+   "type": "wahl",
+   "q": "Im Trainingslager schießt du in jeder Runde ein paar Tore mehr als in der Runde davor. Welche Zahl kommt als Nächstes?",
+   "opts": [
+    "18",
+    "17",
+    "19",
+    "20"
+   ],
+   "correct": 3,
+   "check": {
+    "expr": "17+3"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "Beim Trainingslager schreibt der Trainer nach jeder Woche die Tore deiner Mannschaft an die Tafel. Welche Zahl kommt als Nächstes?",
+   "a": 20,
+   "check": {
+    "expr": "11+9"
+   }
+  },
+  {
+   "type": "wahl",
+   "q": "Auf den Trikots deiner Mannschaft stehen die Rückennummern in einer geheimen Reihenfolge. Welche Zahl kommt als Nächstes?",
+   "opts": [
+    "9",
+    "17",
+    "18",
+    "16"
+   ],
+   "correct": 1,
+   "check": {
+    "expr": "9+8"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "Beim Training legt der Trainer vor jedem Tor immer zwei Bälle mehr bereit als beim letzten Mal. Welche Zahl kommt als Nächstes?",
+   "a": 16,
+   "check": {
+    "expr": "14+2"
+   }
+  }
+ ]
+}

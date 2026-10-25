@@ -28,6 +28,11 @@ SRC = ROOT / "src" / "app.html"
 DEST = ROOT / "index.html"
 RAW = ROOT / "img" / "raw"
 UNITS = ROOT / "data" / "units_seed.json"
+# V3 (ZIELE-V3.md, G4): die feste Aufgabenbank des Denk-Checks, gebaut von
+# build/denkcheck_bank.py. Sie wird wie die anderen Daten eingebettet, damit der
+# Check offline läuft.
+DENKCHECK = ROOT / "data" / "denkcheck.json"
+DENKCHECK_MARKER = "/*__DENKCHECK__*/null"
 # D5: die zehn Fuchs-Posen — schon fertige, freigestellte WebPs mit Alpha.
 AVATAR_DIR = ROOT / "img" / "avatar_fuchs"
 AVATAR_MANIFEST = AVATAR_DIR / "manifest.json"
@@ -169,6 +174,20 @@ def disziplinen_data():
     }
 
 
+def denkcheck_data():
+    """Die Denk-Check-Bank als kompaktes JSON, oder "null", wenn data/denkcheck.json
+    fehlt (dann zeigt die App den Check einfach nicht an). Die Aufgaben stehen
+    schon geprüft in der Datei (denkcheck_bank.py lässt jede durch
+    validate.check_task laufen); hier wird nur noch eingebettet."""
+    if not DENKCHECK.exists():
+        print("Denk-Check:\n   !  data/denkcheck.json fehlt (python build/denkcheck_bank.py)")
+        return "null"
+    bank = json.loads(DENKCHECK.read_text("utf-8"))
+    text = json.dumps(bank, ensure_ascii=False, separators=(",", ":"))
+    print(f"Denk-Check:\n   -> {len(bank.get('aufgaben', []))} Aufgaben, {len(text.encode('utf-8'))/1024:.0f} KB")
+    return text
+
+
 def lan_ip():
     """Adresse, unter der das Handy diesen Rechner im WLAN erreicht.
 
@@ -267,6 +286,15 @@ def main():
         if marker not in html:
             raise SystemExit(f"Platzhalter fehlt in app.html: {marker}")
         html = html.replace(marker, value, 1)
+
+    # Der Denk-Check-Marker ist (anders als die obigen) vorerst freiwillig: Er
+    # kommt mit der App-Seite des Checks in src/app.html. Fehlt er noch, wird
+    # das gemeldet statt der ganze Bau abgebrochen.
+    denkcheck = denkcheck_data()
+    if DENKCHECK_MARKER in html:
+        html = html.replace(DENKCHECK_MARKER, denkcheck, 1)
+    else:
+        print(f"   !  Platzhalter {DENKCHECK_MARKER} fehlt noch in app.html – Denk-Check nicht eingebettet")
 
     DEST.write_text(html, "utf-8")
     print(f"\n{DEST}")

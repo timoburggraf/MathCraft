@@ -1,0 +1,97 @@
+{
+ "skill": "must_wechsel",
+ "stage": 5,
+ "world": "roblox",
+ "title": "Muster · Baukasten",
+ "intro": "Findest du die geheime Regel hinter jeder Reihe?",
+ "tasks": [
+  {
+   "type": "wahl",
+   "q": "In deinem Obby zeigt die Anzeige nach jedem Checkpoint deine Münzen — mal springt sie in großen, mal in kleinen Schritten. Welche Zahl kommt als Nächstes?",
+   "opts": [
+    "838",
+    "831",
+    "839",
+    "840"
+   ],
+   "correct": 2,
+   "check": {
+    "expr": "831+8"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "In deinem Obby sammelst du nach jedem Abschnitt Münzen ein, mal ein paar mehr, mal ein paar weniger. Welche Zahl kommt als Nächstes?",
+   "a": 596,
+   "check": {
+    "expr": "593+3"
+   }
+  },
+  {
+   "type": "wahl",
+   "q": "Nach jeder Runde im Obby zählst du deine Münzen und schreibst den Stand auf. Welche Zahl kommt als Nächstes?",
+   "opts": [
+    "636",
+    "637",
+    "638",
+    "631"
+   ],
+   "correct": 1,
+   "check": {
+    "expr": "631+6"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "In deinem Obby gibt es an jedem Checkpoint Münzen: mal einen kleinen Bonus, mal einen größeren. Welche Zahl kommt als Nächstes?",
+   "a": 344,
+   "check": {
+    "expr": "342+2"
+   }
+  },
+  {
+   "type": "wahl",
+   "q": "In deinem Obby zeigt jeder Checkpoint deinen Münzstand an — mal springt er nur ein wenig, mal richtig hoch. Welche Zahl kommt als Nächstes?",
+   "opts": [
+    "413",
+    "415",
+    "412",
+    "414"
+   ],
+   "correct": 3,
+   "check": {
+    "expr": "412+2"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "In deinem Obby springst du von Block zu Block und die Münzanzeige steigt mal kleiner, mal größer. Welche Zahl kommt als Nächstes?",
+   "a": 925,
+   "check": {
+    "expr": "921+4"
+   }
+  },
+  {
+   "type": "wahl",
+   "q": "In deinem Obby zählst du nach jedem Sprung, wie viele Münzen du schon hast. Welche Zahl kommt als Nächstes?",
+   "opts": [
+    "741",
+    "737",
+    "739",
+    "740"
+   ],
+   "correct": 3,
+   "check": {
+    "expr": "737+3"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "Auf dem Obby sammelst du an jedem Checkpoint Münzen dazu, mal ein paar mehr, mal ein paar weniger. Welche Zahl kommt als Nächstes?",
+   "a": 122,
+   "check": {
+    "expr": "117+5"
+   }
+  }
+ ]
+}

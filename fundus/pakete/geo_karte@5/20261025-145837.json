@@ -1,0 +1,437 @@
+{
+ "skill": "geo_karte",
+ "stage": 5,
+ "world": "clash",
+ "title": "Schatzkarte · Burgenbau",
+ "intro": "Willkommen beim Burgenbau! Finde den Schatz auf der Karte. Papier ist erlaubt.",
+ "tasks": [
+  {
+   "type": "bildwahl",
+   "q": "Vom Anker 5 nach links und 2 nach oben. Was liegt dort?",
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 308 308\"><g transform=\"translate(22,22)\"><rect x=\"0\" y=\"0\" width=\"264\" height=\"264\" fill=\"#e9ecef\" fill-opacity=\"0.07\" stroke=\"#e9ecef\" stroke-width=\"2\"/><line x1=\"0\" y1=\"44\" x2=\"264\" y2=\"44\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"44\" y1=\"0\" x2=\"44\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"88\" x2=\"264\" y2=\"88\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"88\" y1=\"0\" x2=\"88\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"132\" x2=\"264\" y2=\"132\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"132\" y1=\"0\" x2=\"132\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"176\" x2=\"264\" y2=\"176\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"176\" y1=\"0\" x2=\"176\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"220\" x2=\"264\" y2=\"220\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"220\" y1=\"0\" x2=\"220\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><polygon points=\"19.8,37.4 24.2,37.4 25.52,19.8 21.12,19.8\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><ellipse cx=\"17.16\" cy=\"15.84\" rx=\"8.8\" ry=\"3.3\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(-25 17.16 15.84)\"/><ellipse cx=\"29.48\" cy=\"15.84\" rx=\"8.8\" ry=\"3.3\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(25 29.48 15.84)\"/><ellipse cx=\"23.32\" cy=\"11.88\" rx=\"8.8\" ry=\"3.3\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(0 23.32 11.88)\"/><ellipse cx=\"18.92\" cy=\"19.36\" rx=\"8.8\" ry=\"3.3\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(30 18.92 19.36)\"/><ellipse cx=\"27.72\" cy=\"19.36\" rx=\"8.8\" ry=\"3.3\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(-30 27.72 19.36)\"/><line x1=\"59.4\" y1=\"37.4\" x2=\"59.4\" y2=\"7.92\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"59.4,8.8 80.08,16.72 59.4,24.64\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"95.04,35.2 92.4,24.2 101.2,13.2 112.2,10.56 124.08,18.48 127.6,35.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><line x1=\"235.4\" y1=\"37.4\" x2=\"235.4\" y2=\"7.92\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"235.4,8.8 256.08,16.72 235.4,24.64\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><rect x=\"8.8\" y=\"64.24\" width=\"26.4\" height=\"14.08\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><path d=\"M8.8,64.24 Q22,49.28 35.2,64.24 Z\" fill=\"#f08b3e\" fill-opacity=\"0.75\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><rect x=\"19.8\" y=\"66\" width=\"4.4\" height=\"6.16\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"183.04,79.2 180.4,68.2 189.2,57.2 200.2,54.56 212.08,62.48 215.6,79.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"7.04,123.2 4.4,112.2 13.2,101.2 24.2,98.56 36.08,106.48 39.6,123.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><circle cx=\"242\" cy=\"96.8\" r=\"3.96\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\" fill=\"none\"/><path d=\"M242,100.76 L242,123.2 M234.52,105.6 L249.48,105.6 M228.8,114.4 Q242,132 255.2,114.4\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\" fill=\"none\"/><line x1=\"15.4\" y1=\"169.4\" x2=\"15.4\" y2=\"139.92\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"15.4,140.8 36.08,148.72 15.4,156.64\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><line x1=\"191.4\" y1=\"169.4\" x2=\"191.4\" y2=\"139.92\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"191.4,140.8 212.08,148.72 191.4,156.64\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><rect x=\"8.8\" y=\"196.24\" width=\"26.4\" height=\"14.08\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><path d=\"M8.8,196.24 Q22,181.28 35.2,196.24 Z\" fill=\"#f08b3e\" fill-opacity=\"0.75\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><rect x=\"19.8\" y=\"198\" width=\"4.4\" height=\"6.16\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"151.8,213.4 156.2,213.4 157.52,195.8 153.12,195.8\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><ellipse cx=\"149.16\" cy=\"191.84\" rx=\"8.8\" ry=\"3.3\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(-25 149.16 191.84)\"/><ellipse cx=\"161.48\" cy=\"191.84\" rx=\"8.8\" ry=\"3.3\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(25 161.48 191.84)\"/><ellipse cx=\"155.32\" cy=\"187.88\" rx=\"8.8\" ry=\"3.3\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(0 155.32 187.88)\"/><ellipse cx=\"150.92\" cy=\"195.36\" rx=\"8.8\" ry=\"3.3\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(30 150.92 195.36)\"/><ellipse cx=\"159.72\" cy=\"195.36\" rx=\"8.8\" ry=\"3.3\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(-30 159.72 195.36)\"/><rect x=\"52.8\" y=\"240.24\" width=\"26.4\" height=\"14.08\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><path d=\"M52.8,240.24 Q66,225.28 79.2,240.24 Z\" fill=\"#f08b3e\" fill-opacity=\"0.75\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><rect x=\"63.8\" y=\"242\" width=\"4.4\" height=\"6.16\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><line x1=\"235.4\" y1=\"257.4\" x2=\"235.4\" y2=\"227.92\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"235.4,228.8 256.08,236.72 235.4,244.64\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></g></svg>",
+   "optionen_svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 96 96\"><g transform=\"translate(16,16)\"><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#e9ecef\" fill-opacity=\"0.07\" stroke=\"#e9ecef\" stroke-width=\"2\"/><polygon points=\"28.8,54.4 35.2,54.4 37.12,28.8 30.72,28.8\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><ellipse cx=\"24.96\" cy=\"23.04\" rx=\"12.8\" ry=\"4.8\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(-25 24.96 23.04)\"/><ellipse cx=\"42.88\" cy=\"23.04\" rx=\"12.8\" ry=\"4.8\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(25 42.88 23.04)\"/><ellipse cx=\"33.92\" cy=\"17.28\" rx=\"12.8\" ry=\"4.8\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(0 33.92 17.28)\"/><ellipse cx=\"27.52\" cy=\"28.16\" rx=\"12.8\" ry=\"4.8\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(30 27.52 28.16)\"/><ellipse cx=\"40.32\" cy=\"28.16\" rx=\"12.8\" ry=\"4.8\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(-30 40.32 28.16)\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 96 96\"><g transform=\"translate(16,16)\"><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#e9ecef\" fill-opacity=\"0.07\" stroke=\"#e9ecef\" stroke-width=\"2\"/><polygon points=\"10.24,51.2 6.4,35.2 19.2,19.2 35.2,15.36 52.48,26.88 57.6,51.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 96 96\"><g transform=\"translate(16,16)\"><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#e9ecef\" fill-opacity=\"0.07\" stroke=\"#e9ecef\" stroke-width=\"2\"/><rect x=\"12.8\" y=\"29.44\" width=\"38.4\" height=\"20.48\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><path d=\"M12.8,29.44 Q32,7.68 51.2,29.44 Z\" fill=\"#f08b3e\" fill-opacity=\"0.75\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><rect x=\"28.8\" y=\"32\" width=\"6.4\" height=\"8.96\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 96 96\"><g transform=\"translate(16,16)\"><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#e9ecef\" fill-opacity=\"0.07\" stroke=\"#e9ecef\" stroke-width=\"2\"/><line x1=\"22.4\" y1=\"54.4\" x2=\"22.4\" y2=\"11.52\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"22.4,12.8 52.48,24.32 22.4,35.84\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></g></svg>"
+   ],
+   "richtig": 0,
+   "kern": {
+    "art": "karte",
+    "modus": "schritte",
+    "n": 6,
+    "anker": [
+     2,
+     5
+    ],
+    "zeichen": [
+     [
+      0,
+      0,
+      "palme"
+     ],
+     [
+      0,
+      1,
+      "flagge"
+     ],
+     [
+      0,
+      2,
+      "felsen"
+     ],
+     [
+      0,
+      5,
+      "flagge"
+     ],
+     [
+      1,
+      0,
+      "schatz"
+     ],
+     [
+      1,
+      4,
+      "felsen"
+     ],
+     [
+      2,
+      0,
+      "felsen"
+     ],
+     [
+      2,
+      5,
+      "anker"
+     ],
+     [
+      3,
+      0,
+      "flagge"
+     ],
+     [
+      3,
+      4,
+      "flagge"
+     ],
+     [
+      4,
+      0,
+      "schatz"
+     ],
+     [
+      4,
+      3,
+      "palme"
+     ],
+     [
+      5,
+      1,
+      "schatz"
+     ],
+     [
+      5,
+      5,
+      "flagge"
+     ]
+    ],
+    "schritte": [
+     [
+      "links",
+      5
+     ],
+     [
+      "oben",
+      2
+     ]
+    ],
+    "optionen": [
+     "palme",
+     "felsen",
+     "schatz",
+     "flagge"
+    ],
+    "richtig": 0,
+    "stufe": 5
+   },
+   "hint": "Geh Schritt für Schritt mit dem Finger über die Karte."
+  },
+  {
+   "type": "bildwahl",
+   "q": "Vom Anker 1 nach oben und 2 nach rechts. Was liegt dort?",
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 308 308\"><g transform=\"translate(22,22)\"><rect x=\"0\" y=\"0\" width=\"264\" height=\"264\" fill=\"#e9ecef\" fill-opacity=\"0.07\" stroke=\"#e9ecef\" stroke-width=\"2\"/><line x1=\"0\" y1=\"44\" x2=\"264\" y2=\"44\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"44\" y1=\"0\" x2=\"44\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"88\" x2=\"264\" y2=\"88\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"88\" y1=\"0\" x2=\"88\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"132\" x2=\"264\" y2=\"132\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"132\" y1=\"0\" x2=\"132\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"176\" x2=\"264\" y2=\"176\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"176\" y1=\"0\" x2=\"176\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"220\" x2=\"264\" y2=\"220\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"220\" y1=\"0\" x2=\"220\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><rect x=\"8.8\" y=\"20.24\" width=\"26.4\" height=\"14.08\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><path d=\"M8.8,20.24 Q22,5.28 35.2,20.24 Z\" fill=\"#f08b3e\" fill-opacity=\"0.75\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><rect x=\"19.8\" y=\"22\" width=\"4.4\" height=\"6.16\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"110,36.08 94.16,22 99.44,13.2 110,9.68 120.56,13.2 125.84,22\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><line x1=\"110\" y1=\"36.08\" x2=\"94.16\" y2=\"22\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><line x1=\"110\" y1=\"36.08\" x2=\"99.44\" y2=\"13.2\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><line x1=\"110\" y1=\"36.08\" x2=\"110\" y2=\"9.68\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><line x1=\"110\" y1=\"36.08\" x2=\"120.56\" y2=\"13.2\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><polygon points=\"139.04,79.2 136.4,68.2 145.2,57.2 156.2,54.56 168.08,62.48 171.6,79.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><line x1=\"235.4\" y1=\"81.4\" x2=\"235.4\" y2=\"51.92\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"235.4,52.8 256.08,60.72 235.4,68.64\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"22,124.08 6.16,110 11.44,101.2 22,97.68 32.56,101.2 37.84,110\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><line x1=\"22\" y1=\"124.08\" x2=\"6.16\" y2=\"110\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><line x1=\"22\" y1=\"124.08\" x2=\"11.44\" y2=\"101.2\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><line x1=\"22\" y1=\"124.08\" x2=\"22\" y2=\"97.68\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><line x1=\"22\" y1=\"124.08\" x2=\"32.56\" y2=\"101.2\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><polygon points=\"51.04,123.2 48.4,112.2 57.2,101.2 68.2,98.56 80.08,106.48 83.6,123.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><circle cx=\"154\" cy=\"96.8\" r=\"3.96\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\" fill=\"none\"/><path d=\"M154,100.76 L154,123.2 M146.52,105.6 L161.48,105.6 M140.8,114.4 Q154,132 167.2,114.4\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\" fill=\"none\"/><polygon points=\"239.8,125.4 244.2,125.4 245.52,107.8 241.12,107.8\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><ellipse cx=\"237.16\" cy=\"103.84\" rx=\"8.8\" ry=\"3.3\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(-25 237.16 103.84)\"/><ellipse cx=\"249.48\" cy=\"103.84\" rx=\"8.8\" ry=\"3.3\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(25 249.48 103.84)\"/><ellipse cx=\"243.32\" cy=\"99.88\" rx=\"8.8\" ry=\"3.3\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(0 243.32 99.88)\"/><ellipse cx=\"238.92\" cy=\"107.36\" rx=\"8.8\" ry=\"3.3\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(30 238.92 107.36)\"/><ellipse cx=\"247.72\" cy=\"107.36\" rx=\"8.8\" ry=\"3.3\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(-30 247.72 107.36)\"/><line x1=\"147.4\" y1=\"169.4\" x2=\"147.4\" y2=\"139.92\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"147.4,140.8 168.08,148.72 147.4,156.64\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><line x1=\"191.4\" y1=\"169.4\" x2=\"191.4\" y2=\"139.92\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"191.4,140.8 212.08,148.72 191.4,156.64\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"242,168.08 226.16,154 231.44,145.2 242,141.68 252.56,145.2 257.84,154\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><line x1=\"242\" y1=\"168.08\" x2=\"226.16\" y2=\"154\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><line x1=\"242\" y1=\"168.08\" x2=\"231.44\" y2=\"145.2\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><line x1=\"242\" y1=\"168.08\" x2=\"242\" y2=\"141.68\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><line x1=\"242\" y1=\"168.08\" x2=\"252.56\" y2=\"145.2\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><polygon points=\"110,212.08 94.16,198 99.44,189.2 110,185.68 120.56,189.2 125.84,198\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><line x1=\"110\" y1=\"212.08\" x2=\"94.16\" y2=\"198\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><line x1=\"110\" y1=\"212.08\" x2=\"99.44\" y2=\"189.2\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><line x1=\"110\" y1=\"212.08\" x2=\"110\" y2=\"185.68\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><line x1=\"110\" y1=\"212.08\" x2=\"120.56\" y2=\"189.2\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><rect x=\"140.8\" y=\"196.24\" width=\"26.4\" height=\"14.08\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><path d=\"M140.8,196.24 Q154,181.28 167.2,196.24 Z\" fill=\"#f08b3e\" fill-opacity=\"0.75\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><rect x=\"151.8\" y=\"198\" width=\"4.4\" height=\"6.16\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"110,256.08 94.16,242 99.44,233.2 110,229.68 120.56,233.2 125.84,242\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><line x1=\"110\" y1=\"256.08\" x2=\"94.16\" y2=\"242\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><line x1=\"110\" y1=\"256.08\" x2=\"99.44\" y2=\"233.2\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><line x1=\"110\" y1=\"256.08\" x2=\"110\" y2=\"229.68\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><line x1=\"110\" y1=\"256.08\" x2=\"120.56\" y2=\"233.2\" stroke=\"#0d1420\" stroke-width=\"1.2\"/></g></svg>",
+   "optionen_svg": [
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 96 96\"><g transform=\"translate(16,16)\"><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#e9ecef\" fill-opacity=\"0.07\" stroke=\"#e9ecef\" stroke-width=\"2\"/><polygon points=\"32,52.48 8.96,32 16.64,19.2 32,14.08 47.36,19.2 55.04,32\" fill=\"#4cc9f0\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><line x1=\"32\" y1=\"52.48\" x2=\"8.96\" y2=\"32\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><line x1=\"32\" y1=\"52.48\" x2=\"16.64\" y2=\"19.2\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><line x1=\"32\" y1=\"52.48\" x2=\"32\" y2=\"14.08\" stroke=\"#0d1420\" stroke-width=\"1.2\"/><line x1=\"32\" y1=\"52.48\" x2=\"47.36\" y2=\"19.2\" stroke=\"#0d1420\" stroke-width=\"1.2\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 96 96\"><g transform=\"translate(16,16)\"><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#e9ecef\" fill-opacity=\"0.07\" stroke=\"#e9ecef\" stroke-width=\"2\"/><polygon points=\"10.24,51.2 6.4,35.2 19.2,19.2 35.2,15.36 52.48,26.88 57.6,51.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 96 96\"><g transform=\"translate(16,16)\"><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#e9ecef\" fill-opacity=\"0.07\" stroke=\"#e9ecef\" stroke-width=\"2\"/><line x1=\"22.4\" y1=\"54.4\" x2=\"22.4\" y2=\"11.52\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\"/><polygon points=\"22.4,12.8 52.48,24.32 22.4,35.84\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></g></svg>",
+    "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 96 96\"><g transform=\"translate(16,16)\"><rect x=\"0\" y=\"0\" width=\"64\" height=\"64\" fill=\"#e9ecef\" fill-opacity=\"0.07\" stroke=\"#e9ecef\" stroke-width=\"2\"/><polygon points=\"28.8,54.4 35.2,54.4 37.12,28.8 30.72,28.8\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><ellipse cx=\"24.96\" cy=\"23.04\" rx=\"12.8\" ry=\"4.8\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(-25 24.96 23.04)\"/><ellipse cx=\"42.88\" cy=\"23.04\" rx=\"12.8\" ry=\"4.8\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(25 42.88 23.04)\"/><ellipse cx=\"33.92\" cy=\"17.28\" rx=\"12.8\" ry=\"4.8\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(0 33.92 17.28)\"/><ellipse cx=\"27.52\" cy=\"28.16\" rx=\"12.8\" ry=\"4.8\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(30 27.52 28.16)\"/><ellipse cx=\"40.32\" cy=\"28.16\" rx=\"12.8\" ry=\"4.8\" fill=\"#59c37a\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\" transform=\"rotate(-30 40.32 28.16)\"/></g></svg>"
+   ],
+   "richtig": 2,
+   "kern": {
+    "art": "karte",
+    "modus": "schritte",
+    "n": 6,
+    "anker": [
+     2,
+     3
+    ],
+    "zeichen": [
+     [
+      0,
+      0,
+      "schatz"
+     ],
+     [
+      0,
+      2,
+      "muschel"
+     ],
+     [
+      1,
+      3,
+      "felsen"
+     ],
+     [
+      1,
+      5,
+      "flagge"
+     ],
+     [
+      2,
+      0,
+      "muschel"
+     ],
+     [
+      2,
+      1,
+      "felsen"
+     ],
+     [
+      2,
+      3,
+      "anker"
+     ],
+     [
+      2,
+      5,
+      "palme"
+     ],
+     [
+      3,
+      3,
+      "flagge"
+     ],
+     [
+      3,
+      4,
+      "flagge"
+     ],
+     [
+      3,
+      5,
+      "muschel"
+     ],
+     [
+      4,
+      2,
+      "muschel"
+     ],
+     [
+      4,
+      3,
+      "schatz"
+     ],
+     [
+      5,
+      2,
+      "muschel"
+     ]
+    ],
+    "schritte": [
+     [
+      "oben",
+      1
+     ],
+     [
+      "rechts",
+      2
+     ]
+    ],
+    "optionen": [
+     "muschel",
+     "felsen",
+     "flagge",
+     "palme"
+    ],
+    "richtig": 2,
+    "stufe": 5
+   },
+   "hint": "Geh Schritt für Schritt mit dem Finger über die Karte."
+  },
+  {
+   "type": "bildzahl",
+   "q": "Wie viele Schritte sind es vom Anker zum Schatz? Nicht schräg, Felsen umgehen.",
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 308 308\"><g transform=\"translate(22,22)\"><rect x=\"0\" y=\"0\" width=\"264\" height=\"264\" fill=\"#e9ecef\" fill-opacity=\"0.07\" stroke=\"#e9ecef\" stroke-width=\"2\"/><line x1=\"0\" y1=\"44\" x2=\"264\" y2=\"44\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"44\" y1=\"0\" x2=\"44\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"88\" x2=\"264\" y2=\"88\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"88\" y1=\"0\" x2=\"88\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"132\" x2=\"264\" y2=\"132\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"132\" y1=\"0\" x2=\"132\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"176\" x2=\"264\" y2=\"176\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"176\" y1=\"0\" x2=\"176\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"220\" x2=\"264\" y2=\"220\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"220\" y1=\"0\" x2=\"220\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><circle cx=\"66\" cy=\"8.8\" r=\"3.96\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\" fill=\"none\"/><path d=\"M66,12.76 L66,35.2 M58.52,17.6 L73.48,17.6 M52.8,26.4 Q66,44 79.2,26.4\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\" fill=\"none\"/><polygon points=\"139.04,35.2 136.4,24.2 145.2,13.2 156.2,10.56 168.08,18.48 171.6,35.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"139.04,79.2 136.4,68.2 145.2,57.2 156.2,54.56 168.08,62.48 171.6,79.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"51.04,123.2 48.4,112.2 57.2,101.2 68.2,98.56 80.08,106.48 83.6,123.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"95.04,123.2 92.4,112.2 101.2,101.2 112.2,98.56 124.08,106.48 127.6,123.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"183.04,167.2 180.4,156.2 189.2,145.2 200.2,142.56 212.08,150.48 215.6,167.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><rect x=\"96.8\" y=\"196.24\" width=\"26.4\" height=\"14.08\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><path d=\"M96.8,196.24 Q110,181.28 123.2,196.24 Z\" fill=\"#f08b3e\" fill-opacity=\"0.75\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><rect x=\"107.8\" y=\"198\" width=\"4.4\" height=\"6.16\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"139.04,211.2 136.4,200.2 145.2,189.2 156.2,186.56 168.08,194.48 171.6,211.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></g></svg>",
+   "a": 7,
+   "kern": {
+    "art": "karte",
+    "modus": "weg",
+    "n": 6,
+    "anker": [
+     0,
+     1
+    ],
+    "schatz": [
+     4,
+     2
+    ],
+    "felsen": [
+     [
+      0,
+      3
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      2,
+      2
+     ],
+     [
+      3,
+      4
+     ],
+     [
+      4,
+      3
+     ]
+    ],
+    "anzahl": 7,
+    "stufe": 5
+   },
+   "hint": "Zähl die Schritte um die Felsen herum."
+  },
+  {
+   "type": "bildzahl",
+   "q": "Kürzester Weg vom Anker zum Schatz: Wie viele Schritte? Nicht schräg, nicht über Felsen.",
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 308 308\"><g transform=\"translate(22,22)\"><rect x=\"0\" y=\"0\" width=\"264\" height=\"264\" fill=\"#e9ecef\" fill-opacity=\"0.07\" stroke=\"#e9ecef\" stroke-width=\"2\"/><line x1=\"0\" y1=\"44\" x2=\"264\" y2=\"44\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"44\" y1=\"0\" x2=\"44\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"88\" x2=\"264\" y2=\"88\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"88\" y1=\"0\" x2=\"88\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"132\" x2=\"264\" y2=\"132\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"132\" y1=\"0\" x2=\"132\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"176\" x2=\"264\" y2=\"176\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"176\" y1=\"0\" x2=\"176\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"220\" x2=\"264\" y2=\"220\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"220\" y1=\"0\" x2=\"220\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><polygon points=\"51.04,35.2 48.4,24.2 57.2,13.2 68.2,10.56 80.08,18.48 83.6,35.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><circle cx=\"110\" cy=\"8.8\" r=\"3.96\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\" fill=\"none\"/><path d=\"M110,12.76 L110,35.2 M102.52,17.6 L117.48,17.6 M96.8,26.4 Q110,44 123.2,26.4\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\" fill=\"none\"/><polygon points=\"139.04,35.2 136.4,24.2 145.2,13.2 156.2,10.56 168.08,18.48 171.6,35.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"95.04,123.2 92.4,112.2 101.2,101.2 112.2,98.56 124.08,106.48 127.6,123.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"139.04,123.2 136.4,112.2 145.2,101.2 156.2,98.56 168.08,106.48 171.6,123.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"183.04,123.2 180.4,112.2 189.2,101.2 200.2,98.56 212.08,106.48 215.6,123.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"7.04,255.2 4.4,244.2 13.2,233.2 24.2,230.56 36.08,238.48 39.6,255.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><rect x=\"140.8\" y=\"240.24\" width=\"26.4\" height=\"14.08\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><path d=\"M140.8,240.24 Q154,225.28 167.2,240.24 Z\" fill=\"#f08b3e\" fill-opacity=\"0.75\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><rect x=\"151.8\" y=\"242\" width=\"4.4\" height=\"6.16\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></g></svg>",
+   "a": 8,
+   "kern": {
+    "art": "karte",
+    "modus": "weg",
+    "n": 6,
+    "anker": [
+     0,
+     2
+    ],
+    "schatz": [
+     5,
+     3
+    ],
+    "felsen": [
+     [
+      0,
+      1
+     ],
+     [
+      0,
+      3
+     ],
+     [
+      2,
+      2
+     ],
+     [
+      2,
+      3
+     ],
+     [
+      2,
+      4
+     ],
+     [
+      5,
+      0
+     ]
+    ],
+    "anzahl": 8,
+    "stufe": 5
+   },
+   "hint": "Zähl die Schritte um die Felsen herum."
+  },
+  {
+   "type": "bildzahl",
+   "q": "Kürzester Weg ohne Felsen, nicht schräg. 1 Kästchen = 10 m. Wie viele Meter?",
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 308 308\"><g transform=\"translate(22,22)\"><rect x=\"0\" y=\"0\" width=\"264\" height=\"264\" fill=\"#e9ecef\" fill-opacity=\"0.07\" stroke=\"#e9ecef\" stroke-width=\"2\"/><line x1=\"0\" y1=\"44\" x2=\"264\" y2=\"44\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"44\" y1=\"0\" x2=\"44\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"88\" x2=\"264\" y2=\"88\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"88\" y1=\"0\" x2=\"88\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"132\" x2=\"264\" y2=\"132\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"132\" y1=\"0\" x2=\"132\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"176\" x2=\"264\" y2=\"176\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"176\" y1=\"0\" x2=\"176\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"220\" x2=\"264\" y2=\"220\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"220\" y1=\"0\" x2=\"220\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><polygon points=\"183.04,35.2 180.4,24.2 189.2,13.2 200.2,10.56 212.08,18.48 215.6,35.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"95.04,79.2 92.4,68.2 101.2,57.2 112.2,54.56 124.08,62.48 127.6,79.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"7.04,123.2 4.4,112.2 13.2,101.2 24.2,98.56 36.08,106.48 39.6,123.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"7.04,167.2 4.4,156.2 13.2,145.2 24.2,142.56 36.08,150.48 39.6,167.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"95.04,211.2 92.4,200.2 101.2,189.2 112.2,186.56 124.08,194.48 127.6,211.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"183.04,211.2 180.4,200.2 189.2,189.2 200.2,186.56 212.08,194.48 215.6,211.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><rect x=\"228.8\" y=\"196.24\" width=\"26.4\" height=\"14.08\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><path d=\"M228.8,196.24 Q242,181.28 255.2,196.24 Z\" fill=\"#f08b3e\" fill-opacity=\"0.75\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><rect x=\"239.8\" y=\"198\" width=\"4.4\" height=\"6.16\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><circle cx=\"66\" cy=\"228.8\" r=\"3.96\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\" fill=\"none\"/><path d=\"M66,232.76 L66,255.2 M58.52,237.6 L73.48,237.6 M52.8,246.4 Q66,264 79.2,246.4\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\" fill=\"none\"/><polygon points=\"183.04,255.2 180.4,244.2 189.2,233.2 200.2,230.56 212.08,238.48 215.6,255.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></g></svg>",
+   "a": 70,
+   "kern": {
+    "art": "karte",
+    "modus": "massstab",
+    "n": 6,
+    "anker": [
+     5,
+     1
+    ],
+    "schatz": [
+     4,
+     5
+    ],
+    "felsen": [
+     [
+      0,
+      4
+     ],
+     [
+      1,
+      2
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      4,
+      2
+     ],
+     [
+      4,
+      4
+     ],
+     [
+      5,
+      4
+     ]
+    ],
+    "anzahl": 70,
+    "stufe": 5,
+    "meter": 10
+   },
+   "hint": "Zähl erst die Kästchen, dann rechne mal so viele Meter.",
+   "papier": true
+  },
+  {
+   "type": "bildzahl",
+   "q": "Noch eins: Kürzester Weg ohne Felsen, nicht schräg. 1 Kästchen = 10 m. Wie viele Meter?",
+   "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 308 308\"><g transform=\"translate(22,22)\"><rect x=\"0\" y=\"0\" width=\"264\" height=\"264\" fill=\"#e9ecef\" fill-opacity=\"0.07\" stroke=\"#e9ecef\" stroke-width=\"2\"/><line x1=\"0\" y1=\"44\" x2=\"264\" y2=\"44\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"44\" y1=\"0\" x2=\"44\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"88\" x2=\"264\" y2=\"88\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"88\" y1=\"0\" x2=\"88\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"132\" x2=\"264\" y2=\"132\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"132\" y1=\"0\" x2=\"132\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"176\" x2=\"264\" y2=\"176\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"176\" y1=\"0\" x2=\"176\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"0\" y1=\"220\" x2=\"264\" y2=\"220\" stroke=\"#26334a\" stroke-width=\"1\"/><line x1=\"220\" y1=\"0\" x2=\"220\" y2=\"264\" stroke=\"#26334a\" stroke-width=\"1\"/><polygon points=\"95.04,35.2 92.4,24.2 101.2,13.2 112.2,10.56 124.08,18.48 127.6,35.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><rect x=\"228.8\" y=\"20.24\" width=\"26.4\" height=\"14.08\" fill=\"#f08b3e\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><path d=\"M228.8,20.24 Q242,5.28 255.2,20.24 Z\" fill=\"#f08b3e\" fill-opacity=\"0.75\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><rect x=\"239.8\" y=\"22\" width=\"4.4\" height=\"6.16\" fill=\"#e9ecef\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"139.04,79.2 136.4,68.2 145.2,57.2 156.2,54.56 168.08,62.48 171.6,79.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"139.04,123.2 136.4,112.2 145.2,101.2 156.2,98.56 168.08,106.48 171.6,123.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"227.04,123.2 224.4,112.2 233.2,101.2 244.2,98.56 256.08,106.48 259.6,123.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"95.04,167.2 92.4,156.2 101.2,145.2 112.2,142.56 124.08,150.48 127.6,167.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><circle cx=\"66\" cy=\"184.8\" r=\"3.96\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\" fill=\"none\"/><path d=\"M66,188.76 L66,211.2 M58.52,193.6 L73.48,193.6 M52.8,202.4 Q66,220 79.2,202.4\" stroke=\"#e9ecef\" stroke-width=\"3\" stroke-linecap=\"round\" fill=\"none\"/><polygon points=\"95.04,211.2 92.4,200.2 101.2,189.2 112.2,186.56 124.08,194.48 127.6,211.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/><polygon points=\"7.04,255.2 4.4,244.2 13.2,233.2 24.2,230.56 36.08,238.48 39.6,255.2\" fill=\"#e9ecef\" fill-opacity=\"0.6\" stroke=\"#0d1420\" stroke-width=\"1.5\" stroke-linejoin=\"round\"/></g></svg>",
+   "a": 100,
+   "kern": {
+    "art": "karte",
+    "modus": "massstab",
+    "n": 6,
+    "anker": [
+     4,
+     1
+    ],
+    "schatz": [
+     0,
+     5
+    ],
+    "felsen": [
+     [
+      0,
+      2
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      2,
+      3
+     ],
+     [
+      2,
+      5
+     ],
+     [
+      3,
+      2
+     ],
+     [
+      4,
+      2
+     ],
+     [
+      5,
+      0
+     ]
+    ],
+    "anzahl": 100,
+    "stufe": 5,
+    "meter": 10
+   },
+   "hint": "Zähl erst die Kästchen, dann rechne mal so viele Meter.",
+   "papier": true
+  }
+ ]
+}

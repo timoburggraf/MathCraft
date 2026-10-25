@@ -78,6 +78,24 @@ def pruefe_baupläne():
     add("Der Kern-Bauplan lässt sich auf ein Klassenband einschränken",
         0 < len(gefiltert) < len(alle), f"{len(gefiltert)} von {len(alle)}")
 
+    # V3: jede Fertigkeit, die der Kern-Pfad übernommen hat, läuft auch wirklich
+    # darüber (pfad_von prüft den Kern VOR der Folgen-Regel), und der Plan
+    # enthält sie auf eigener Stufe und eine darüber.
+    v3 = KP.V3_SKILLS
+    add("Alle V3-Fertigkeiten nehmen den Kern-Pfad (auch die alten Folgen-Fertigkeiten)",
+        all(GU.pfad_von(sid) == "kern" for sid in v3),
+        str({sid: GU.pfad_von(sid) for sid in v3 if GU.pfad_von(sid) != "kern"}))
+    add("Die alten Folgen-Fertigkeiten ohne Kern-Bauer behalten ihren Pfad",
+        all(GU.pfad_von(sid) in ("kern", "folgen") for sid in GU.FOLGEN_REGEL)
+        and GU.pfad_von("must_form") == "standard" and GU.pfad_von("log_gitter") == "logikgitter")
+    plan_v3 = [e for e in alle if e[0] in v3]
+    add("Der Kern-Plan hat zu jeder V3-Fertigkeit genau zwei Pakete (Stufe und Stufe+1)",
+        all(sorted(st for sid, st, _ in plan_v3 if sid == s) ==
+            [C.stage_of(s), C.stage_of(s) + 1] for s in v3),
+        f"{len(plan_v3)} Pakete für {len(v3)} Fertigkeiten")
+    add("Jede Klasse findet im Kern-Plan V3-Pakete in ihrem Band",
+        all(any(st in C.klasse_band(k) for _, st, _ in plan_v3) for k in C.KLASSEN))
+
     # Zwei verschiedene Klassen dürfen nicht denselben Plan ergeben — sonst
     # wäre die ganze Unterscheidung wirkungslos.
     add("Zwei Klassen ergeben verschiedene Grundstöcke",

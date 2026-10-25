@@ -194,6 +194,10 @@ _ROBOTER = _obj({
     "hint": _HINT,
 }, required=["type", "modus", "q", "n", "start", "richtung", "waende", "hint"])
 
+_PAPIER = {"type": "boolean",
+           "description": "Optional. true = 'Papier und Stift erlaubt' wird angezeigt (ZIELE-V3.md, G3). "
+                          "Das Papier dient Skizzen und Zwischenergebnissen, nicht langen Rechnungen."}
+
 _BILDWAHL = _obj({
     "type": {"const": "bildwahl"},
     "q": {"type": "string", "description": "Die Aufgabenstellung. Höchstens zwei Sätze."},
@@ -201,21 +205,32 @@ _BILDWAHL = _obj({
     "optionen_svg": {"type": "array", "items": {"type": "string"},
                       "description": "Genau vier Options-SVGs."},
     "richtig": {"type": "integer", "description": "Platz der richtigen Option, 0..3."},
-    "kern": {"type": "object", "description": "Die wahrheitstragenden Felder aus grafik_kern.py "
-                                              "bzw. muster_kern.py (art, zellen, optionen_zellen, "
-                                              "richtig, stufe, ggf. winkel/regeln/…)."},
+    "kern": {"type": "object", "description": "Die wahrheitstragenden Felder aus grafik_kern.py, "
+                                              "muster_kern.py, geo_kern.py (ansicht, netzfalten, karte) "
+                                              "bzw. figur_kern.py (merkbild): art, zellen, "
+                                              "optionen_zellen, richtig, stufe, ggf. winkel/regeln/… "
+                                              "Jede Art hat ein pruefe_<art>(kern); kern.richtig "
+                                              "muss mit 'richtig' übereinstimmen."},
+    "merken_ms": {"type": "integer",
+                  "description": "Optional, nur bildwahl: das Fragebild so viele Millisekunden "
+                                 "zeigen (1000..10000), dann ausblenden; erst danach erscheinen "
+                                 "die Optionen (Merkbild, ZIELE-V3.md)."},
+    "papier": _PAPIER,
     "hint": _HINT,
-})
+}, required=["type", "q", "svg", "optionen_svg", "richtig", "kern", "hint"])
 
 _BILDZAHL = _obj({
     "type": {"const": "bildzahl"},
     "q": {"type": "string", "description": "Die Aufgabenstellung. Höchstens zwei Sätze."},
     "svg": {"type": "string", "description": "Das Fragebild als SVG-Text."},
     "a": {"type": "number", "description": "Die richtige Anzahl."},
-    "kern": {"type": "object", "description": "{'art':'wuerfelgebaeude','hoehen':[[…]],"
-                                              "'anzahl':…, 'stufe':…} aus grafik_kern.py."},
+    "kern": {"type": "object", "description": "Der Kern mit art und anzahl: 'wuerfelgebaeude' "
+                                              "(grafik_kern.py), 'gitterfigur', 'quader', 'karte' "
+                                              "(geo_kern.py) oder 'punktmuster' (figur_kern.py). "
+                                              "kern.anzahl muss mit 'a' übereinstimmen."},
+    "papier": _PAPIER,
     "hint": _HINT,
-})
+}, required=["type", "q", "svg", "a", "kern", "hint"])
 
 _POSITIONEN_HINWEIS = _obj({
     "typ": {"type": "string", "description": "Hinweistyp, z.B. 'direkt_links', 'neben', "
@@ -255,9 +270,56 @@ _POSITIONEN = _obj({
 }, required=["type", "rahmen", "namen", "hinweise", "loesung", "frage", "frage_text",
              "optionen", "richtig", "hint"])
 
-TASK = {"anyOf": [_ENTDECKEN, _ZAHL, _WAHL, _WAHRFALSCH,
+# --- zahl mit Kern (ZIELE-V3.md, G3): die Rechteck-Rätsel von geo_flaeche_umfang
+# (Index 4-5) sind gewöhnliche zahl-Aufgaben, tragen aber zusätzlich ihren Kern
+# aus geo_kern.py (art 'gitterfigur', modus 'raetsel'): check.expr allein ist
+# dort nur die Zahl selbst und beweist nichts, erst der Prüfer rechnet das
+# Durchprobieren nach. Deshalb eine eigene Variante und NICHT ein optionales
+# Feld in _ZAHL: _ZAHL steht in TASK_LLM, und dort muss jedes Feld Pflicht sein.
+_ZAHL_KERN = _obj({
+    "type": {"const": "zahl"},
+    "q": {"type": "string", "description": "Die Frage. Höchstens zwei Sätze."},
+    "a": {"type": "number", "description": "Die richtige Zahl."},
+    "check": _TERM,
+    "kern": {"type": "object", "description": "Kern mit art ('gitterfigur') und anzahl == a."},
+    "papier": _PAPIER,
+    "hint": _HINT,
+}, required=["type", "q", "a", "check", "kern", "hint"])
+
+# --- legen (ZIELE-V3.md, G1 und 'Datenformate'): Figuren (Emoji-Karten) auf
+# Plätze legen, alle Anordnungen sammeln. Wie die anderen Kern-Typen entsteht
+# der Typ nur deterministisch (legen_kern.py), steht also in TASK, aber nicht
+# in TASK_LLM. Die Gesamtzahl 'a' ist das Ergebnis einer vollständigen
+# Aufzählung im Kern, nie die Rechnung eines Sprachmodells.
+_LEGEN_REGEL = _obj({
+    "art": {"type": "string", "description": "Geordnet: nicht_platz, auf_platz, direkt_hinter, "
+                                             "nebeneinander, nicht_nebeneinander. Ungeordnet: "
+                                             "zusammen, nicht_zusammen, dabei, nicht_dabei."},
+    "a": {"type": "integer", "description": "Figur-Index."},
+    "b": {"type": "integer", "description": "Zweiter Figur-Index (nur bei Regeln mit zwei Figuren)."},
+    "platz": {"type": "integer", "description": "Platz ab 0 (nur nicht_platz und auf_platz)."},
+}, required=["art", "a"])
+
+_LEGEN = _obj({
+    "type": {"const": "legen"},
+    "q": {"type": "string", "description": "Auftrag samt Regelsätzen, kurz."},
+    "figuren": {"type": "array",
+                "items": _obj({"name": {"type": "string"}, "bild": {"type": "string"}}),
+                "description": "Zwei bis sechs Figuren aus dem Vorrat von legen_kern.py."},
+    "plaetze": {"type": "integer", "description": "Wie viele Plätze gelegt werden, 2..Figurenzahl."},
+    "geordnet": {"type": "boolean", "description": "true = Reihenfolge zählt, false = Auswahl."},
+    "modus": {"type": "string", "description": "'alle' (alle Anordnungen sammeln, nur bei a 2..8) "
+                                              "oder 'zaehlen' (Zahl eingeben)."},
+    "regeln": {"type": "array", "items": _LEGEN_REGEL, "description": "Höchstens drei Regeln."},
+    "a": {"type": "integer", "description": "Gesamtzahl der gültigen Anordnungen."},
+    "kern": {"type": "object", "description": "{'art':'legen','n','plaetze','geordnet','regeln',"
+                                              "'anzahl'} — legen_kern.pruefe_legen ist die Wahrheit."},
+    "hint": _HINT,
+}, required=["type", "q", "figuren", "plaetze", "geordnet", "modus", "regeln", "a", "kern", "hint"])
+
+TASK = {"anyOf": [_ENTDECKEN, _ZAHL, _ZAHL_KERN, _WAHL, _WAHRFALSCH,
                   _ORDNEN, _ZUORDNEN, _MEHRSCHRITT, _GITTER, _LOGIKGITTER,
-                  _ROBOTER, _BILDWAHL, _BILDZAHL, _POSITIONEN]}
+                  _ROBOTER, _BILDWAHL, _BILDZAHL, _POSITIONEN, _LEGEN]}
 
 # Was ein Sprachmodell abliefern darf: alles außer 'logikgitter'. Der Typ
 # entsteht ausschließlich deterministisch aus dem Kern (generate_units.py);

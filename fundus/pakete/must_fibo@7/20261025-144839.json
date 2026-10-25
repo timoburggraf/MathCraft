@@ -1,0 +1,97 @@
+{
+ "skill": "must_fibo",
+ "stage": 7,
+ "world": "dino",
+ "title": "Muster · Dinozeit",
+ "intro": "Findest du die geheime Regel hinter jeder Reihe?",
+ "tasks": [
+  {
+   "type": "wahl",
+   "q": "Bei der Ausgrabung legst du Knochen frei, und in jeder Schicht liegen so viele wie in den zwei Schichten darüber zusammen. Welche Zahl kommt als Nächstes?",
+   "opts": [
+    "17",
+    "16",
+    "10",
+    "15"
+   ],
+   "correct": 1,
+   "check": {
+    "expr": "10+6"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "Im Grabungsfeld liegen die Knochen in Reihen, und jeder neue Fund passt zu den beiden davor. Welche Zahl kommt als Nächstes?",
+   "a": 14,
+   "check": {
+    "expr": "9+5"
+   }
+  },
+  {
+   "type": "wahl",
+   "q": "Bei der Ausgrabung notiert ein Forscher, wie viele Knochen er in jeder Schicht findet. Welche Zahl kommt als Nächstes?",
+   "opts": [
+    "23",
+    "21",
+    "22",
+    "14"
+   ],
+   "correct": 2,
+   "check": {
+    "expr": "14+8"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "Im Grabungsfeld liegen die Knochen in Reihen, und jede Reihe hat so viele Knochen wie die zwei Reihen davor zusammen. Welche Zahl kommt als Nächstes?",
+   "a": 8,
+   "check": {
+    "expr": "5+3"
+   }
+  },
+  {
+   "type": "wahl",
+   "q": "Im Grabungsfeld liegen die Knochen in Reihen, und jede neue Reihe ist so lang wie die zwei davor zusammen. Welche Zahl kommt als Nächstes?",
+   "opts": [
+    "9",
+    "5",
+    "7",
+    "8"
+   ],
+   "correct": 3,
+   "check": {
+    "expr": "5+3"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "Im Grabungsfeld legst du Knochen frei, und jeder neue Fund passt genau zu den zwei davor. Welche Zahl kommt als Nächstes?",
+   "a": 13,
+   "check": {
+    "expr": "8+5"
+   }
+  },
+  {
+   "type": "wahl",
+   "q": "Im Ausgrabungsfeld notiert der Forscher jeden Tag, wie viele Knochen er findet. Welche Zahl kommt als Nächstes?",
+   "opts": [
+    "15",
+    "14",
+    "13",
+    "9"
+   ],
+   "correct": 1,
+   "check": {
+    "expr": "9+5"
+   }
+  },
+  {
+   "type": "zahl",
+   "q": "Bei der Ausgrabung zählst du in jeder neuen Schicht die Dino-Knochen. Welche Zahl kommt als Nächstes?",
+   "a": 24,
+   "check": {
+    "expr": "15+9"
+   }
+  }
+ ]
+}

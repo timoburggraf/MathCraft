@@ -1,0 +1,99 @@
+{
+ "skill": "komb_paare",
+ "stage": 4,
+ "world": "pokemon",
+ "title": "Monster tauschen und paaren",
+ "intro": "Deine Sammelmonster wollen Bonbons probieren – jedes Monster mit jeder Sorte.",
+ "tasks": [
+  {
+   "type": "zahl",
+   "q": "Du hast 3 Monster und 2 Bonbonsorten. Jedes Monster probiert jede Sorte. Wie viele Paare gibt das?",
+   "a": 6,
+   "check": {
+    "expr": "3*2"
+   },
+   "hint": "Jedes der 3 Monster bekommt 2 Paare – zähle 2 und 2 und 2."
+  },
+  {
+   "type": "zahl",
+   "q": "Im Käfig sind 4 Monster. Du hast 5 Bonbonsorten. Wie viele Monster-Bonbon-Paare kannst du bilden?",
+   "a": 20,
+   "check": {
+    "expr": "4*5"
+   },
+   "hint": "Denk an 4 Reihen mit je 5 Bonbons."
+  },
+  {
+   "type": "wahl",
+   "q": "6 Monster, 4 Bonbonsorten. Jedes Monster testet jede Sorte. Wie viele Tests sind das?",
+   "opts": [
+    "10 Tests",
+    "12 Tests",
+    "24 Tests",
+    "18 Tests"
+   ],
+   "correct": 2,
+   "check": {
+    "expr": "6*4"
+   },
+   "hint": "Nicht zusammenzählen – jede Reihe hat 4 Bonbons, und es gibt 6 Reihen."
+  },
+  {
+   "type": "zahl",
+   "q": "Du hast 7 Monster. Jedes zeigst du in 3 Entwicklungsstufen auf einer Karte. Wie viele Karten brauchst du?",
+   "a": 21,
+   "check": {
+    "expr": "7*3"
+   },
+   "hint": "3 Karten pro Monster, und Monster gibt es sieben."
+  },
+  {
+   "type": "wahl",
+   "q": "Auf dem Tauschmarkt stehen 5 Monster und 9 Bonbonsorten. Wie viele verschiedene Paare gehen?",
+   "opts": [
+    "36 Paare",
+    "45 Paare",
+    "54 Paare",
+    "14 Paare"
+   ],
+   "correct": 1,
+   "check": {
+    "expr": "5*9"
+   },
+   "hint": "Rechne 9 mal 5, oder 5 mal 10 und nimm eine 5 weg."
+  },
+  {
+   "type": "zahl",
+   "q": "Du hast 4 Monster und zählst genau 24 mögliche Paare. Wie viele Bonbonsorten liegen da?",
+   "a": 6,
+   "check": {
+    "expr": "24/4"
+   },
+   "hint": "Welche Zahl mal 4 ergibt 24?"
+  },
+  {
+   "type": "zahl",
+   "q": "6 Monster stehen vor 5 Bonbonsorten. Ein Monster schläft und probiert nichts. Wie viele Paare bleiben?",
+   "a": 25,
+   "check": {
+    "expr": "(6-1)*5"
+   },
+   "hint": "Zähle erst die wachen Monster, dann rechne mal 5."
+  },
+  {
+   "type": "wahl",
+   "q": "8 Monster wollen naschen. Von den 9 Bonbondosen sind 2 leer. Wie viele Monster-Bonbon-Paare kannst du bilden?",
+   "opts": [
+    "72 Paare",
+    "63 Paare",
+    "56 Paare",
+    "15 Paare"
+   ],
+   "correct": 2,
+   "check": {
+    "expr": "8*(9-2)"
+   },
+   "hint": "Nimm zuerst die leeren Dosen weg, dann rechne mal 8."
+  }
+ ]
+}

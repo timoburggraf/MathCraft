@@ -31,6 +31,9 @@ import raetsel_kern as K
 import grafik_kern as GK
 import muster_kern as MK
 import algo_kern as AK
+import geo_kern as GEO
+import figur_kern as FK
+import legen_kern as LK
 
 # Ein Fragetext für einen Achtjährigen. Zwei Sätze, mehr nicht — wer drei
 # Zeilen lesen muss, bevor er rechnen darf, gibt vorher auf.
@@ -235,6 +238,31 @@ def _v_zahl(t, stage, out):
         out.append(f"Antwort ist keine Zahl: {a!r}")
         return
     _check_term(t.get("check"), stage, a, out)
+    if "kern" in t:
+        _zahl_kern_pruefen(t["kern"], a, out)
+
+
+def _zahl_kern_pruefen(kern, a, out):
+    """zahl mit Kern (ZIELE-V3.md, G3): die Rechteck-Rätsel von
+    geo_flaeche_umfang sind zahl-Aufgaben, deren check.expr nur die Zahl
+    selbst trägt und nichts beweist. Beweisen tut erst der Prüfer des Kerns,
+    der das Durchprobieren neu rechnet. Ohne 'kern' bleibt jede zahl-Aufgabe
+    wie sie war; MIT 'kern' muss er stimmen und zur Antwort passen."""
+    if not isinstance(kern, dict):
+        out.append("'kern' ist kein Objekt")
+        return
+    art = kern.get("art")
+    pruefer = _KERN_PRUEFER.get(art)
+    if pruefer is None:
+        out.append(f"zahl: unbekannte kern.art {art!r}")
+        return
+    ok, grund = pruefer(kern)
+    if not ok:
+        out.append(f"Kern lehnt die Aufgabe ab: {grund}")
+    if "anzahl" not in kern:
+        out.append(f"kern.art {art!r} hat keine 'anzahl' – das passt nicht zu einer zahl-Aufgabe")
+    elif not _near(kern.get("anzahl"), a):
+        out.append(f"a={a!r} stimmt nicht mit kern.anzahl={kern.get('anzahl')!r} überein")
 
 
 def _v_wahl(t, stage, out):
@@ -486,18 +514,25 @@ def _v_bildwahl(t, stage, out):
         out.append("bildwahl ohne 'kern' – die Wahrheit fehlt")
         return
     art = kern.get("art")
-    pruefer = {
-        "spiegelbild": GK.pruefe_spiegelbild, "drehfigur": GK.pruefe_drehfigur,
-        "matrix": MK.pruefe_matrix, "analogie": MK.pruefe_analogie,
-    }.get(art)
+    pruefer = _KERN_PRUEFER.get(art)
     if pruefer is None:
         out.append(f"bildwahl: unbekannte kern.art {art!r}")
         return
+    # Eine Art, die keine Auswahl-Wahrheit trägt (z.B. eine Zahl-Art wie
+    # 'quader'), gehört nicht in eine bildwahl-Aufgabe.
+    if "richtig" not in kern:
+        out.append(f"bildwahl: kern.art {art!r} hat kein 'richtig' – das ist keine Auswahl-Art")
     ok, grund = pruefer(kern)
     if not ok:
         out.append(f"Kern lehnt die Aufgabe ab: {grund}")
     if kern.get("richtig") != richtig:
         out.append(f"'richtig'={richtig!r} stimmt nicht mit kern.richtig={kern.get('richtig')!r} überein")
+    # Merkbild: das Fragebild verschwindet nach merken_ms. Die Zeit steht im
+    # Kern (und der Prüfer rechnet sie zur Stufe nach); die Aufgabe muss
+    # dieselbe tragen, sonst blendet die App anders aus, als der Kern prüft.
+    if art == "merkbild" and t.get("merken_ms") != kern.get("merken_ms"):
+        out.append(f"merken_ms={t.get('merken_ms')!r} stimmt nicht mit kern.merken_ms="
+                   f"{kern.get('merken_ms')!r} überein")
 
     _kennungen_pruefen([t.get("q")], out)
 
@@ -518,16 +553,35 @@ def _v_bildzahl(t, stage, out):
         a = None
 
     kern = t.get("kern")
-    if not isinstance(kern, dict) or kern.get("art") != "wuerfelgebaeude":
-        out.append("bildzahl ohne gültigen 'kern' (kern.art muss 'wuerfelgebaeude' sein)")
+    if not isinstance(kern, dict) or kern.get("art") not in _KERN_PRUEFER:
+        out.append("bildzahl ohne gültigen 'kern' (kern.art ist unbekannt: "
+                   f"{kern.get('art') if isinstance(kern, dict) else kern!r})")
         return
-    ok, grund = GK.pruefe_wuerfelgebaeude(kern)
+    art = kern["art"]
+    # Eine Art ohne Zählwahrheit (z.B. 'ansicht') gehört nicht in eine
+    # bildzahl-Aufgabe.
+    if "anzahl" not in kern:
+        out.append(f"bildzahl: kern.art {art!r} hat keine 'anzahl' – das ist keine Zahl-Art")
+    ok, grund = _KERN_PRUEFER[art](kern)
     if not ok:
         out.append(f"Kern lehnt die Aufgabe ab: {grund}")
     if a is not None and kern.get("anzahl") != a:
         out.append(f"a={a!r} stimmt nicht mit kern.anzahl={kern.get('anzahl')!r} überein")
 
     _kennungen_pruefen([t.get("q")], out)
+
+
+# Alle Kern-Arten, die bildwahl, bildzahl und zahl-mit-Kern tragen dürfen, und
+# der Prüfer, der ihre Wahrheit ohne das SVG neu rechnet. Welche Art in welchen
+# Typ gehört, sagt der Kern selbst: bildwahl braucht 'richtig', bildzahl und
+# zahl brauchen 'anzahl'. (geo_kern.PRUEFER und figur_kern.PRUEFER sind die
+# Wahrheit der V3-Arten, siehe ZIELE-V3.md.)
+_KERN_PRUEFER = {
+    "spiegelbild": GK.pruefe_spiegelbild, "drehfigur": GK.pruefe_drehfigur,
+    "wuerfelgebaeude": GK.pruefe_wuerfelgebaeude,
+    "matrix": MK.pruefe_matrix, "analogie": MK.pruefe_analogie,
+    **GEO.PRUEFER, **FK.PRUEFER,
+}
 
 
 # Hinweistyp -> die Felder ('a'/'b'/'c'), die auf einen Subjekt-Index zeigen.
@@ -704,13 +758,92 @@ def _v_roboter(t, stage, out):
     _kennungen_pruefen([t.get("q")], out)
 
 
+def _ganz(x):
+    return isinstance(x, int) and not isinstance(x, bool)
+
+
+def _v_legen(t, stage, out):
+    """legen (ZIELE-V3.md, G1): Figuren auf Plätze legen, alle Anordnungen
+    sammeln. Die Wahrheit steht ausschließlich im Kern: Die Gesamtzahl kommt
+    aus der vollständigen Aufzählung (legen_kern.pruefe_legen_aufgabe zählt
+    sie neu und prüft Modus-Grenze 2..8 und den Abgleich Aufgabe <-> Kern).
+    Hier kommen die Formregeln dazu, mit denen ein kaputtes Feld eine eigene,
+    verständliche Meldung bekommt, statt nur im Kern-Urteil zu stecken."""
+    _check_text(t.get("q"), out, stage)
+
+    modus = t.get("modus")
+    if modus not in ("alle", "zaehlen"):
+        out.append(f"modus={modus!r} ist weder 'alle' noch 'zaehlen'")
+
+    figuren = t.get("figuren")
+    if not isinstance(figuren, list) or not 2 <= len(figuren) <= LK.MAX_FIGUREN:
+        out.append(f"'figuren' braucht 2 bis {LK.MAX_FIGUREN} Einträge, hat "
+                   f"{len(figuren) if isinstance(figuren, list) else figuren!r}")
+        n = None
+    else:
+        n = len(figuren)
+        for i, f in enumerate(figuren):
+            if not isinstance(f, dict) or not isinstance(f.get("name"), str) \
+                    or not isinstance(f.get("bild"), str) or not f["name"].strip() \
+                    or not f["bild"].strip():
+                out.append(f"Figur {i} braucht einen Namen und ein Bild: {f!r}")
+
+    geordnet = t.get("geordnet")
+    if not isinstance(geordnet, bool):
+        out.append(f"geordnet={geordnet!r} ist kein Wahrheitswert")
+    plaetze = t.get("plaetze")
+    if not _ganz(plaetze) or (n is not None and not 2 <= plaetze <= n):
+        out.append(f"plaetze={plaetze!r} passt nicht zu {n} Figuren")
+
+    regeln = t.get("regeln")
+    if not isinstance(regeln, list):
+        out.append("'regeln' fehlt oder ist keine Liste")
+    else:
+        bekannt = set(LK.REGELN_GEORDNET) | set(LK.REGELN_UNGEORDNET)
+        passend = (LK.REGELN_GEORDNET if geordnet else LK.REGELN_UNGEORDNET) \
+            if isinstance(geordnet, bool) else bekannt
+        for i, r in enumerate(regeln):
+            if not isinstance(r, dict) or r.get("art") not in bekannt:
+                out.append(f"Regel {i}: unbekannte Regelart "
+                           f"{r.get('art') if isinstance(r, dict) else r!r}")
+                continue
+            if r["art"] not in passend:
+                out.append(f"Regel {i}: Regelart {r['art']!r} gibt es "
+                           f"{'bei geordneten' if geordnet else 'bei ungeordneten'} Aufgaben nicht")
+            for feld in ("a", "b"):
+                if feld in r and (not _ganz(r[feld]) or (n is not None and not 0 <= r[feld] < n)):
+                    out.append(f"Regel {i}: Feld {feld!r}={r[feld]!r} zeigt auf keine Figur")
+            if "platz" in r and (not _ganz(r["platz"])
+                                 or (_ganz(plaetze) and not 0 <= r["platz"] < plaetze)):
+                out.append(f"Regel {i}: Feld 'platz'={r['platz']!r} liegt außerhalb der Plätze")
+
+    kern = t.get("kern")
+    if not isinstance(kern, dict):
+        out.append("legen ohne 'kern' – die Wahrheit fehlt")
+        return
+    # Die Antwort ist die Gesamtzahl aus dem Kern, nie ein eigener Wert.
+    a = t.get("a")
+    if not _ganz(a):
+        out.append(f"a={a!r} ist keine ganze Zahl")
+    elif a != kern.get("anzahl"):
+        out.append(f"a={a!r} stimmt nicht mit kern.anzahl={kern.get('anzahl')!r} überein")
+    try:
+        ok, grund = LK.pruefe_legen_aufgabe(t)
+    except (TypeError, ValueError, KeyError) as e:
+        ok, grund = False, f"Prüfung scheitert an einem kaputten Feld ({type(e).__name__}: {e})"
+    if not ok:
+        out.append(f"Kern lehnt die Aufgabe ab: {grund}")
+
+    _kennungen_pruefen([t.get("q")], out)
+
+
 VALIDATORS = {
     "entdecken": _v_entdecken, "zahl": _v_zahl, "wahl": _v_wahl,
     "wahrfalsch": _v_wahrfalsch, "ordnen": _v_ordnen, "zuordnen": _v_zuordnen,
     "mehrschritt": _v_mehrschritt, "gitter": _v_gitter,
     "logikgitter": _v_logikgitter,
     "bildwahl": _v_bildwahl, "bildzahl": _v_bildzahl, "positionen": _v_positionen,
-    "roboter": _v_roboter,
+    "roboter": _v_roboter, "legen": _v_legen,
 }
 
 
@@ -733,6 +866,17 @@ def check_task(task, stage, allowed_types=None):
         out.append(f"Aufgabentyp {typ!r} ist für diese Fertigkeit nicht vorgesehen "
                    f"(erlaubt: {', '.join(allowed_types)})")
     VALIDATORS[typ](task, stage, out)
+    # Optionale Felder neuer Aufgabentypen (ZIELE-V3.md): 'papier' darf jede
+    # Aufgabe tragen, 'merken_ms' nur bildwahl (Fragebild kurz zeigen, dann
+    # ausblenden). Fehlen sie, ändert sich nichts.
+    if "papier" in task and not isinstance(task["papier"], bool):
+        out.append(f"papier={task['papier']!r} ist kein Wahrheitswert")
+    if "merken_ms" in task:
+        ms = task["merken_ms"]
+        if typ != "bildwahl":
+            out.append("merken_ms gibt es nur bei bildwahl")
+        elif not _ganz(ms) or not 1000 <= ms <= 10000:
+            out.append(f"merken_ms={ms!r} liegt nicht in 1000..10000")
     if task.get("hint"):
         _check_text(task["hint"], out, stage, "Tipp")
     return out

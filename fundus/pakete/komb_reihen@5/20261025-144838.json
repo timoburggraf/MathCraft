@@ -1,0 +1,63 @@
+{
+ "skill": "komb_reihen",
+ "stage": 5,
+ "world": "clash",
+ "title": "Reihenfolgen im Burgenbau",
+ "intro": "Du planst deinen Bau – und heute geht es darum, in welcher Reihenfolge alles fertig wird.",
+ "tasks": [
+  {
+   "type": "zahl",
+   "q": "Du baust eine Mauer und einen Turm, eins nach dem anderen. In wie vielen Reihenfolgen kannst du die zwei bauen?",
+   "a": 2,
+   "check": {
+    "expr": "2*1"
+   },
+   "hint": "Überlege, was zuerst fertig sein kann – und was dann übrig bleibt."
+  },
+  {
+   "type": "zahl",
+   "q": "Rathaus, Goldmine und Kaserne werden nacheinander fertig. Wie viele Reihenfolgen gibt es?",
+   "a": 6,
+   "check": {
+    "expr": "3*2*1"
+   },
+   "hint": "Für den ersten Platz hast du 3 Gebäude, danach nur noch 2, dann 1."
+  },
+  {
+   "type": "zahl",
+   "q": "Vier Truppen verlassen die Kaserne hintereinander. Wie viele Reihenfolgen sind möglich?",
+   "a": 24,
+   "check": {
+    "expr": "4*3*2*1"
+   },
+   "hint": "4 Wahlen für vorne, dann 3, dann 2, dann 1 – alles malnehmen."
+  },
+  {
+   "type": "zahl",
+   "q": "Von deinen vier Truppen willst du nur die ersten zwei Plätze festlegen. Wie viele Möglichkeiten hast du dafür?",
+   "a": 12,
+   "check": {
+    "expr": "4*3"
+   },
+   "hint": "Für Platz eins hast du 4 Truppen, für Platz zwei nur noch 3."
+  },
+  {
+   "type": "zahl",
+   "q": "Du planst die Reihenfolge für drei Gebäude, dein Kumpel für drei andere. Jede deiner Reihenfolgen passt zu jeder von seinen. Wie viele Paare gibt es?",
+   "a": 36,
+   "check": {
+    "expr": "(3*2*1)*(3*2*1)"
+   },
+   "hint": "Zu jeder deiner 6 Reihenfolgen gehören alle 6 von ihm."
+  },
+  {
+   "type": "zahl",
+   "q": "Vier Truppen laufen hintereinander los. Der Riese läuft immer direkt hinter dem Heiler. Wie viele Reihenfolgen gibt es dann?",
+   "a": 6,
+   "check": {
+    "expr": "3*2*1"
+   },
+   "hint": "Denk an Heiler und Riese als ein einziges Paket – dann sind es nur noch drei Teile."
+  }
+ ]
+}

@@ -2,7 +2,7 @@
 """Die fünf Denkdisziplinen der Denkschule (ZIELE-V2.md, Abschnitt D1).
 
 Diese Datei ist reine Datenhaltung, keine Logik: Sie legt fest, welche der
-inzwischen 89 Fertigkeiten aus curriculum.py zu welcher der fünf Disziplinen
+inzwischen 94 Fertigkeiten aus curriculum.py zu welcher der fünf Disziplinen
 gehört (Mustererkennung, Logik & Deduktion, Algorithmik, Kombinatorik &
 Strategie, Raum & Form) und welche stattdessen Pre-Lesson-Material sind — reine
 Rechenfertigkeiten, die dem Kind nur noch als kurzer Vorlauf vor einer
@@ -33,6 +33,13 @@ zwölf neuen Denkschule-Fertigkeiten aus SPEC_lektionen_v2.md §1:
                           dagegen Rechenaufgaben (Formel anwenden) und bleiben
                           Pre-Lesson-Material; dazu die drei neuen
                           Bildaufgaben geo_spiegel, geo_drehen, geo_wuerfel
+                          und seit V3 (ZIELE-V3.md, G3) die fünf Geometrie-
+                          Fertigkeiten geo_ansicht, geo_netzfalten,
+                          geo_flaeche_umfang, geo_quader, geo_karte. Auch
+                          geo_flaeche_umfang gehört dazu, obwohl es um Fläche
+                          und Umfang geht: es ist hier Kästchen-Zählen und
+                          Rechtecke-Suchen an Bildern, keine Formelrechnung
+                          (die bleibt bei geo_umfang/geo_flaeche).
 
 PRE_LESSON_SKILLS wird bewusst nicht von Hand abgetippt, sondern aus
 curriculum.py abgeleitet ("alle übrigen"): jede Fertigkeit, die keiner
@@ -96,6 +103,7 @@ DISZIPLINEN = {
         skills=[
             "geo_formen", "geo_symm", "geo_zaehl", "geo_koerper", "geo_netz", "geo_koord",
             "geo_spiegel", "geo_drehen", "geo_wuerfel",
+            "geo_ansicht", "geo_netzfalten", "geo_flaeche_umfang", "geo_quader", "geo_karte",
         ],
     ),
 }
