@@ -7,20 +7,23 @@ danach die Auswahl auf dem Gerät verändert, im Protokoll auftaucht und sich
 zurücknehmen lässt.
 
   .venv/bin/python build/wunsch_test.py
+
+Der Dienst spricht seit der Sicherheitsumstellung nur noch HTTPS: Die Wünsche
+werden über die angemeldete Elternseite gesetzt (Cookie, einmaliges CSRF-Token),
+die Ereignisse kommen als signierte Geräteanfrage. Den Dienst dafür startet
+HttpsDienst aus eltern_test.py mit Dummy-Geheimnissen auf localhost.
 """
 import json
-import os
 import shutil
 import socket
-import subprocess
 import sys
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import testhilfe as T
+from eltern_test import HttpsDienst
 
 ROOT = Path(__file__).resolve().parent.parent
 APP = ROOT / "index.html"
@@ -47,24 +50,13 @@ def frei(port):
         s.close()
 
 
-class _OhneUmleitung(urllib.request.HTTPRedirectHandler):
-    """urllib folgt der Umleitung sonst selbst — dann käme immer 200 zurück,
-    und ob der Dienst wirklich umleitet, bliebe ungeprüft."""
-
-    def redirect_request(self, *a, **k):
-        return None
-
-
 def form(pfad, felder):
-    from urllib.parse import urlencode
-    oeffner = urllib.request.build_opener(_OhneUmleitung)
-    r = urllib.request.Request(f"http://127.0.0.1:{PORT}{pfad}",
-                               data=urlencode(felder).encode(), method="POST")
-    try:
-        with oeffner.open(r, timeout=5) as resp:
-            return resp.status
-    except urllib.error.HTTPError as e:
-        return e.code
+    """Ein Formular der Elternseite abschicken — angemeldet, mit frischem
+    Token; der Status kommt ungefolgt zurück (ob umgeleitet wird, zählt)."""
+    return DIENST.formular(pfad, felder).status
+
+
+DIENST = None
 
 
 def main():
@@ -91,25 +83,19 @@ def main():
                        "g": sk["stage"], "y": "zahl", "o": 1 if k < 8 else 0,
                        "ms": 4000, "r": 0, "h": 0})
 
-    dienst = subprocess.Popen(
-        [sys.executable, str(ROOT / "tutor/server.py"),
-         "--port", str(PORT), "--host", "127.0.0.1"],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-        env=dict(os.environ, MC_TELE=str(tele)))
+    global DIENST
+    dev = "aa11bb22cc33dd44"
+    dienst = DIENST = HttpsDienst(PORT, tele)
     try:
-        for _ in range(60):
-            try:
-                urllib.request.urlopen(f"http://127.0.0.1:{PORT}/health", timeout=1)
-                break
-            except Exception:
-                time.sleep(.2)
+        if not dienst.start():
+            sys.exit("HTTPS-Dienst startet nicht")
+        add("Die Elternanmeldung klappt mit dem Test-Passwort", dienst.anmelden())
+        schluessel = dienst.koppeln(dev)
 
-        r = urllib.request.Request(f"http://127.0.0.1:{PORT}/sync",
-                                   data=json.dumps({"v": 1, "dev": "aa11bb22cc33dd44",
-                                                    "ev": ev,
-                                                    "stats": {"answers": len(ev)}}).encode(),
-                                   headers={"Content-Type": "text/plain"}, method="POST")
-        urllib.request.urlopen(r, timeout=10).read()
+        r = dienst.signiert(dev, schluessel, "/sync",
+                            {"v": 1, "dev": dev, "ev": ev, "stats": {"answers": len(ev)}})
+        add("Die Ereignisse des Kindes kommen als signierte Anfrage an",
+            r.status == 200 and r.json().get("neu") == len(ev), str(r.status))
 
         # ------------------------------------------------------ Der Dienst
         add("Ein Wunsch lässt sich setzen",
@@ -126,10 +112,7 @@ def main():
             and gespeichert[-1]["art"] == "mehr")
         form("/wunsch", {"ziel": "skill", "id": hoch["id"], "art": "jetzt"})
 
-        antw = json.loads(urllib.request.urlopen(urllib.request.Request(
-            f"http://127.0.0.1:{PORT}/sync",
-            data=json.dumps({"v": 1, "dev": "aa11bb22cc33dd44", "ev": []}).encode(),
-            headers={"Content-Type": "text/plain"}, method="POST"), timeout=5).read())
+        antw = dienst.signiert(dev, schluessel, "/sync", {"v": 1, "dev": dev, "ev": []}).json()
         add("Der Wunsch geht mit der Sync-Antwort ans Handy",
             any(w["id"] == hoch["id"] and w["art"] == "jetzt" for w in antw["wishes"]),
             json.dumps(antw["wishes"])[:60])
@@ -226,8 +209,7 @@ def main():
             b.close()
 
         # ------------------------------------------------- Warnung und Zahlen
-        with urllib.request.urlopen(f"http://127.0.0.1:{PORT}/eltern", timeout=10) as r:
-            seite = r.read().decode("utf-8")
+        seite = dienst.get("/eltern").text
         add("Ein Sprung über mehrere Stufen wird gewarnt",
             "Das ist ein Sprung über" in seite and "trotzdem ausgeführt" in seite)
         add("Die Warnung nennt die Stufen", f'Stufe {hoch["stage"]}, er steht bei' in seite,
@@ -242,8 +224,7 @@ def main():
             not any(w["id"] == hoch["id"]
                     for w in json.loads((tele / "wuensche.json").read_text("utf-8"))))
     finally:
-        dienst.terminate()
-        dienst.wait(timeout=5)
+        dienst.stop()
         shutil.rmtree(tele, ignore_errors=True)
 
     fails = [r for r in RESULTS if not r[1]]

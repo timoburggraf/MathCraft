@@ -111,9 +111,22 @@ def fertigkeiten(ereignisse=None):
     return out
 
 
+DENKCHECK = "denkcheck"     # u-Kennung der Antworten im Denk-Check (V3/G4)
+CHECK_WIEDERHOLUNG_TAGE = 90    # frühestens nach so vielen Tagen ein neuer Check
+
+
 def alle_antworten(ereignisse=None):
+    """Die Antworten, die zum Üben zählen.
+
+    Antworten aus dem Denk-Check (u == "denkcheck") sind bewusst nicht dabei:
+    Die Aufgaben dort sind absichtlich an der Grenze des Kindes gewählt (Treppen-
+    verfahren, bis zur Hälfte falsch). Zählten sie mit, bekäme jede Fertigkeit,
+    Quote, Zeit und Typenmischung einen Block Fehlversuche, den das Kind beim
+    Üben nie hatte — und die Seite würde „hakt“ melden, wo nichts hakt. Ihr
+    Ergebnis steht eigens in denkcheck_profil().
+    """
     ev = SP.alle_ereignisse() if ereignisse is None else ereignisse
-    return [e for e in ev if e.get("e") == "a"]
+    return [e for e in ev if e.get("e") == "a" and e.get("u") != DENKCHECK]
 
 
 def bereiche(fert=None):
@@ -276,6 +289,42 @@ def uebungstage(ereignisse=None):
                    for e in alle_antworten(ereignisse) if e.get("t")})
 
 
+def denkcheck_profil(ereignisse=None):
+    """Das Profil aus den Denk-Check-Ergebnissen ("c"-Ereignisse).
+
+    Je Dimension (Schlüssel k) das jüngste Ergebnis — Schätzung, Aufgaben,
+    richtige, Median-Dauer, Vermerk z, Zeit und Datum — plus der Verlauf der
+    früheren Ergebnisse (Datum und Schätzung, ältestes zuerst). Dazu der
+    Zeitpunkt des letzten Checks überhaupt. Wie alle Auswertungen hier gilt es
+    für die übergebene Ereignisliste, auf der Elternseite also je Gerät.
+
+    Ohne ein einziges Ergebnis: leere Dimensionen und letzter == 0.
+    """
+    ev = SP.alle_ereignisse() if ereignisse is None else ereignisse
+    ergebnisse = sorted((e for e in ev if e.get("e") == "c" and e.get("k")),
+                        key=lambda e: (e.get("t", 0), e.get("i", 0)))
+
+    def tag(ms):
+        return datetime.fromtimestamp(ms / 1000).date().isoformat() if ms else ""
+
+    je = {}
+    for e in ergebnisse:
+        je.setdefault(e["k"], []).append(e)
+
+    dim = {}
+    for k, liste in je.items():
+        neu = liste[-1]
+        dim[k] = {
+            "schaetzung": neu.get("g"), "n": int(neu.get("n") or 0),
+            "c": int(neu.get("c") or 0), "ms": int(neu.get("ms") or 0),
+            "z": int(neu.get("z") or 0), "t": neu.get("t", 0), "datum": tag(neu.get("t", 0)),
+            "verlauf": [{"t": x.get("t", 0), "datum": tag(x.get("t", 0)),
+                         "schaetzung": x.get("g")} for x in liste[:-1]],
+        }
+    letzter = max((e.get("t", 0) for e in ergebnisse), default=0)
+    return {"dimensionen": dim, "letzter": letzter, "letzter_datum": tag(letzter)}
+
+
 def _skill_von_unit():
     """Paket-Id ("skill@stufe") -> Fertigkeit — die Umkehrung dessen, was ein
     Paket über sich selbst weiß. Ein "f"- oder "g"-Ereignis trägt nur die
@@ -432,6 +481,7 @@ def ueberblick(ereignisse=None):
         "geraete": SP.geraetestand(),
         "motivation": motivationslage(ev),
         "disziplinen": disziplinen_uebersicht(ev),
+        "denkcheck": denkcheck_profil(ev),
     }
 
 

@@ -465,7 +465,8 @@ def _client():
 def denk_nach(client=None):
     """Einmal über den Verlauf nachdenken. Rückgabe: (plan|None, Protokoll)."""
     ev = SP.alle_ereignisse()
-    antworten = sum(1 for e in ev if e.get("e") == "a")
+    # Denk-Check-Antworten sind kein Üben und zählen hier nicht (ZIELE-V3 G4).
+    antworten = sum(1 for e in ev if e.get("e") == "a" and e.get("u") != "denkcheck")
     if antworten < 10:
         return None, [f"zu wenig Verlauf: {antworten} Antworten"]
 
@@ -542,7 +543,8 @@ def faellig():
     if _laeuft["ja"]:
         return False
     ev = SP.alle_ereignisse()
-    antworten = sum(1 for e in ev if e.get("e") == "a")
+    # Denk-Check-Antworten sind kein Üben und zählen hier nicht (ZIELE-V3 G4).
+    antworten = sum(1 for e in ev if e.get("e") == "a" and e.get("u") != "denkcheck")
     if antworten < 10:
         return False
     p = lies_plan()

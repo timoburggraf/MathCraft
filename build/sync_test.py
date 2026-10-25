@@ -13,22 +13,25 @@ Die Zielwerte stehen in ZIELE.md, Abschnitt Z1:
   · kein Klarname verlässt das Gerät
 
   .venv/bin/python build/sync_test.py
+
+Der Dienst spricht seit der Sicherheitsumstellung nur noch HTTPS: Ereignisse
+kommen als signierte Geräteanfrage, Formulare der Elternseite brauchen
+Anmeldung und einmaliges CSRF-Token. Den Dienst dafür startet HttpsDienst aus
+eltern_test.py (Dummy-Geheimnisse, localhost). Die App im Browser verbindet
+sich über denselben Weg: Die Freigabe läuft über die echten Endpunkte des
+Dienstes, nur das Eintippen des Codes in der Oberfläche entfällt.
 """
 import json
-import os
 import shutil
 import socket
-import subprocess
 import sys
 import tempfile
 import time
-import urllib.error
-import urllib.parse
-import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import testhilfe as T
+from eltern_test import HttpsDienst
 from smoke_test import play
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -56,44 +59,54 @@ def frei(port):
         s.close()
 
 
-def warte_auf_dienst(url, sekunden=15):
-    for _ in range(sekunden * 5):
-        try:
-            urllib.request.urlopen(url, timeout=1)
-            return True
-        except Exception:
-            time.sleep(.2)
-    return False
+DIENST = None
+SCHLUESSEL = {}          # Gerätekennung -> Geräteschlüssel, je Lauf frisch gekoppelt
+KEIN_DIENST = "127.0.0.1:1"   # hier lauscht niemand: Verbindung wird sofort verweigert
 
 
-def post(pfad, daten):
-    r = urllib.request.Request(f"http://127.0.0.1:{PORT}{pfad}",
-                               data=json.dumps(daten).encode("utf-8"),
-                               headers={"Content-Type": "text/plain;charset=UTF-8"},
-                               method="POST")
-    with urllib.request.urlopen(r, timeout=5) as resp:
-        return json.loads(resp.read())
+def schluessel(dev):
+    if dev not in SCHLUESSEL:
+        SCHLUESSEL[dev] = DIENST.koppeln(dev)
+    return SCHLUESSEL[dev]
+
+
+def post(pfad, daten, als=None):
+    """Eine signierte Geräteanfrage. als: mit dem Schlüssel dieses Geräts
+    signieren, auch wenn die Ladung eine andere Kennung trägt. Gibt den
+    Inhalt der Antwort zurück; ein Fehlerstatus ist ein Fehler des Tests."""
+    dev = als or daten["dev"]
+    r = DIENST.signiert(dev, schluessel(dev), pfad, daten)
+    if r.status != 200:
+        raise RuntimeError(f"{pfad}: Status {r.status}")
+    return r.json()
 
 
 def hole(pfad):
-    with urllib.request.urlopen(f"http://127.0.0.1:{PORT}{pfad}", timeout=5) as r:
-        return json.loads(r.read())
+    return DIENST.get(pfad).json()
 
 
 def formular(pfad, felder):
-    """Ein abgeschicktes Formular wie von der Elternseite. Gibt den Status zurück."""
-    r = urllib.request.Request(
-        f"http://127.0.0.1:{PORT}{pfad}",
-        data=urllib.parse.urlencode(felder).encode("utf-8"),
-        headers={"Content-Type": "application/x-www-form-urlencoded"}, method="POST")
-    class _ohneUmleitung(urllib.request.HTTPRedirectHandler):
-        def redirect_request(self, *a, **k):
-            return None
-    try:
-        with urllib.request.build_opener(_ohneUmleitung).open(r, timeout=5) as resp:
-            return resp.status
-    except urllib.error.HTTPError as e:
-        return e.code
+    """Ein abgeschicktes Formular wie von der Elternseite (angemeldet, mit
+    frischem Token). Gibt den Status zurück, ohne der Umleitung zu folgen."""
+    return DIENST.formular(pfad, felder).status
+
+
+def verbinde(page):
+    """Das Gerät der Seite freigeben, wie es die Eltern in der Oberfläche
+    täten: Code erzeugen, Code einlösen, Schlüssel ablegen. Die App prüft
+    danach selbst gegen Adresse und Kennung (privateRequest)."""
+    dev = page.evaluate("() => S.dev")
+    page.evaluate("""([dev, key]) => {
+      AUTH = {dev, key, server: '', expires: Math.floor(Date.now()/1000) + 3600,
+              loaded: true, note: ''};
+    }""", [dev, DIENST.koppeln(dev)])
+
+
+def adresse(page, ziel):
+    """Die Adresse des Rechners setzen — und die Freigabe auf diese Herkunft
+    stellen, wie es pairDevice() täte (AUTH.server ist die gekoppelte Herkunft)."""
+    page.evaluate("""(ziel) => { S.server = ziel; AUTH.server = 'https://' + ziel; save(); }""",
+                  ziel)
 
 
 def main():
@@ -104,15 +117,13 @@ def main():
     if not frei(PORT):
         sys.exit(f"Port {PORT} ist belegt")
 
+    global DIENST
     tele = Path(tempfile.mkdtemp(prefix="mathcraft_tele_"))
-    umgebung = dict(os.environ, MC_TELE=str(tele))
-    dienst = subprocess.Popen(
-        [sys.executable, str(ROOT / "tutor/server.py"),
-         "--port", str(PORT), "--host", "127.0.0.1"],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=umgebung)
+    dienst = DIENST = HttpsDienst(PORT, tele)
 
     try:
-        add("Dienst startet", warte_auf_dienst(f"http://127.0.0.1:{PORT}/health"))
+        add("Dienst startet", dienst.start())
+        add("Die Elternanmeldung klappt mit dem Test-Passwort", dienst.anmelden())
 
         # ---------------------------------------------- Der Dienst für sich
         ladung = {"v": 1, "dev": "0123456789abcdef", "stats": {"answers": 2, "lost": 0},
@@ -139,8 +150,18 @@ def main():
         add("Unbekannte Felder landen nicht auf der Platte",
             "Alex" not in auf_platte and "geheim" not in auf_platte)
 
-        add("Eine unbrauchbare Geräte-Id wird abgewiesen",
-            _wirft_400({"v": 1, "dev": "../../etc/passwd", "ev": []}))
+        # Seit der Geräte-Signatur kommt eine fremde Kennung gar nicht mehr bis
+        # zur Ablage: Der Dienst weist sie schon an der Tür ab (403, denn das
+        # Gerät darf nur den eigenen Lernstand übertragen). Eine Kennung, die
+        # nicht einmal als Dateiname taugt, scheitert schon an der Signatur.
+        add("Eine unbrauchbare Geräte-Id wird abgewiesen, nichts wird angelegt",
+            _abgewiesen({"v": 1, "dev": "../../etc/passwd", "ev": []}, "0123456789abcdef")
+            and not (tele / "passwd.jsonl").exists()
+            and not list(tele.glob("**/passwd*")))
+        r_fremd = DIENST.signiert("../../etc/passwd", "0" * 64, "/sync",
+                                  {"v": 1, "dev": "../../etc/passwd", "ev": []})
+        add("Auch als Geräte-Kennung im Kopf wird sie abgewiesen", r_fremd.status == 401,
+            str(r_fremd.status))
 
         # ------------------------------- Ein Gerät aus der Auswertung nehmen
         # Ein Testlauf, der einmal mitgezählt hat, verfälscht jede Zahl auf der
@@ -285,10 +306,32 @@ def main():
                      and json.loads(z).get("e") == "f"]
         add("Ein doppelt gesendetes Spaß-Signal verdoppelt sich nicht", len(spass_ev2) == 1)
 
+        # ---------------------------- V3/G4: Rundlauf des Denk-Check-Ergebnisses
+        # Ein „c“-Ereignis trägt die Schätzung als Kommazahl (5.5) und den
+        # Vermerk z (−1/0/1). Wie jedes Ereignis kommt es genau einmal an,
+        # und mitgeschickte Fremdfelder (hier ein Klarname) bleiben draußen.
+        c_ladung = {"v": 1, "dev": "0123456789abcdef",
+                    "ev": [{"i": 6, "t": 1753776013000, "s": "aa11", "e": "c",
+                            "k": "strukturen", "g": 5.5, "n": 4, "c": 3, "ms": 7400,
+                            "z": 1, "name": "Alex", "u": "denkcheck"}]}
+        post("/sync", c_ladung)
+        post("/sync", c_ladung)
+        inhalt_c = (tele / "0123456789abcdef.jsonl").read_text("utf-8")
+        check_ev = [json.loads(z) for z in inhalt_c.splitlines() if z.strip()
+                    and json.loads(z).get("e") == "c"]
+        add("Das Denk-Check-Ergebnis kommt an, die Kommazahl bleibt, doppelt zählt einmal",
+            len(check_ev) == 1 and check_ev[0].get("g") == 5.5 and check_ev[0].get("k") == "strukturen"
+            and (check_ev[0].get("n"), check_ev[0].get("c"), check_ev[0].get("z")) == (4, 3, 1),
+            str(check_ev[:1])[:70])
+        add("Auch beim Denk-Check-Ergebnis werden unbekannte Felder verworfen",
+            "Alex" not in inhalt_c and "denkcheck" not in inhalt_c)
+
         # ---------------------------------------------------- Die App dazu
         with sync_playwright() as pw:
             b = pw.chromium.launch()
-            page = b.new_context(viewport={"width": 393, "height": 873}).new_page()
+            # Das Zertifikat des Test-Dienstes ist selbstsigniert (nur localhost).
+            page = b.new_context(viewport={"width": 393, "height": 873},
+                                 ignore_https_errors=True).new_page()
             errs = []
             page.on("pageerror", lambda e: errs.append(str(e)))
             T.ohne_dienst(page)
@@ -327,10 +370,10 @@ def main():
                 f'{stand["sitzungen"]}')
             add("Ohne Dienst geht nichts verloren", stand["verfallen"] == 0)
 
-            # Jetzt die Adresse setzen und übertragen.
-            page.evaluate(f"""async () => {{
-              S.server = '127.0.0.1:{PORT}'; save(); await syncNow(true);
-            }}""")
+            # Jetzt das Gerät freigeben, die Adresse setzen und übertragen.
+            verbinde(page)
+            adresse(page, f"127.0.0.1:{PORT}")
+            page.evaluate("async () => { await syncNow(true); }")
             page.wait_for_timeout(600)
             offen = page.evaluate("() => S.log.ev.length")
             add("Nach dem Übertragen ist der Puffer leer", offen == 0, f"{offen} offen")
@@ -351,21 +394,21 @@ def main():
             add("Doppeltes Übertragen verdoppelt nichts",
                 hole("/zaehlstand")["antworten_hier"] == vorher, f"{vorher}")
 
-            # Offline-Phase: falsche Adresse, weiterspielen, danach nachholen.
-            page.evaluate("() => { S.server = '10.255.255.1:9'; save(); }")
+            # Offline-Phase: unerreichbare Adresse (nur localhost — dort lauscht
+            # niemand), weiterspielen, danach nachholen.
+            adresse(page, KEIN_DIENST)
             page.evaluate("() => startUnit(nextUnit().id)")
             page.wait_for_timeout(200)
             play(page)
             page.wait_for_timeout(300)
             page.evaluate("async () => { await syncNow(true); }")
-            page.wait_for_timeout(7000)          # der Abbruch greift nach 8 Sekunden
+            page.wait_for_timeout(1000)          # Verbindung wird sofort verweigert
             gepuffert = page.evaluate("() => S.log.ev.length")
             add("Ohne Verbindung bleibt alles im Puffer liegen", gepuffert > 0,
                 f"{gepuffert} Ereignisse")
 
-            page.evaluate(f"""async () => {{
-              S.server = '127.0.0.1:{PORT}'; save(); await syncNow(true);
-            }}""")
+            adresse(page, f"127.0.0.1:{PORT}")
+            page.evaluate("async () => { await syncNow(true); }")
             page.wait_for_timeout(800)
             add("Nach der Offline-Phase wird alles nachgeholt",
                 page.evaluate("() => S.log.ev.length") == 0)
@@ -395,21 +438,23 @@ def main():
             # Der Takt: Der Fortschritt muss das Gerät verlassen, BEVOR die
             # Sitzung endet. Bricht das Kind mittendrin ab, wäre sonst alles
             # bis dahin ungesehen.
-            mitten = page.evaluate(f"""async () => {{
-              S = freshState(); S.server = '127.0.0.1:{PORT}'; save();
+            page.evaluate("() => { S = freshState(); save(); }")
+            verbinde(page)
+            adresse(page, f"127.0.0.1:{PORT}")
+            mitten = page.evaluate("""async () => {
               startUnit(nextUnit().id);
               // drei Aufgaben beantworten, Sitzung bewusst NICHT beenden
-              for(let k = 0; k < 3; k++){{
+              for(let k = 0; k < 3; k++){
                 if(!SESS) break;
                 grade(true);
-                SESS.i++; Object.assign(SESS, {{answered:false, typed:''}});
-              }}
+                SESS.i++; Object.assign(SESS, {answered:false, typed:''});
+              }
               const vorTakt = S.log.ev.filter(e => e.e === 'a').length;
               SYNC.naechster = 0;
               syncTakt();
               await new Promise(r => setTimeout(r, 900));
-              return {{vorTakt, offen: S.log.ev.length, laeuftNoch: !!SESS}};
-            }}""")
+              return {vorTakt, offen: S.log.ev.length, laeuftNoch: !!SESS};
+            }""")
             add("Mitten in der Sitzung sind Antworten aufgelaufen",
                 mitten["vorTakt"] >= 3, f'{mitten["vorTakt"]} Antworten')
             add("Die Sitzung läuft dabei noch", mitten["laeuftNoch"])
@@ -417,8 +462,8 @@ def main():
                 mitten["offen"] == 0, f'{mitten["offen"]} noch offen')
 
             # Scheitert es, wird der Abstand gestreckt statt stur weiterzuklopfen.
+            adresse(page, KEIN_DIENST)
             backoff = page.evaluate("""async () => {
-              S.server = '10.255.255.1:9'; save();
               SYNC.fehler = 0; SYNC.naechster = 0;
               const t = [];
               for(let k = 0; k < 2; k++){
@@ -444,8 +489,7 @@ def main():
             add("keine JS-Fehler", not errs, errs[0][:70] if errs else "")
             b.close()
     finally:
-        dienst.terminate()
-        dienst.wait(timeout=5)
+        dienst.stop()
         shutil.rmtree(tele, ignore_errors=True)
 
     fails = [r for r in RESULTS if not r[1]]
@@ -455,12 +499,11 @@ def main():
     return 1 if fails else 0
 
 
-def _wirft_400(daten):
-    try:
-        post("/sync", daten)
-        return False
-    except urllib.error.HTTPError as e:
-        return e.code == 400
+def _abgewiesen(daten, als):
+    """True, wenn der Dienst die Ladung ablehnt (nicht 200). Signiert wird mit
+    dem Schlüssel des Geräts `als` — die Ladung trägt eine andere Kennung."""
+    r = DIENST.signiert(als, schluessel(als), "/sync", daten)
+    return r.status in (400, 401, 403)
 
 
 if __name__ == "__main__":

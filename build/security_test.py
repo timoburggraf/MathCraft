@@ -82,7 +82,7 @@ class AccessTests(unittest.TestCase):
     def test_anonymous_parent_and_paid_routes_fail_closed(self):
         for path in ["/eltern", "/zaehlstand"]:
             self.assertEqual(self.get(path).status_code, 401)
-        for path in ["/tutor", "/tutor-jetzt", "/wunsch", "/geraet", "/sync", "/erklaer"]:
+        for path in ["/tutor", "/tutor-jetzt", "/wunsch", "/geraet", "/elternbogen", "/sync", "/erklaer"]:
             self.assertEqual(self.post(path, json={}).status_code, 401)
 
     def test_all_private_http_including_login_refused(self):
@@ -113,6 +113,33 @@ class AccessTests(unittest.TestCase):
             result = self.post("/geraet", data={"dev": self.dev, "art": "aus", "csrf": token})
             self.assertEqual(result.status_code, 303); changed.assert_called_once()
             self.assertEqual(self.post("/geraet", data={"dev": self.dev, "art": "aus", "csrf": token}).status_code, 403)
+
+    def test_elternbogen_needs_login_and_one_time_csrf(self):
+        bogen = {"dev": self.dev, **{k: "3" for k in speicher.BOGEN_SCHLUESSEL}}
+        # ohne Anmeldung: 401, und es wird nichts gespeichert
+        with patch.object(speicher, "elternbogen_speichern") as saved:
+            self.assertEqual(self.post("/elternbogen", data=bogen).status_code, 401)
+            saved.assert_not_called()
+        self.login(); token = self.csrf()
+        # angemeldet, aber ohne CSRF-Token oder von fremder Herkunft: 403
+        with patch.object(speicher, "elternbogen_speichern") as saved:
+            self.assertEqual(self.post("/elternbogen", data=bogen).status_code, 403)
+            self.assertEqual(self.post("/elternbogen", data=dict(bogen, csrf=token),
+                                       headers={"Origin": "https://attacker.invalid"}).status_code, 403)
+            saved.assert_not_called()
+        # mit Token: angenommen und zurück auf die Elternseite; ein zweites Mal mit demselben Token nicht
+        token = self.csrf()
+        with patch.object(speicher, "elternbogen_speichern") as saved:
+            result = self.post("/elternbogen", data=dict(bogen, csrf=token))
+            self.assertEqual(result.status_code, 303)
+            self.assertEqual(result.headers["Location"], "/eltern?spieler=1234567890abcdef#elternbogen")
+            saved.assert_called_once()
+            self.assertEqual(self.post("/elternbogen", data=dict(bogen, csrf=token)).status_code, 403)
+        # Ungültiges wird nach bestandener Prüfung des Tokens mit 400 abgewiesen, nie gespeichert
+        with patch.object(speicher, "elternbogen_speichern") as saved:
+            self.assertEqual(self.post("/elternbogen", data=dict(bogen, knobeln="5", csrf=self.csrf())).status_code, 400)
+            self.assertEqual(self.post("/elternbogen", data=dict(bogen, extra="1", csrf=self.csrf())).status_code, 400)
+            saved.assert_not_called()
 
     def test_login_form_replay_and_login_csrf_refused(self):
         form = self.get("/login"); token = re.search(r'name="csrf" value="([^"]+)"', form.text).group(1)

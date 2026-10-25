@@ -10,6 +10,7 @@ eine Textdatei lässt sich noch in fünf Jahren mit den Augen lesen.
                                      ggf. der Spielername
   data/telemetrie/wuensche.json     was die Eltern angefragt haben
   data/telemetrie/ignoriert.json    Geräte, die nicht mitzählen sollen
+  data/telemetrie/elternbogen.json  Beobachtungsbögen der Eltern (neun Aussagen, je 1–4)
 
 Zwei Eigenschaften sind hier wichtig und werden von build/sync_test.py geprüft:
 
@@ -65,7 +66,31 @@ FELDER = {
                                                                       # gut, 2 ging so, 3 super) —
                                                                       # kein Freitext, höchstens
                                                                       # eins je Sitzung (App-Deckel).
+    "c": ("i", "t", "s", "k", "g", "n", "c", "ms", "z"),             # Denk-Check-Ergebnis (V3/G4):
+                                                                      # k Dimension, g Schätzung der
+                                                                      # Stufe (darf eine Kommazahl
+                                                                      # sein, z. B. 5.5), n Aufgaben,
+                                                                      # c richtig, ms Median-Dauer,
+                                                                      # z −1/0/1 (Boden/Decke).
 }
+
+# Der Beobachtungsbogen der Eltern (V3/G4): neun Aussagen, je 1 („trifft nicht
+# zu“) bis 4 („trifft voll zu“). Reihenfolge und Wortlaut stehen hier, weil
+# an den Schlüsseln die strenge Prüfung hängt — die Elternseite liest sie von
+# hier, damit Formular und Prüfung nie auseinanderlaufen.
+ELTERNBOGEN = (
+    ("knobeln", "Beschäftigt sich gern und von sich aus mit Knobelaufgaben."),
+    ("ausdauer", "Bleibt bei einer schweren Aufgabe lange dran."),
+    ("selbststaendig", "Arbeitet gern selbstständig."),
+    ("ideen", "Erfindet eigene Zahlenspiele, Aufgaben oder Lösungswege."),
+    ("merken", "Merkt sich Zahlen, Muster oder Wege auffallend gut."),
+    ("begruenden", "Erklärt und begründet, warum etwas stimmt."),
+    ("gespuer", "Bemerkt schnell, wenn in einem Muster oder einer Rechnung etwas nicht passt."),
+    ("konzentration", "Kann sich lange konzentrieren, wenn es etwas interessiert."),
+    ("misserfolg", "Geht gelassen mit Fehlern um und versucht es nochmal."),
+)
+BOGEN_SCHLUESSEL = tuple(k for k, _ in ELTERNBOGEN)
+BOGEN_MAX = 50      # so viele Bögen je Gerät bleiben liegen, die ältesten gehen zuerst
 
 MAX_OFFEN = 300     # so viele offene Paket-Ids je Gerät merkt sich der Dienst (D)
 
@@ -103,6 +128,8 @@ def saeubere(ev):
             if not math.isfinite(v):
                 continue
             out[k] = int(v) if float(v).is_integer() else round(float(v), 3)
+            if art == "c" and k == "z" and out[k] not in (-1, 0, 1):
+                del out[k]          # z ist ein Vermerk (−1/0/1), keine freie Zahl
         elif isinstance(v, dict) and k == "b":
             # Belege einer Tutor-Entscheidung: Zahlen und kurze Kennungen wie
             # die Fertigkeit, auf die sie sich bezieht. Höchstens acht Stück.
@@ -424,3 +451,59 @@ def wunsch_erfuellen(ziel, kennung, wunsch_zeit, jetzt):
         if geaendert:
             TELE.mkdir(parents=True, exist_ok=True)
             WUENSCHE.write_text(json.dumps(liste, ensure_ascii=False, indent=1), "utf-8")
+
+
+# -------------------------------------------------------------- Elternbogen
+
+def _bogen_datei():
+    # Erst beim Aufruf gebildet (nicht beim Import), damit ein Test, der TELE
+    # umlenkt, hier mitgenommen wird.
+    return TELE / "elternbogen.json"
+
+
+def elternbogen_lesen(dev=None):
+    """Alle gespeicherten Bögen, älteste zuerst — mit dev nur die dieses Geräts."""
+    datei = _bogen_datei()
+    if not datei.exists():
+        return []
+    try:
+        liste = json.loads(datei.read_text("utf-8"))
+    except (ValueError, OSError):
+        return []
+    if not isinstance(liste, list):
+        return []
+    liste = [b for b in liste if isinstance(b, dict)]
+    return [b for b in liste if b.get("dev") == dev] if dev is not None else liste
+
+
+def elternbogen_speichern(dev, werte, jetzt):
+    """Einen Beobachtungsbogen ablegen. Streng: genau die neun Schlüssel aus
+    ELTERNBOGEN, jeder Wert eine ganze Zahl 1..4 — sonst ValueError.
+
+    Je Gerät bleiben höchstens BOGEN_MAX Bögen; die Bögen anderer Geräte
+    bleiben unangetastet. Geschrieben wird über eine Zwischendatei, damit ein
+    Absturz mitten im Schreiben nie einen halben Bestand hinterlässt.
+    """
+    if not isinstance(dev, str) or not DEV_RE.fullmatch(dev):
+        raise ValueError("unbrauchbare Geräte-Id")
+    if not isinstance(werte, dict) or set(werte) != set(BOGEN_SCHLUESSEL):
+        raise ValueError("unbrauchbarer Bogen")
+    sauber = {}
+    for k in BOGEN_SCHLUESSEL:
+        v = werte[k]
+        if isinstance(v, bool) or not isinstance(v, int) or not 1 <= v <= 4:
+            raise ValueError("unbrauchbarer Wert")
+        sauber[k] = v
+    with _lock:
+        TELE.mkdir(parents=True, exist_ok=True)
+        alle = elternbogen_lesen()
+        alle.append({"t": jetzt, "dev": dev, "werte": sauber})
+        eigene = [b for b in alle if b.get("dev") == dev]
+        if len(eigene) > BOGEN_MAX:
+            weg = {id(b) for b in eigene[:-BOGEN_MAX]}
+            alle = [b for b in alle if id(b) not in weg]
+        datei = _bogen_datei()
+        zwischen = datei.with_suffix(".json.neu")
+        zwischen.write_text(json.dumps(alle, ensure_ascii=False, indent=1), "utf-8")
+        os.replace(zwischen, datei)
+    return sauber

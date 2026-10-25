@@ -19,15 +19,14 @@ import json
 import os
 import shutil
 import socket
-import subprocess
 import sys
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import testhilfe as T
+from eltern_test import HttpsDienst
 
 ROOT = Path(__file__).resolve().parent.parent
 APP = ROOT / "index.html"
@@ -172,25 +171,19 @@ def main():
            "g": niedrig["stage"], "y": "zahl", "o": 1, "ms": 4000, "r": 0, "h": 0}
           for i in range(40)]
 
-    dienst = subprocess.Popen(
-        [sys.executable, str(ROOT / "tutor/server.py"),
-         "--port", str(PORT), "--host", "127.0.0.1"],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-        env=dict(os.environ, MC_TELE=str(tele), MC_PLAN=str(planfile)))
+    # Der Dienst läuft seit der Sicherheitsumstellung nur noch über HTTPS mit
+    # Elternanmeldung und signierten Geräteanfragen — derselbe Testdienst wie
+    # in eltern_test.py, mit Dummy-Geheimnissen auf localhost.
+    dev = "aabb00112233ccdd"
+    dienst = HttpsDienst(PORT, tele, plan=planfile)
     try:
-        for _ in range(60):
-            try:
-                urllib.request.urlopen(f"http://127.0.0.1:{PORT}/health", timeout=1)
-                break
-            except Exception:
-                time.sleep(.2)
-
-        r = urllib.request.Request(f"http://127.0.0.1:{PORT}/sync",
-                                   data=json.dumps({"v": 1, "dev": "aabb00112233ccdd",
-                                                    "ev": ev,
-                                                    "stats": {"answers": len(ev)}}).encode(),
-                                   headers={"Content-Type": "text/plain"}, method="POST")
-        antwort = json.loads(urllib.request.urlopen(r, timeout=15).read())
+        if not dienst.start():
+            sys.exit("HTTPS-Dienst startet nicht")
+        add("Die Elternanmeldung klappt mit dem Test-Passwort", dienst.anmelden())
+        schluessel = dienst.koppeln(dev)
+        r = dienst.signiert(dev, schluessel, "/sync",
+                            {"v": 1, "dev": dev, "ev": ev, "stats": {"answers": len(ev)}})
+        antwort = r.json()
         add("Der Plan geht mit der Sync-Antwort ans Handy",
             len(antwort.get("plan", [])) == 3,
             f'{len(antwort.get("plan", []))} Punkte')
@@ -199,8 +192,7 @@ def main():
         add("D3: das 'fuer' des Vorlauf-Postens reist mit an die App",
             antwort["plan"][0].get("fuer") == niedrig["id"])
 
-        seite = urllib.request.urlopen(
-            f"http://127.0.0.1:{PORT}/eltern", timeout=10).read().decode("utf-8")
+        seite = dienst.get("/eltern").text
         add("Die Elternseite gibt seine Beobachtung wieder",
             "Freitags bricht er ab" in seite)
         add("Und seinen Absatz für die Eltern", "Lange Texte bremsen ihn" in seite)
@@ -270,8 +262,7 @@ def main():
             add("keine JS-Fehler", not errs, errs[0][:70] if errs else "")
             b.close()
     finally:
-        dienst.terminate()
-        dienst.wait(timeout=5)
+        dienst.stop()
         shutil.rmtree(tele, ignore_errors=True)
 
     fails = [r for r in RESULTS if not r[1]]

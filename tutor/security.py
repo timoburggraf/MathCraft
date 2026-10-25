@@ -20,8 +20,8 @@ COOKIE = "__Host-mathcraft_parent"
 LOGIN_COOKIE = "__Host-mathcraft_login"
 DEVICE = re.compile(r"[0-9a-f]{8,32}\Z")
 NONCE = re.compile(r"[0-9a-f]{32}\Z")
-PARENT_ROUTES = {"/eltern", "/zaehlstand", "/wunsch", "/geraet", "/tutor", "/tutor-jetzt",
-                 "/logout", "/device/pair-code", "/device/revoke"}
+PARENT_ROUTES = {"/eltern", "/zaehlstand", "/wunsch", "/geraet", "/elternbogen", "/tutor",
+                 "/tutor-jetzt", "/logout", "/device/pair-code", "/device/revoke"}
 DEVICE_ROUTES = {"/sync", "/erklaer", "/pair"}
 PUBLIC_ROUTES = {"/", "/health", "/version", "/app.apk", "/login"}
 

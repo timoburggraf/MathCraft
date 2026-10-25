@@ -10,7 +10,7 @@ Eine Trefferquote ohne die Angabe, woraus sie gebildet wurde, verleitet zu
 Schlüssen, die die Daten nicht hergeben.
 """
 import html
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import auswertung as A
 import curriculum as C
@@ -305,6 +305,194 @@ def _motivation(u, name=None):
     </div>"""
 
 
+# ------------------------------------------------------------------ Denk-Check
+
+DENKCHECK_HINWEIS = ("Der Denk-Check ist kein IQ-Test und vergleicht nicht mit anderen "
+                     "Kindern. Er zeigt, wo dein Kind im Verhältnis zu sich selbst stark "
+                     "ist, und legt die Startstufen fest. Aussagekräftig wird das Bild "
+                     "erst zusammen mit dem, was beim normalen Spielen über Wochen "
+                     "herauskommt.")
+DENKCHECK_OHNE = ("Noch kein Denk-Check gemacht — das Kind startet ihn in der App "
+                  "auf der Startseite.")
+# Räumliches Vorstellen ist ein Interessenwert: Es trennt in der Forschung
+# Begabte kaum von anderen. Die Seite soll ihn nicht größer machen, als er ist.
+DENKCHECK_ZUSATZ = {"raum": " (Interessenwert — trennt laut Forschung kaum)"}
+
+
+def _denkcheck_dimensionen(profil):
+    """(Schlüssel, Titel) in der Reihenfolge der Aufgabenbank.
+
+    Titel und Reihenfolge kommen aus data/denkcheck.json (Schlüssel
+    "dimensionen"). Fehlt die Datei oder ist sie unlesbar, stehen die
+    Schlüssel selbst da — die Seite darf an einer fehlenden Datei nicht
+    sterben. Dimensionen, die nur im Profil vorkommen, hängen hinten an.
+    """
+    import json
+    reihe = []
+    try:
+        d = json.loads((A.ROOT / "data" / "denkcheck.json").read_text("utf-8")).get("dimensionen")
+        if isinstance(d, dict):
+            for k, v in d.items():
+                titel = v.get("titel") if isinstance(v, dict) else None
+                reihe.append((k, titel if isinstance(titel, str) and titel else k))
+    except (ValueError, OSError, AttributeError):
+        pass
+    bekannt = {k for k, _ in reihe}
+    return reihe + [(k, k) for k in profil["dimensionen"] if k not in bekannt]
+
+
+def _zahl_de(x):
+    """5.5 -> '5,5', 6.0 -> '6' — Dezimalkomma wie überall auf der Seite."""
+    return f"{round(float(x), 1):g}".replace(".", ",")
+
+
+def _stufe_text(g):
+    """'Stufe 5,5 — zwischen „Der Tausender“ und „Große Zahlen“'. Eine halbe
+    Stufe ist eine Schätzung zwischen zwei Stufen, keine eigene Stufe."""
+    ganz = min(C.MAX_STAGE, max(1, int(g)))
+    name = C.STAGES[ganz]["name"]
+    if float(g).is_integer() or ganz >= C.MAX_STAGE:
+        return f"Stufe {_zahl_de(g)} — {name}"
+    return f"Stufe {_zahl_de(g)} — zwischen „{name}“ und „{C.STAGES[ganz + 1]['name']}“"
+
+
+def _stufenbalken(g):
+    """Balken auf der Skala 1–8: Breite g/8, dazu ein Strich je Stufe."""
+    breite = min(C.MAX_STAGE, max(0.0, float(g))) / C.MAX_STAGE * 100
+    striche = "".join(
+        f'<span style="position:absolute;left:{k / C.MAX_STAGE * 100:.1f}%;top:0;bottom:0;'
+        f'width:1px;background:rgba(11,16,32,.65)"></span>' for k in range(1, C.MAX_STAGE))
+    return (f'<div class="bar" style="position:relative;min-width:120px" '
+            f'title="Stufe {esc(_zahl_de(g))} auf einer Skala von 1 bis {C.MAX_STAGE}">'
+            f'<i style="width:{breite:.1f}%"></i>{striche}</div>')
+
+
+def _denkcheck(u):
+    """V3/G4: das Profil des Denk-Checks, pro Gerät, mit dem Hinweis, was er
+    nicht ist. Der Hinweis steht immer da — auch ohne Ergebnis: Wer die Seite
+    liest, bevor das Kind den Check gemacht hat, soll ihn nicht falsch lesen,
+    wenn er kommt."""
+    profil = u["denkcheck"]
+    dims = profil["dimensionen"]
+
+    if not dims:
+        inhalt = f'<div style="font-size:15px">{esc(DENKCHECK_OHNE)}</div>'
+    else:
+        zeilen = []
+        for k, titel in _denkcheck_dimensionen(profil):
+            d = dims.get(k)
+            kopf = esc(titel) + esc(DENKCHECK_ZUSATZ.get(k, ""))
+            if not d or d["schaetzung"] is None:
+                zeilen.append(f'<tr><td>{kopf}</td><td colspan="5" class="muted">'
+                              f'noch nicht gemacht</td></tr>')
+                continue
+            g = d["schaetzung"]
+            frueher = ""
+            if d["verlauf"]:
+                frueher = ('<div class="muted" style="font-size:12.5px">früher: '
+                           + " · ".join(f'{esc(_zahl_de(x["schaetzung"]))} '
+                                        f'({esc(datum(x["t"]))})'
+                                        for x in d["verlauf"][-4:] if x["schaetzung"] is not None)
+                           + '</div>')
+            vermerk = ""
+            if d["z"] == 1:
+                vermerk = f'<span style="color:{FARBE["arbeit"]}">Decke nicht erreicht</span>'
+            elif d["z"] == -1:
+                vermerk = f'<span style="color:{FARBE["arbeit"]}">unter dem Start</span>'
+            median = f'{_zahl_de(d["ms"] / 1000)} s' if d["ms"] else "–"
+            zeilen.append(
+                f'<tr><td style="min-width:11rem">{kopf}{frueher}</td>'
+                f'<td style="min-width:130px">{_stufenbalken(g)}</td>'
+                f'<td>{esc(_stufe_text(g))}</td>'
+                f'<td class="r" style="white-space:nowrap">{d["c"]} von {d["n"]} richtig<div class="muted" '
+                f'style="font-size:12.5px">Median {esc(median)}</div></td>'
+                f'<td>{vermerk}</td>'
+                f'<td class="r">{esc(datum(d["t"]))}</td></tr>')
+        inhalt = ('<div class="scroll"><table><tr><th>Dimension</th><th>Stufe (1–8)</th>'
+                  '<th></th><th class="r">Treffer</th><th></th><th class="r">Datum</th></tr>'
+                  + "".join(zeilen) + '</table></div>')
+
+    naechster = ""
+    if profil["letzter"]:
+        ab = datetime.fromtimestamp(profil["letzter"] / 1000) + timedelta(days=A.CHECK_WIEDERHOLUNG_TAGE)
+        naechster = (f'<div style="margin-top:8px;font-size:14px">Nächster Check sinnvoll ab '
+                     f'{esc(ab.strftime("%d.%m.%Y"))}.</div>')
+
+    return f"""
+    <h2 id="denkcheck">Denk-Check</h2>
+    <div class="card">
+      {inhalt}
+      <div class="def" style="margin-top:10px">{esc(DENKCHECK_HINWEIS)}</div>
+      {naechster}
+    </div>"""
+
+
+# --------------------------------------------------------------- Elternbogen
+
+def _bogenbalken(wert):
+    return (f'<div class="bar" style="min-width:90px" title="{wert} von 4">'
+            f'<i style="width:{wert / 4 * 100:.0f}%"></i></div>')
+
+
+def _elternbogen(dev, name=None):
+    """V3/G4: der Beobachtungsbogen. Neun Aussagen, je 1–4; gespeichert mit
+    Datum, angezeigt wird der letzte samt Balken, und das Formular ist mit
+    seinen Werten vorausgefüllt — wer einen Wert ändern will, muss nicht alles
+    neu ankreuzen. Beantwortet wird für ein bestimmtes Gerät (dev): dasselbe,
+    das oben in der Spieler-Auswahl gewählt ist."""
+    if not dev:
+        return ("""
+    <h2 id="elternbogen">Elternbogen</h2>
+    <div class="card"><div class="muted" style="font-size:14px">Der Bogen lässt sich
+      ausfüllen, sobald ein Gerät Daten geschickt hat.</div></div>""")
+
+    import speicher as SP
+    bogen = SP.elternbogen_lesen(dev)
+    letzter = bogen[-1] if bogen else None
+    werte = letzter["werte"] if letzter else {}
+
+    if letzter:
+        zeilen = "".join(
+            f'<tr><td>{esc(text)}</td><td style="width:120px">{_bogenbalken(werte[k])}</td>'
+            f'<td class="r">{werte[k]}</td></tr>'
+            for k, text in SP.ELTERNBOGEN if isinstance(werte.get(k), int))
+        zuletzt = (f'<h3>Letzter Bogen vom {esc(datum(letzter["t"]))}</h3>'
+                   f'<div class="scroll"><table>{zeilen}</table></div>')
+    else:
+        zuletzt = '<div class="muted" style="font-size:14px">Noch kein Bogen ausgefüllt.</div>'
+
+    kopf = ('<tr><th></th><th class="r">1<br><span style="text-transform:none">trifft nicht zu'
+            '</span></th><th class="r">2</th><th class="r">3</th><th class="r">4<br>'
+            '<span style="text-transform:none">trifft voll zu</span></th></tr>')
+    felder = "".join(
+        f'<tr><td>{esc(text)}</td>' + "".join(
+            f'<td class="r"><label style="display:block;padding:4px 10px;cursor:pointer">'
+            f'<input type="radio" name="{k}" value="{v}" required'
+            f'{" checked" if werte.get(k) == v else ""} aria-label="{esc(text)} — {v}"></label></td>'
+            for v in (1, 2, 3, 4)) + '</tr>'
+        for k, text in SP.ELTERNBOGEN)
+
+    return f"""
+    <h2 id="elternbogen">Elternbogen</h2>
+    <div class="card">
+      <div class="def">Neun Beobachtungen zu Eigenschaften, die Begabung stützen — Freude
+        am Knobeln, Ausdauer, eigene Ideen und so weiter. Du beantwortest sie aus deinem
+        Alltag mit {esc(name or "dem Kind")}, jede von 1 (trifft nicht zu) bis 4 (trifft
+        voll zu). Es gibt kein Ergebnis und keine Auswertung, nur einen Verlauf: Gespeichert
+        wird jeder Bogen mit Datum.</div>
+      {zuletzt}
+    </div>
+    <div class="card">
+      <h3>Bogen ausfüllen{' — Werte vom letzten Mal sind vorausgewählt' if letzter else ''}</h3>
+      <form method="post" action="/elternbogen">
+        <input type="hidden" name="dev" value="{esc(dev)}">
+        <div class="scroll"><table>{kopf}{felder}</table></div>
+        <button class="wb" type="submit" style="margin-top:10px;padding:6px 14px;font-size:14px">
+          Bogen speichern</button>
+      </form>
+    </div>"""
+
+
 def _nordstern(n):
     gut = n["anteil"] >= 0.70 and n["gewertet"] >= 4
     return f"""
@@ -467,7 +655,10 @@ def _planposten_status(skill_id, seit, einheiten_je_fertigkeit, offene_gesamt):
     davor schon Sofort-Abbrüche liefen."""
     import speicher as SP
     ev = SP.alle_ereignisse()
-    if any(e.get("e") == "a" and e.get("t", 0) >= seit and e.get("k") == skill_id
+    # Eine Antwort aus dem Denk-Check zählt nicht: Sie kam nicht über das Paket
+    # zustande, das der Plan vorziehen wollte.
+    if any(e.get("e") == "a" and e.get("u") != A.DENKCHECK
+           and e.get("t", 0) >= seit and e.get("k") == skill_id
            for e in ev):
         return "gestellt"
     einheiten = set(einheiten_je_fertigkeit.get(skill_id) or [])
@@ -658,6 +849,23 @@ def _wunsch_status(w, einheiten_je_fertigkeit, wirkung):
     return "wirkt", FARBE["sitzt"]
 
 
+BREMSE_AB = 3       # so viele Sofort-Abbrüche seit dem Wunsch, dann der Hinweis (G5)
+
+
+def _wunsch_bremse(w, einheiten_je_fertigkeit, ereignisse):
+    """G5: wie oft wurden die Pakete eines aktiven Wunsches seit dem Wunsch
+    sofort weggetippt (Sitzungsende mit z == 1 und n == 0)? 0, wenn der Wunsch
+    nichts heranschiebt (weniger/später) oder schon erfüllt ist — dort wäre
+    „Wunsch zurücknehmen“ der falsche Rat."""
+    if w.get("status") == "erfuellt" or w.get("art") not in ("jetzt", "mehr"):
+        return 0
+    einheiten = _ziel_einheiten(w, einheiten_je_fertigkeit)
+    return sum(1 for e in ereignisse
+               if e.get("e") == "s" and e.get("t", 0) >= w.get("t", 0)
+               and int(e.get("z") or 0) == 1 and int(e.get("n") or 0) == 0
+               and e.get("u") in einheiten)
+
+
 def _wuensche(u):
     """Z4: was die Eltern angefragt haben, und was daraus geworden ist."""
     import speicher as SP
@@ -666,6 +874,7 @@ def _wuensche(u):
     titel_von = {f["id"]: f for f in u["fertigkeiten"]}
     bereich_von = {b["id"]: b for b in u["bereiche"]}
     einheiten_je_fertigkeit = _einheiten_je_fertigkeit()
+    alle_ev = SP.alle_ereignisse()
 
     if not liste:
         zeilen = ('<div class="muted" style="font-size:14px">Noch keine Wünsche. '
@@ -688,13 +897,20 @@ def _wuensche(u):
             seit = (f'{wirkung["n"]} Aufgaben, davon {wirkung["richtig"]} richtig'
                     if wirkung["n"] else "seither noch nichts geübt")
             status_text, status_farbe = _wunsch_status(w, einheiten_je_fertigkeit, wirkung)
+            bremse = ""
+            k_weg = _wunsch_bremse(w, einheiten_je_fertigkeit, alle_ev)
+            if k_weg >= BREMSE_AB:
+                bremse = (f'<div style="color:{FARBE["hakt"]};font-size:13px;margin-top:3px">'
+                          f'🛑 Seit deinem Wunsch {k_weg}-mal sofort weggetippt. Die App '
+                          f'pausiert das Paket inzwischen immer länger. Vielleicht den '
+                          f'Wunsch zurücknehmen?</div>')
             z.append(
                 f'<tr><td><b>{esc(name)}</b>'
                 f'<div class="muted" style="font-size:12.5px">'
                 f'{esc(WUNSCH_TEXT.get(w.get("art"), w.get("art","")))} · '
                 f'seit {esc(datum(w.get("t", 0)))}: {esc(seit)} · '
                 f'<span style="color:{status_farbe}">{esc(status_text)}</span></div>'
-                f'{warnung}</td>'
+                f'{warnung}{bremse}</td>'
                 f'<td style="text-align:right">'
                 f'{_wunschknoepfe(w.get("ziel","skill"), w.get("id",""), w.get("art"))}</td></tr>')
         zeilen = '<div class="scroll"><table>' + "".join(z) + "</table></div>"
@@ -964,9 +1180,11 @@ def seite(zusatz="", spieler=None):
     if gewaehlt:
         u = A.ueberblick(ereignisse=SP.ereignisse_von(gewaehlt["dev"]))
         name = gewaehlt["name"] or None
+        dev = gewaehlt["dev"]
     else:
         u = A.ueberblick()
         name = None
+        dev = None
 
     kopfzusatz = _spieler_auswahl(stand, gewaehlt) if stand else ""
     if gewaehlt and not gewaehlt["gezaehlt"]:
@@ -982,9 +1200,10 @@ def seite(zusatz="", spieler=None):
             schickt die App den Lernstand hierher — beim Start und nach jeder Sitzung.
             In der App steht die Adresse dieses Rechners unter
             Einstellungen ▸ Lernstand für die Elternseite.</p>
-        </div>{_motivation(u, name)}{zusatz}{_tutor(u)}{_protokoll()}{_wuensche(u)}"""
+        </div>{_denkcheck(u)}{_elternbogen(dev, name)}{_motivation(u, name)}{zusatz}{_tutor(u)}{_protokoll()}{_wuensche(u)}"""
     else:
-        inhalt = (kopfzusatz + _kopf(u) + _fazit(u, name) + _motivation(u, name) + zusatz
+        inhalt = (kopfzusatz + _kopf(u) + _fazit(u, name) + _denkcheck(u)
+                  + _elternbogen(dev, name) + _motivation(u, name) + zusatz
                   + _tutor(u) + _nordstern(u["nordstern"])
                   + _auffaellig(u["fertigkeiten"]) + _verlauf(u)
                   + _protokoll() + _wuensche(u) + _fertigkeiten(u) + _technik(u))

@@ -15,6 +15,7 @@ import re
 import socket
 import sys
 import time
+from urllib.parse import urlencode
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -292,6 +293,33 @@ def build_app(security_config=None):
         except ValueError as e:
             return jsonify(error=str(e)), 400
         return Response(status=303, headers={"Location": "/eltern#technik"})
+
+    @app.post("/elternbogen")
+    def elternbogen():
+        """Den Beobachtungsbogen der Eltern ablegen (V3/G4).
+
+        Streng: genau das gewählte Gerät, die neun Aussagen und der CSRF-
+        Schlüssel — kein Feld mehr, keines weniger, jeder Wert 1 bis 4. Was
+        sonst ankäme, wäre kein Bogen von dieser Seite.
+        """
+        dev = (request.form.get("dev") or "").strip()
+        erlaubt = {"dev", "csrf", *SP.BOGEN_SCHLUESSEL}
+        if not SP.DEV_RE.fullmatch(dev) or set(request.form) - erlaubt:
+            return jsonify(error="unbrauchbarer Bogen"), 400
+        werte = {}
+        for k in SP.BOGEN_SCHLUESSEL:
+            roh = request.form.getlist(k)
+            if len(roh) != 1 or not re.fullmatch(r"[1-4]", roh[0]):
+                return jsonify(error="unbrauchbarer Bogen"), 400
+            werte[k] = int(roh[0])
+        try:
+            SP.elternbogen_speichern(dev, werte, int(time.time() * 1000))
+        except ValueError as e:
+            return jsonify(error=str(e)), 400
+        # Mit dem gewählten Kind zurück, sonst zeigt die Seite bei mehreren
+        # Geräten wieder das Standardgerät statt des gerade gespeicherten Bogens.
+        ziel = "/eltern?" + urlencode({"spieler": dev}) + "#elternbogen" if dev else "/eltern#elternbogen"
+        return Response(status=303, headers={"Location": ziel})
 
     @app.get("/version")
     def version():
