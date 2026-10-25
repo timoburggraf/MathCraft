@@ -636,6 +636,17 @@ function saeubereDenkcheck(raw){
                                    z:(z === 1 || z === -1) ? z : 0};
       }
     }
+    // Die Vermerke „fertig“ müssen zum Inhalt passen: Eine Runde ist nur fertig,
+    // wenn jede ihrer Dimensionen alle DC_N Antworten hat, und der Lauf nur, wenn
+    // beide Runden fertig sind. Ein widersprüchlicher Stand (Runde fertig, Lauf
+    // offen, aber nichts mehr zu tun) ließ den Check sonst nie wieder starten.
+    for(const r of ["A", "B"]){
+      const voll = dims.filter(dim => (DENKCHECK.dimensionen[dim] || {}).runde === r)
+        .every(dim => (lauf.runde[r].dims[dim] || {folge:[]}).folge.length >= DC_N);
+      if(!voll) lauf.runde[r].fertig = 0;
+    }
+    lauf.fertig = lauf.runde.A.fertig && lauf.runde.B.fertig
+      ? (lauf.fertig || Math.max(lauf.runde.A.fertig, lauf.runde.B.fertig)) : 0;
     out.laeufe.push(lauf);
   }
   return out;
@@ -3887,7 +3898,10 @@ function dcIntro(r, weiter){
 
 /* „Los geht's“: die Sitzung der Runde beginnen (bei Bedarf einen neuen Lauf). */
 function dcLos(r){
-  const lauf = dcOffenerLauf() || dcNeuerLauf();
+  let lauf = dcOffenerLauf();
+  // Ein offener Lauf ohne offene Runde darf nie in einer Sackgasse enden.
+  if(!lauf || !dcNaechsteRunde(lauf)) lauf = dcNeuerLauf();
+  if(!lauf.runde[r] || lauf.runde[r].fertig) r = dcNaechsteRunde(lauf) || "A";
   const n = dcNaechsteAufgabe(lauf, r);
   if(!n) return dcRundeAbschluss(lauf, r);
   beginSession({kind:"denkcheck", unitId:null, title:"Denk-Check", intro:"", dcRunde:r,

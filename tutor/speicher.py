@@ -142,6 +142,18 @@ def saeubere(ev):
                 elif isinstance(vv, str):
                     belege[str(kk)[:20]] = vv[:MAX_TEXT]
             out[k] = belege
+    if art == "c":
+        # Ein Denk-Check-Ergebnis ist nur mit Dimension (Text) und Zahlen
+        # brauchbar. Sonst würde ein kaputtes Feld später jede Auswertung —
+        # und damit die Elternseite — zum Absturz bringen, dauerhaft, weil es
+        # gespeichert bleibt.
+        if not isinstance(out.get("k"), str) or not out["k"]:
+            return None
+        for k in ("g", "n", "c", "ms"):
+            if k in out and not isinstance(out[k], (int, float)):
+                del out[k]
+        if "g" not in out or not 0 <= out["g"] <= 9:
+            return None
     return out
 
 

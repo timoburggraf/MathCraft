@@ -548,6 +548,18 @@ def main():
                    "ms": 100, "z": 1})
         add("(G4) Ereignis „c“: z außerhalb von −1/0/1 wird verworfen",
             "z" not in SP.saeubere(dict(roh, z=2)) and SP.saeubere(dict(roh, z=-1))["z"] == -1)
+        # Gegenprüfung (Fund aus der unabhängigen Prüfung): Ein kaputtes Ergebnis
+        # darf weder in die Ablage noch die Auswertung und die Seite kippen.
+        add("(G4) Ereignis „c“ ohne Zahl als Stufe oder ohne Dimension wird verworfen",
+            SP.saeubere(dict(roh, g="kaputt")) is None and SP.saeubere(dict(roh, k=7)) is None
+            and SP.saeubere(dict(roh, g=99)) is None and "n" not in SP.saeubere(dict(roh, n="kaputt")))
+        altlast = [dict(roh, g="kaputt"), dict(roh, i=2, n="kaputt"), dict(roh, i=3, k="merken")]
+        try:
+            pa = A.denkcheck_profil(altlast)
+            add("(G4) Auswertung überspringt alte kaputte Ergebnisse statt abzustürzen",
+                list(pa["dimensionen"]) == ["merken"], str(list(pa["dimensionen"])))
+        except Exception as fehler:
+            add("(G4) Auswertung überspringt alte kaputte Ergebnisse statt abzustürzen", False, repr(fehler))
 
         # ---------------------------------------------------- Elternbogen
         werte_1 = {k: (i % 4) + 1 for i, k in enumerate(SP.BOGEN_SCHLUESSEL)}

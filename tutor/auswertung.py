@@ -301,7 +301,15 @@ def denkcheck_profil(ereignisse=None):
     Ohne ein einziges Ergebnis: leere Dimensionen und letzter == 0.
     """
     ev = SP.alle_ereignisse() if ereignisse is None else ereignisse
-    ergebnisse = sorted((e for e in ev if e.get("e") == "c" and e.get("k")),
+
+    def zahl(x):
+        return isinstance(x, (int, float)) and not isinstance(x, bool)
+
+    # Nur, was saeubere() heute durchlässt — falls ältere Ablagen noch ein
+    # kaputtes Ergebnis enthalten, fällt es hier heraus, statt die Seite zu kippen.
+    ergebnisse = sorted((e for e in ev if e.get("e") == "c" and isinstance(e.get("k"), str)
+                         and e.get("k") and zahl(e.get("g"))
+                         and all(zahl(e[f]) for f in ("n", "c", "ms", "z", "t") if f in e)),
                         key=lambda e: (e.get("t", 0), e.get("i", 0)))
 
     def tag(ms):

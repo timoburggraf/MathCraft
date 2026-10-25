@@ -1282,6 +1282,29 @@ async () => {
     const kG = dcSuperkraefte(gleich);
     t("Superkräfte: bei lauter Gleichstand höchstens drei", kG.length === 3, J(kG.map(k => k.dim)));
   }
+  {
+    // Fund der unabhängigen Prüfung: Runden fertig, Lauf offen, aber leer —
+    // das ließ „Los geht's“ mit einem TypeError abstürzen, auch nach Neuladen.
+    const merk = localStorage.getItem(KEY);
+    localStorage.setItem(KEY, JSON.stringify({v:1, denkcheck:{laeufe:[
+      {fertig:0, runde:{A:{fertig:1}, B:{fertig:1}}}]}}));
+    const sv = S, ssv = SESS, vsv = view;
+    S = load();
+    const l0 = S.denkcheck.laeufe[0];
+    t("Widersprüchlicher Denk-Check-Stand wird beim Laden zurechtgerückt",
+      l0 && !l0.fertig && !l0.runde.A.fertig && !l0.runde.B.fertig, J(l0));
+    let fehler = "";
+    try{ dcLos("A"); }catch(e){ fehler = String(e); }
+    t("Danach startet der Denk-Check ohne Fehler", !fehler && SESS && SESS.kind === "denkcheck", fehler);
+    // Auch ohne Säuberung (Stand mitten im Lauf so entstanden): keine Sackgasse
+    S.denkcheck.laeufe = [{start:1, fertig:0, runde:{A:{fertig:1, dims:{}}, B:{fertig:1, dims:{}}}}];
+    fehler = "";
+    try{ dcLos("A"); }catch(e){ fehler = String(e); }
+    t("Ein offener Lauf ohne offene Runde führt in einen neuen Lauf",
+      !fehler && SESS && SESS.kind === "denkcheck" && S.denkcheck.laeufe.length === 2, fehler);
+    SESS = ssv; S = sv; view = vsv; render();
+    if(merk === null) localStorage.removeItem(KEY); else localStorage.setItem(KEY, merk);
+  }
   t("Ergebnis-Ansicht: 'Deine Superkräfte', Emoji und lobender Satz, ohne Schwächen und Zahlen",
     text().includes("Deine Superkräfte") && text().includes("Du rechnest flink") && !/\d/.test(text()) &&
     !/schwach|Schwäche|schlecht|leider|falsch|nicht/i.test(text()) && !text().includes("Rückwärts denken"), text());
