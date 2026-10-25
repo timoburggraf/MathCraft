@@ -63,7 +63,7 @@ def version_info():
 
 def build_app(security_config=None):
     from flask import Flask, jsonify, request, send_file, Response, g
-    from security import Security, COOKIE, LOGIN_COOKIE
+    from security import Security, COOKIE, LOGIN_COOKIE, fehlerantwort
     import html
 
     app = Flask(__name__)
@@ -80,7 +80,10 @@ def build_app(security_config=None):
         if request.method == "POST":
             token, status = access.login()
             if not token:
-                return jsonify(error="Anmeldung abgelehnt; Anmeldeseite neu öffnen"), status
+                meldung = {401: "Das Passwort stimmt nicht.",
+                           429: "Zu viele Versuche. Bitte eine Viertelstunde warten."}.get(
+                    status, "Die Anmeldung wurde abgelehnt. Bitte die Anmeldeseite neu öffnen.")
+                return fehlerantwort(meldung, status, knopf="Noch einmal anmelden")
             response = Response(status=303, headers={"Location": "/eltern"})
             response.set_cookie(COOKIE, token, secure=True, httponly=True, samesite="Strict", max_age=8*3600, path="/")
             response.delete_cookie(LOGIN_COOKIE, secure=True, httponly=True, samesite="Strict", path="/")

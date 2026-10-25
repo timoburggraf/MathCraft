@@ -14,7 +14,7 @@ import stat
 import time
 from urllib.parse import urlsplit
 
-from flask import g, jsonify, request
+from flask import Response, g, jsonify, request
 
 COOKIE = "__Host-mathcraft_parent"
 LOGIN_COOKIE = "__Host-mathcraft_login"
@@ -24,6 +24,27 @@ PARENT_ROUTES = {"/eltern", "/zaehlstand", "/wunsch", "/geraet", "/elternbogen",
                  "/tutor-jetzt", "/logout", "/device/pair-code", "/device/revoke"}
 DEVICE_ROUTES = {"/sync", "/erklaer", "/pair"}
 PUBLIC_ROUTES = {"/", "/health", "/version", "/app.apk", "/login"}
+
+
+def fehlerantwort(meldung, status, weiter="/login", knopf="Zur Anmeldung", sofort=False):
+    """Fehler für Skripte als JSON, für einen Browser als kleine Seite mit Link.
+
+    Ein Elternteil, das /eltern ohne Anmeldung öffnet oder dessen Anmeldung
+    scheitert, sah vorher nur rohen JSON-Text. Der Statuscode bleibt derselbe;
+    nur der Inhalt richtet sich nach dem, was der Aufrufer annehmen will.
+    """
+    if not request.accept_mimetypes.accept_html:
+        return jsonify(error=meldung, login=weiter), status
+    ziel = html.escape(weiter, quote=True)
+    umleiten = f'<meta http-equiv="refresh" content="0; url={ziel}">' if sofort else ""
+    seite = ('<!doctype html><html lang="de"><meta charset="utf-8">'
+             '<meta name="viewport" content="width=device-width, initial-scale=1">'
+             f'{umleiten}<title>MathCraft</title>'
+             '<body style="font-family:system-ui;background:#0b1020;color:#eef3ff;'
+             'max-width:34rem;margin:3rem auto;padding:0 1rem;line-height:1.5">'
+             f'<p>{html.escape(meldung)}</p><p><a style="color:#7dd3fc" href="{ziel}">{html.escape(knopf)}</a></p>'
+             '</body></html>')
+    return Response(seite, status=status, mimetype="text/html")
 
 
 class Security:
@@ -125,10 +146,11 @@ class Security:
         if request.path in PARENT_ROUTES:
             session = self.parent_session()
             if not session:
-                return jsonify(error="Elternanmeldung erforderlich", login="/login"), 401
+                return fehlerantwort("Bitte zuerst als Elternteil anmelden.", 401, sofort=True)
             g.parent_session = session
             if request.method not in ("GET", "HEAD") and not self.csrf(session):
-                return jsonify(error="Formular abgelaufen; Seite neu öffnen"), 403
+                return fehlerantwort("Das Formular ist abgelaufen. Bitte die Elternseite neu öffnen.",
+                                     403, weiter="/eltern", knopf="Zur Elternseite")
             if request.path in {"/tutor", "/tutor-jetzt"} and not self.limit("parent-tutor", 3, 3600):
                 return jsonify(error="Tutor-Limit erreicht"), 429
         if request.path in DEVICE_ROUTES:
@@ -273,7 +295,11 @@ class Security:
 
     def headers(self, response):
         response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["Referrer-Policy"] = "no-referrer"
+        # same-origin statt no-referrer: Bei no-referrer schickt Chromium (auch
+        # Chrome und WebView auf dem Handy) bei jedem Formular "Origin: null" —
+        # die Herkunftsprüfung von Anmeldung und Elternformularen lehnte dann
+        # jede echte Anmeldung ab. Nach außen geht weiterhin kein Referrer.
+        response.headers["Referrer-Policy"] = "same-origin"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
         if request.is_secure:

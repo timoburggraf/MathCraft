@@ -231,6 +231,44 @@ def _wirft(f):
     return False
 
 
+def _browser_ablauf(dienst):
+    """Anmelden und ein Gerät freigeben wie ein Elternteil: in Chromium, mit
+    den Kopfzeilen, die ein echter Browser schickt (Origin!). Die Prüfungen
+    mit http.client schicken keine Origin-Kopfzeile und sahen darum nicht,
+    dass Chromium bei no-referrer "Origin: null" sendet und jede Anmeldung
+    scheiterte. Rückgabe: Ergebnisse als dict."""
+    from playwright.sync_api import sync_playwright
+    out = {}
+    with sync_playwright() as pw:
+        b = pw.chromium.launch()
+        ctx = b.new_context(viewport={"width": 393, "height": 873}, ignore_https_errors=True)
+        seite = ctx.new_page()
+        seite.goto(dienst.basis + "/eltern")
+        try:                                   # die Seite leitet per meta refresh weiter
+            seite.wait_for_url("**/login", timeout=4000)
+        except Exception:
+            pass
+        out["ohne_anmeldung"] = seite.url
+        out["ohne_anmeldung_text"] = seite.inner_text("body")
+        seite.goto(dienst.basis + "/login")
+        seite.fill('input[name="password"]', dienst.passwort)
+        with seite.expect_response(lambda r: r.url.endswith("/login") and r.request.method == "POST") as info:
+            seite.click("form button")
+        out["login_status"] = info.value.status
+        out["login_origin"] = info.value.request.headers.get("origin")
+        seite.wait_for_load_state()
+        out["nach_login"] = seite.url
+        feld = seite.locator('input[placeholder="Gerätekennung"]')
+        out["kopplung_da"] = feld.count() > 0
+        if feld.count():
+            feld.fill("00000000deadbeef")
+            seite.click("text=Verbindungs-Code erstellen")
+            seite.wait_for_load_state()
+            out["code_seite"] = seite.inner_text("body")
+        b.close()
+    return out
+
+
 def _bildschirmfoto(dienst, pfad, ziel):
     """Die Abschnitte Denk-Check und Elternbogen als Bild (Breite 1000 px) —
     mit der Anmeldung des Tests, über denselben HTTPS-Dienst."""
@@ -376,6 +414,18 @@ def main():
         if not dienst.start():
             sys.exit("HTTPS-Dienst startet nicht")
         add("Die Elternanmeldung klappt mit dem Test-Passwort", dienst.anmelden())
+        ba = _browser_ablauf(dienst)
+        add("Im echten Browser (Chromium) klappt die Anmeldung",
+            ba["login_status"] == 303 and ba["nach_login"].split("#")[0].endswith("/eltern"),
+            f'{ba["login_status"]}, Origin {ba["login_origin"]}')
+        add("Ohne Anmeldung führt /eltern im Browser zur Anmeldeseite, nicht zu JSON",
+            ba["ohne_anmeldung"].endswith("/login") and "{" not in ba["ohne_anmeldung_text"],
+            ba["ohne_anmeldung"])
+        add("Der Browser schickt dabei die echte Herkunft, nicht 'null'",
+            ba["login_origin"] == dienst.basis, str(ba["login_origin"]))
+        add("Im Browser lässt sich ein Verbindungs-Code für ein Gerät erstellen",
+            ba["kopplung_da"] and re.search(r"\b[0-9A-Z]{4,}", ba.get("code_seite", "")) is not None,
+            ba.get("code_seite", "")[:60].replace("\n", " "))
 
         t0 = time.time()
         seite = dienst.get("/eltern").text
