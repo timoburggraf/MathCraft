@@ -277,20 +277,53 @@ class Security:
         return {"ok": True, "dev": dev, "key": self.device_secret(dev, generation),
                 "expires": now + 365 * 86400}, 200
 
-    def parent_panel(self, csrf):
+    def parent_panel(self, csrf, bekannte=()):
+        """Der Abschnitt „Gerät koppeln“ am Ende der Elternseite (Anker #koppeln).
+
+        bekannte: Geräte, deren Lernstand hier schon einmal angekommen ist, als
+        (dev, name, zuletzt-Datum)-Tripel, jüngstes zuerst. Für sie gibt es je einen Knopf — die 16-stellige
+        Kennung muss dann niemand vom Kinderhandy abtippen. Das Eingabefeld
+        bleibt für ein Gerät, das noch nie Daten geschickt hat."""
         with self.connect() as db:
             rows = db.execute("SELECT dev,paid,expires FROM devices ORDER BY dev").fetchall()
+        gekoppelt = {row["dev"] for row in rows}
         token = html.escape(csrf, quote=True)
-        entries = "".join(f'<li>{row["dev"]} — KI-Erklärungen: {"ja" if row["paid"] else "nein"}'
-                          f'<form method="post" action="/device/revoke"><input type="hidden" name="csrf" value="{token}">'
-                          f'<input type="hidden" name="dev" value="{row["dev"]}"><button>Freigabe sperren</button></form></li>' for row in rows)
-        return ('<section class="card"><h2>Sicherer Zugang</h2><p>Gerätekennung in der App unter Einstellungen ablesen. '
-                'Der Verbindungs-Code gilt fünf Minuten und nur für dieses Gerät.</p>'
-                f'<form method="post" action="/device/pair-code"><input type="hidden" name="csrf" value="{token}">'
-                '<input name="dev" required pattern="[0-9a-f]{8,32}" placeholder="Gerätekennung">'
-                '<label><input type="checkbox" name="paid" value="1"> KI-Erklärungen erlauben (höchstens 10/Tag)</label>'
-                '<button>Verbindungs-Code erstellen</button></form>'
-                f'<ul>{entries}</ul><form method="post" action="/logout"><input type="hidden" name="csrf" value="{token}">'
+        namen = {dev: (name, datum) for dev, name, datum in bekannte}
+        KI = '<label class="ki"><input type="checkbox" name="paid" value="1"> KI-Erklärungen (höchstens 10/Tag)</label>'
+
+        def bez(dev):
+            name, datum = namen.get(dev, ("", ""))
+            kurz = html.escape(dev[:4] + " " + dev[4:8] + " …")
+            wann = f" · zuletzt {html.escape(datum)}" if datum else ""
+            kopf = f"<b>{html.escape(name)}</b> " if name else ""
+            return f"{kopf}<span class='muted'>({kurz}{wann})</span>"
+
+        knoepfe = "".join(
+            f'<form method="post" action="/device/pair-code" class="kz">'
+            f'<input type="hidden" name="csrf" value="{token}"><input type="hidden" name="dev" value="{html.escape(dev)}">'
+            f'<span>{bez(dev)}</span>{KI}<button>Code erstellen</button></form>'
+            for dev, _, _ in bekannte if DEVICE.fullmatch(dev) and dev not in gekoppelt)
+        eintraege = "".join(
+            f'<li>{bez(row["dev"])} — gekoppelt · KI-Erklärungen: {"ja" if row["paid"] else "nein"}'
+            f'<form method="post" action="/device/revoke" style="display:inline;margin-left:8px">'
+            f'<input type="hidden" name="csrf" value="{token}">'
+            f'<input type="hidden" name="dev" value="{row["dev"]}"><button>Freigabe sperren</button></form></li>'
+            for row in rows)
+        return ('<section class="card" id="koppeln"><h2>📱 Gerät koppeln</h2>'
+                '<ol style="margin:0 0 12px;padding-left:20px;line-height:1.6">'
+                '<li>In der App unter <b>Einstellungen</b> die Adresse <b>192.168.0.152:8792</b> eintragen (ab Fassung 1.25 stellt die App das selbst um).</li>'
+                '<li>Hier für das Gerät einen <b>Verbindungs-Code</b> erstellen.</li>'
+                '<li>Den Code in der App unter <b>Einstellungen ▸ Lernstand für die Elternseite</b> eintippen und '
+                '<b>„Gerät sicher verbinden“</b> drücken. Er gilt fünf Minuten.</li></ol>'
+                + (f'<div style="margin:6px 0 12px">{knoepfe}</div>' if knoepfe else '')
+                + f'<form method="post" action="/device/pair-code" class="kz"><input type="hidden" name="csrf" value="{token}">'
+                '<input name="dev" required pattern="[0-9a-f]{8,32}" placeholder="Gerätekennung" '
+                'autocapitalize="none" spellcheck="false" style="flex:1;min-width:10em">'
+                + KI + '<button>Code erstellen</button></form>'
+                '<p class="muted" style="font-size:13px;margin:4px 0 12px">Die Gerätekennung steht in der App unter '
+                'Einstellungen ▸ Lernstand für die Elternseite.</p>'
+                f'<ul style="margin-top:12px">{eintraege}</ul>'
+                f'<form method="post" action="/logout"><input type="hidden" name="csrf" value="{token}">'
                 '<button>Abmelden</button></form></section>')
 
     def headers(self, response):

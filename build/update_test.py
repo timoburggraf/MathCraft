@@ -156,11 +156,11 @@ def main():
                 page.evaluate("() => UPD.stand")[:50])
 
             # --- Fall 5: Eingetragene Adresse überlebt einen Neustart --------
-            page.evaluate("""() => { S.server = '192.168.0.99:8790'; save(); }""")
+            page.evaluate("""() => { S.server = '192.168.0.99:8792'; save(); }""")
             page.reload()
             page.wait_for_timeout(400)
             add("Eingetragene Adresse bleibt gespeichert",
-                page.evaluate("() => S.server") == "192.168.0.99:8790",
+                page.evaluate("() => S.server") == "192.168.0.99:8792",
                 page.evaluate("() => S.server"))
 
             # --- Fall 6: Beim Öffnen sucht die App von selbst ----------------

@@ -117,7 +117,7 @@ def koppeln_mit_ki(dienst, dev):
     ohne diese ausdrückliche Freigabe der Eltern lehnt der Dienst /erklaer ab
     (das prüft der Test unten ebenfalls)."""
     a = dienst.formular("/device/pair-code", {"dev": dev, "paid": "1"})
-    code = re.search(r"<strong>([A-Z2-7]+)</strong>", a.text).group(1)
+    code = re.search(r'id="code">([A-Z2-7 ]+)</p>', a.text).group(1)
     r = dienst.anfrage("POST", "/pair", json.dumps({"dev": dev, "code": code}),
                        {"Content-Type": "application/json"}, cookies=False)
     return r.json()["key"]

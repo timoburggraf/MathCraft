@@ -359,6 +359,20 @@ JS = r"""
   t("gültiger Fokus überlebt das Laden", fokusGeladen.settings.fokus && fokusGeladen.settings.fokus.id === fw.id && fokusGeladen.settings.fokusAn);
   frisch();
 
+  // Alte Download-Adresse (Port 8790) wird beim Laden durch die eingebaute ersetzt
+  {
+    const merkB = BUILD.server;
+    BUILD.server = "https://192.168.0.152:8792";
+    localStorage.setItem(KEY, JSON.stringify({v:1, server:"192.168.0.79:8790"}));
+    t("alte 8790-Adresse wird durch die eingebaute ersetzt", load().server === BUILD.server, load().server);
+    localStorage.setItem(KEY, JSON.stringify({v:1, server:"10.0.0.5:8792"}));
+    t("eine selbst eingetragene sichere Adresse bleibt", load().server === "10.0.0.5:8792");
+    BUILD.server = "";
+    localStorage.setItem(KEY, JSON.stringify({v:1, server:"192.168.0.79:8790"}));
+    t("ohne eingebaute Adresse bleibt die alte stehen", load().server === "192.168.0.79:8790");
+    BUILD.server = merkB;
+  }
+
   // Nie über die höchste Stufe hinaus
   frisch();
   DATA.units.forEach(u => { S.units[u.id] = {stars:3, plays:1}; });

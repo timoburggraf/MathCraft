@@ -25,6 +25,15 @@ _ALLE_SPIELER = ('<span class="muted" style="font-weight:400;font-size:13px">'
                  ' — gilt für alle Spieler</span>')
 
 CSS = """
+  /* Gerät koppeln (security.parent_panel) */
+  .kz { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:0 0 8px;
+        padding:10px 12px; border-radius:12px; background:rgba(255,255,255,.05); }
+  .kz > span { flex:1; min-width:9em; }
+  .kz .ki { font-size:13px; color:#9fb0d0; }
+  #koppeln input[name=dev], #koppeln button { font:inherit; font-size:15px; padding:8px 12px;
+        border-radius:10px; border:1px solid rgba(255,255,255,.2);
+        background:rgba(255,255,255,.07); color:#eef3ff; }
+  #koppeln .kz button { background:#2dd4bf; color:#0b1020; border:0; font-weight:600; }
 *{box-sizing:border-box}
 body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#0b1020;
   color:#eef3ff;margin:0;padding:0 16px 64px;line-height:1.5;
@@ -1175,7 +1184,11 @@ def seite(zusatz="", spieler=None):
         je_dev = {g["dev"]: g for g in stand}
         gewaehlt = je_dev.get(spieler) if spieler else None
         if gewaehlt is None:
-            gewaehlt = next((g for g in stand if g["gezaehlt"]), stand[0])
+            # Ohne Wahl: das Kind, das zuletzt gespielt hat — nicht das Gerät mit den
+            # meisten Antworten, sonst zeigt die Seite nach einem Gerätewechsel
+            # wochenlang das alte Handy.
+            gezaehlt = [g for g in stand if g["gezaehlt"]]
+            gewaehlt = max(gezaehlt, key=lambda g: g["zuletzt"]) if gezaehlt else stand[0]
 
     if gewaehlt:
         u = A.ueberblick(ereignisse=SP.ereignisse_von(gewaehlt["dev"]))
@@ -1187,6 +1200,10 @@ def seite(zusatz="", spieler=None):
         dev = None
 
     kopfzusatz = _spieler_auswahl(stand, gewaehlt) if stand else ""
+    # Der Kopplungsabschnitt steht ganz unten (server.py hängt ihn an) — oben
+    # ein Sprung dorthin, sonst sucht man ihn auf dem Handy 27 000 Pixel weit.
+    kopfzusatz += ('<p style="margin:10px 0 0"><a href="#koppeln" style="color:#7dd3fc">'
+                   '📱 Gerät koppeln</a></p>')
     if gewaehlt and not gewaehlt["gezaehlt"]:
         kopfzusatz += _testgeraet_hinweis()
 

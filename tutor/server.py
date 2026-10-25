@@ -61,6 +61,24 @@ def version_info():
     return info
 
 
+# Kleines Seitengerüst für Anmeldung und Code-Seite: lesbar auf dem Handy,
+# ohne Skript (die CSP der Elternseiten verbietet Skripte ohnehin).
+_RAHMEN = ('<!doctype html><html lang="de"><meta charset="utf-8">'
+           '<meta name="viewport" content="width=device-width, initial-scale=1">'
+           '<title>{titel}</title><body style="font-family:system-ui;background:#0b1020;color:#eef3ff;'
+           'max-width:30rem;margin:2.5rem auto;padding:0 1rem;line-height:1.5">'
+           '<style>input,button{{font:inherit;font-size:17px;padding:10px 12px;border-radius:10px;'
+           'border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.07);color:#eef3ff}}'
+           'button{{background:#2dd4bf;color:#0b1020;border:0;font-weight:600}}a{{color:#7dd3fc}}</style>'
+           '{inhalt}</body></html>')
+
+
+def _code_gruppen(code):
+    """VDOM6VZQUOBBXZ2N -> VDOM 6VZQ UOBB XZ2N: so tippt man es fehlerfrei ab.
+    Die Leerzeichen entfernt der Dienst beim Koppeln wieder."""
+    return " ".join(code[i:i + 4] for i in range(0, len(code), 4))
+
+
 def build_app(security_config=None):
     from flask import Flask, jsonify, request, send_file, Response, g
     from security import Security, COOKIE, LOGIN_COOKIE, fehlerantwort
@@ -91,11 +109,12 @@ def build_app(security_config=None):
         if not access.limit("login-form:" + request.remote_addr, 20, 60):
             return jsonify(error="Bitte kurz warten"), 429
         token = access.login_form()
-        response = Response('<!doctype html><html lang="de"><meta charset="utf-8"><title>MathCraft Elternzugang</title>'
-                            '<h1>Elternzugang</h1><form method="post" action="/login">'
-                            f'<input type="hidden" name="csrf" value="{html.escape(token, quote=True)}">'
-                            '<label>Elternpasswort <input type="password" name="password" required autocomplete="current-password"></label>'
-                            '<button>Anmelden</button></form></html>', mimetype="text/html")
+        inhalt = ('<h1 style="font-size:24px">MathCraft · Elternzugang</h1><form method="post" action="/login">'
+                  f'<input type="hidden" name="csrf" value="{html.escape(token, quote=True)}">'
+                  '<label>Elternpasswort<br><input type="password" name="password" required '
+                  'autocomplete="current-password" style="width:100%;box-sizing:border-box;margin:6px 0 12px"></label>'
+                  '<button style="width:100%">Anmelden</button></form>')
+        response = Response(_RAHMEN.format(titel="MathCraft Elternzugang", inhalt=inhalt), mimetype="text/html")
         response.set_cookie(LOGIN_COOKIE, token, secure=True, httponly=True, samesite="Strict", max_age=600, path="/")
         return response
 
@@ -113,10 +132,15 @@ def build_app(security_config=None):
             code = access.pair_code(request.form.get("dev", ""), request.form.get("paid") == "1")
         except ValueError:
             return jsonify(error="Ungültige Gerätekennung"), 400
-        return Response('<!doctype html><html lang="de"><meta charset="utf-8"><title>Gerät verbinden</title>'
-                        '<h1>Gerät verbinden</h1><p>Diesen einmaligen Code in der App unter Einstellungen eingeben. '
-                        'Er gilt fünf Minuten nur für die gewählte Gerätekennung.</p>'
-                        f'<p><strong>{code}</strong></p><a href="/eltern">Zurück</a></html>', mimetype="text/html")
+        inhalt = ('<h1 style="font-size:24px">📱 Gerät verbinden</h1>'
+                  '<p>Diesen Code in der App unter <b>Einstellungen ▸ Lernstand für die Elternseite</b> '
+                  'eintippen und <b>„Gerät sicher verbinden“</b> drücken.</p>'
+                  f'<p style="font:600 30px ui-monospace,monospace;letter-spacing:2px;background:rgba(255,255,255,.07);'
+                  f'border-radius:12px;padding:16px;text-align:center" id="code">{html.escape(_code_gruppen(code))}</p>'
+                  '<p style="color:#9fb0d0;font-size:14px">Er gilt fünf Minuten und nur für dieses eine Gerät. '
+                  'Abgelaufen? Einfach einen neuen erstellen.</p>'
+                  '<p><a href="/eltern#koppeln">Zurück zur Elternseite</a></p>')
+        return Response(_RAHMEN.format(titel="Gerät verbinden", inhalt=inhalt), mimetype="text/html")
 
     @app.post("/device/revoke")
     def revoke_device():
@@ -249,9 +273,14 @@ def build_app(security_config=None):
                       lambda m: m.group(1) + f'<input type="hidden" name="csrf" value="{token}">', page)
         page = page.replace('onchange="this.form.submit()"', '')
         page = page.replace('</select>', '</select><button type="submit">Ansicht wählen</button>')
-        page = page.replace('</body>', access.parent_panel(g.parent_session["csrf"]) + '</body>')
-        if '</body>' not in page:
-            page = page.replace('</html>', access.parent_panel(g.parent_session["csrf"]) + '</html>')
+        bekannte = [(x["dev"], x["name"],
+                     time.strftime("%d.%m.%Y", time.localtime(x["zuletzt"] / 1000)) if x["zuletzt"] else "")
+                    for x in sorted(SP.geraetestand(), key=lambda x: -x["zuletzt"]) if x["gezaehlt"]]
+        panel = access.parent_panel(g.parent_session["csrf"], bekannte)
+        if '</body>' in page:
+            page = page.replace('</body>', panel + '</body>')
+        else:
+            page = page.replace('</html>', panel + '</html>')
         return Response(page, mimetype="text/html")
 
     @app.post("/wunsch")

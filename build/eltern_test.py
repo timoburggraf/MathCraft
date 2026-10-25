@@ -199,7 +199,9 @@ class HttpsDienst:
     def koppeln(self, dev):
         """Gerät über den Elternweg freigeben (Code, dann /pair) -> Geräteschlüssel."""
         a = self.formular("/device/pair-code", {"dev": dev})
-        code = re.search(r"<strong>([A-Z2-7]+)</strong>", a.text).group(1)
+        # Der Code steht in Vierergruppen da ("VDOM 6VZQ …") — genau so abgetippt,
+        # mit Leerzeichen, muss er beim Dienst ankommen und gelten.
+        code = re.search(r'id="code">([A-Z2-7 ]+)</p>', a.text).group(1)
         r = self.anfrage("POST", "/pair", json.dumps({"dev": dev, "code": code}),
                          {"Content-Type": "application/json"}, cookies=False)
         return r.json()["key"]

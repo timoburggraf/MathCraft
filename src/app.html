@@ -727,6 +727,13 @@ function load(){
     // Eine von Hand eingetragene Adresse gewinnt gegen die eingebaute – sonst
     // würde ein Neubau die Korrektur des Nutzers wieder überschreiben.
     if(typeof raw.server === "string") s.server = raw.server.slice(0, 60);
+    // Port 8790 ist der alte, öffentliche Download-Dienst. Private Wege (Koppeln,
+    // Übertragen, Updates) gibt es nur noch beim sicheren Dienst unter der
+    // eingebauten Adresse — serverUrl() tauscht zwar den Port, aber nicht den
+    // Rechner, und unter der alten Kabeladresse lauscht kein sicherer Dienst.
+    // Eine 8790-Adresse wird darum durch die eingebaute ersetzt, damit nach dem
+    // Update niemand am Kinderhandy die Adresse von Hand ändern muss.
+    if(BUILD.server && /:8790\/?$/.test(s.server.trim())) s.server = BUILD.server;
     if(isObj(raw.profile)){
       const p = raw.profile;
       Object.assign(s.profile, {
