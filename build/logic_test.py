@@ -1361,7 +1361,7 @@ async () => {
       a.ms >= 0 && a.ms <= 600000) && gs.e === null && gs.z === 0, J(gs));
   t("Laden: benutzt enthält nur kurze Texte", J(g.denkcheck.benutzt) === J(["ok"]));
   localStorage.setItem(KEY, J({v:1, denkcheck:"kaputt"}));
-  t("Laden: ein kaputter Denk-Check-Eintrag ergibt einen leeren Stand", J(load().denkcheck) === J({laeufe:[], benutzt:[]}));
+  t("Laden: ein kaputter Denk-Check-Eintrag ergibt einen leeren Stand", J(load().denkcheck) === J({laeufe:[], benutzt:[], wunsch:null}));
   localStorage.setItem(KEY, J({v:1, denkcheck:{laeufe:Array.from({length:50}, () => ({start:1, fertig:1, runde:{A:{}, B:{}}}))}}));
   t("Laden: höchstens DC_LAEUFE_MAX Läufe", load().denkcheck.laeufe.length === DC_LAEUFE_MAX);
 
@@ -1394,6 +1394,82 @@ async () => {
   go("denkcheck", {phase:"ergebnis", runde:"A", gesprochen:true,
     lauf:baue({strukturen:[1.5, -1], raum:[1.5, -1], merken:[1.5, -1]})});
   t("Superkräfte: ganz ohne Treffer bleibt ein freundlicher Satz", text().includes("Du hast richtig gut mitgedacht!"));
+
+  // ------------------------- Teil-Check auf Anforderung des Tutors (23.11.2026)
+  t("Anforderung: Säuberung behält nur bekannte Bereiche, braucht Zeitpunkt und Bereich",
+    J(dcWunschSauber({t:5, bereiche:["umkehren", "gibtsnicht", "schlussketten"], seit:7})) === J({t:5, bereiche:["schlussketten", "umkehren"], seit:7}) &&
+    dcWunschSauber({t:5, bereiche:["umkehren"]}, {t:5, seit:3}).seit === 3 &&
+    dcWunschSauber({t:6, bereiche:["umkehren"]}, {t:5, seit:3}).seit > 3 &&
+    dcWunschSauber({t:0, bereiche:["umkehren"]}) === null && dcWunschSauber({t:5, bereiche:[]}) === null &&
+    dcWunschSauber(null) === null && dcWunschSauber("x") === null);
+  frisch(); S.settings.modus = "v2";
+  S.denkcheck.laeufe = [baue(Object.fromEntries(dims.map(d => [d, [4, 0]])))];
+  S.denkcheck.laeufe[0].fertig = Date.now() - 20 * DAY;
+  t("Anforderung: ohne Anforderung ist ein frischer Check nicht fällig", dcFaellig() === false);
+  S.denkcheck.wunsch = {t:1, bereiche:["schlussketten", "umkehren", "systematik"], seit:Date.now() - 1000};
+  go("home");
+  t("Anforderung: die Karte erscheint mit der Zahl der Rätsel", dcFaellig() === true &&
+    text().includes("Denk-Check — finde") && text().includes("(12 kleine Rätsel)"), text().slice(0, 300));
+  dcOeffnen();
+  t("Anforderung: Einleitung beginnt bei Runde A und nennt 4 Rätsel", view.opts.runde === "A" &&
+    /4 kleine Rätsel/.test(dcIntroText("A", false)), dcIntroText("A", false));
+  dcLos("A");
+  const teil = S.denkcheck.laeufe[S.denkcheck.laeufe.length - 1];
+  t("Anforderung: der neue Lauf prüft nur die angeforderten Bereiche", J(teil.nur) === J(["schlussketten", "umkehren", "systematik"]));
+  const teilDims = []; let tg = 0;
+  while(SESS && tg++ < 20){ teilDims.push(SESS.tasks[SESS.i].dcDim); grade(true); nextTask(); }
+  t("Anforderung: Runde A stellt nur Schlussfolgern (4 Aufgaben), dann Zwischenstand",
+    J([...new Set(teilDims)]) === J(["schlussketten"]) && teilDims.length === 4 &&
+    view.opts.phase === "rundeFertig", J(teilDims));
+  dcIntro("B", false); dcLos("B"); tg = 0; const teilB = [];
+  while(SESS && tg++ < 20){ teilB.push(SESS.tasks[SESS.i].dcDim); grade(tg % 2 === 0); nextTask(); }
+  t("Anforderung: Runde B stellt nur Rückwärts denken und Durchprobieren, dann Ergebnis",
+    J([...new Set(teilB)].sort()) === J(["systematik", "umkehren"]) && teilB.length === 8 &&
+    teil.fertig > 0 && view.opts.phase === "ergebnis", J(teilB));
+  t("Anforderung: danach erledigt, keine Karte mehr", dcWunschOffen() === null && dcFaellig() === false);
+  t("Anforderung: Superkräfte nur aus den geprüften Bereichen",
+    dcSuperkraefte(teil).every(k => teil.nur.includes(k.dim)) && dcSuperkraefte(teil).length > 0);
+  t("Anforderung: Teil-Lauf und Wunsch überstehen Speichern und Laden",
+    (() => { save(); const g = load(); return J(g.denkcheck.laeufe.slice(-1)[0].nur) === J(teil.nur) &&
+      !!g.denkcheck.laeufe.slice(-1)[0].fertig && J(g.denkcheck.wunsch) === J(S.denkcheck.wunsch); })());
+  {
+    // Nur Runde B angefordert: Runde A ist gleich erledigt, die Einleitung beginnt bei B
+    frisch(); S.settings.modus = "v2";
+    S.denkcheck.wunsch = {t:1, bereiche:["merken"], seit:Date.now() - 1000};
+    dcOeffnen();
+    const startB = view.opts.runde, einleitung = dcIntroText("B", false);
+    dcLos(startB);
+    const nurB = S.denkcheck.laeufe.slice(-1)[0];
+    t("Anforderung nur Runde B: startet bei B mit Begrüßung, Runde A gilt als erledigt",
+      startB === "B" && /Willkommen/.test(einleitung) && nurB.runde.A.fertig > 0 && SESS.tasks[SESS.i].dcDim === "merken",
+      startB + " " + einleitung.slice(0, 40));
+    quitSession();
+  }
+  {
+    // Je Bereich zählt sein eigener Abschluss nach dem Empfang der Anforderung
+    frisch(); S.settings.modus = "v2";
+    const seit = Date.now() - 5000;
+    S.denkcheck.wunsch = {t:1, bereiche:dims.slice(), seit};
+    const ganz = baue(Object.fromEntries(dims.map(d => [d, [4, 0]]))); ganz.fertig = Date.now();
+    for(const r of ["A", "B"]) for(const d of Object.values(ganz.runde[r].dims)) d.f = Date.now();
+    S.denkcheck.laeufe = [ganz];
+    t("Anforderung: ein ganzer Check nach der Anforderung erfüllt sie", dcWunschOffen() === null);
+    // Fund der Gegenprüfung: Runde A vor, Runde B nach der Anforderung beendet —
+    // die Bereiche aus A sind damit NICHT erledigt (so zählt auch der Dienst).
+    for(const d of Object.values(ganz.runde.A.dims)) d.f = seit - 1000;
+    t("Anforderung: Runde A vor der Anforderung zählt nicht, auch wenn der Lauf danach fertig wurde",
+      dcWunschOffen() !== null && J(dcPlanDims("A")) === J(dcDimsVon("A")) && dcPlanDims("B").length === 0,
+      J([dcPlanDims("A"), dcPlanDims("B")]));
+    dcLos("A");
+    t("Anforderung: der neue Lauf prüft nur, was noch fehlt", J(S.denkcheck.laeufe.slice(-1)[0].nur) === J(dcDimsVon("A")));
+    quitSession();
+    t("Teil-Check startet die 90-Tage-Frist nicht neu", dcLetzterFertiger() === ganz);
+    S.denkcheck.wunsch = null;
+    ganz.runde.B.dims.rechnen.folge = [1, 2, 3, 4].map(i => ({id:"rechnen-4-" + i, stufe:4, o:1, ms:1000}));
+    save();
+    const gl = load().denkcheck.laeufe[0];
+    t("Laden: der Abschluss je Bereich (f) bleibt erhalten", gl.runde.B.dims.rechnen.f > 0);
+  }
 
   // Stats-Ansicht: Trefferquote ohne Denk-Check-Antworten
   frisch(); S.stats.answers = 10; S.stats.correct = 0; S.stats.check = 10;

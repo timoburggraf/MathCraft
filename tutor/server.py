@@ -196,11 +196,30 @@ def build_app(security_config=None):
             return jsonify(error=str(e)), 400
 
         import lehrer as L
-        # Paid generation requires a parent action; authenticated sync never triggers it.
+        # Der Tutor plant nach einer Übertragung selbst (Elternwunsch 23.11.2026),
+        # aber nur, wenn es sich lohnt (L.faellig) und höchstens L.AUTO_MAX_TAG-mal
+        # in 24 Stunden (L._auto_frei) — ein Gerät kann die Kosten nicht hochtreiben.
+        # Er läuft im Hintergrund; diese Antwort trägt noch den bisherigen Plan.
+        # Kommt der Verlauf in Häppchen ("mehr": es folgen weitere), wartet er
+        # auf das letzte, statt auf einem halben Verlauf zu planen.
+        if neu and not d.get("mehr"):
+            L.vielleicht_nachdenken()
 
+        # Die Check-Anforderung geht nur hinaus, solange sie offen ist — nach
+        # den Ergebnissen aller Geräte. So entscheidet eine Stelle, wann sie
+        # erledigt ist, und ein zweites oder neu gekoppeltes Gerät bekommt
+        # keinen Check angeboten, den das Kind längst gemacht hat.
+        # Ein beschädigter Plan darf keine Übertragung scheitern lassen: Ohne
+        # Bestätigung liefe der Puffer der App voll, und Ereignisse gingen verloren.
         plan = L.lies_plan() or {}
+        try:
+            offen = L.offene_anforderung(plan, SP.alle_ereignisse())
+            anforderung = ({"t": int(offen["t"]), "bereiche": [str(b) for b in offen.get("bereiche") or []]}
+                           if offen else None)
+        except (AttributeError, TypeError, ValueError, KeyError):
+            anforderung = None
         return jsonify(ok=True, ack=ack, neu=neu, wishes=SP.wuensche_lesen(),
-                       plan=plan.get("plan") or [])
+                       plan=plan.get("plan") or [], denkcheck=anforderung)
 
     @app.post("/tutor")
     def tutor():

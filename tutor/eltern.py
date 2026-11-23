@@ -760,6 +760,24 @@ def _tutor(u):
         f'(Stufe {e["stufe"]}): {esc(klartext(e["warum"]))}</li>' for e in p.get("erzeugen", []))
     k = p.get("kosten") or {}
 
+    # Denk-Check: was der Tutor entschieden hat — angefordert (offen oder
+    # erledigt) oder bewusst nicht, mit seinem Grund.
+    dc = p.get("denkcheck") or {}
+    dc_html = ""
+    if dc.get("anfordern"):
+        dc_titel = dict(_denkcheck_dimensionen({"dimensionen": {}}))
+        namen = ", ".join(dc_titel.get(b, b) for b in dc.get("bereiche") or [])
+        offen = L.offene_anforderung(p, SP.alle_ereignisse())
+        stand = ("Die App bietet ihn in der Denkschule auf der Startseite an; gemacht ist er noch nicht."
+                 if offen else "Erledigt — die Ergebnisse stehen oben im Denk-Check.")
+        dc_html = (f'<div class="card"><h3>Denk-Check angefordert</h3>'
+                   f'<div style="font-size:15px">{esc(namen)}</div>'
+                   f'<div style="font-size:14px;margin-top:4px">{esc(klartext(dc.get("grund", "")))}</div>'
+                   f'<div class="muted" style="font-size:13px;margin-top:6px">{esc(stand)}</div></div>')
+    elif dc.get("grund"):
+        dc_html = (f'<div class="card"><h3>Denk-Check</h3><div class="muted" style="font-size:14px">'
+                   f'Diesmal keiner: {esc(klartext(dc["grund"]))}</div></div>')
+
     return f"""
     <h2>Was der Tutor sich denkt{_ALLE_SPIELER}</h2>
     <div class="card">
@@ -778,6 +796,7 @@ def _tutor(u):
     </div>
     {'<div class="card"><h3>Seine Entscheidungen</h3><div class="scroll"><table>'
      + "".join(zeilen) + '</table></div></div>' if zeilen else ''}
+    {dc_html}
     {'<div class="card warn"><h3>Davon ließ sich nicht alles ausführen</h3>'
      '<div class="def">Der Tutor entscheidet frei, aber er kann sich nur auf '
      'Fertigkeiten beziehen, die es gibt. Was hier steht, wurde übergangen.</div>'

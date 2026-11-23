@@ -162,7 +162,7 @@ class AccessTests(unittest.TestCase):
         code = self.access.pair_code(self.dev); self.now += 301
         self.assertEqual(self.post("/pair", json={"dev": self.dev, "code": code}).status_code, 401)
 
-    def test_signed_sync_own_device_only_and_no_paid_generation(self):
+    def test_signed_sync_own_device_only_and_no_paid_generation_without_new_events(self):
         key = self.pair()
         raw, headers = self.signed(key, "/sync", {"dev": self.dev, "ev": []})
         with patch.object(speicher, "schreibe", return_value=(0, 0)), patch.object(speicher, "wuensche_lesen", return_value=[]), patch.object(lehrer, "lies_plan", return_value=None), \
@@ -172,6 +172,46 @@ class AccessTests(unittest.TestCase):
         raw, headers = self.signed(key, "/sync", {"dev": "abcdef0123456789", "ev": []}, nonce="b"*32)
         with patch.object(speicher, "schreibe") as changed:
             self.assertEqual(self.post("/sync", data=raw, headers=headers).status_code, 403);changed.assert_not_called()
+
+    def test_sync_with_new_events_asks_tutor_and_returns_check_request(self):
+        # Elternwunsch 23.11.2026: Nach einer Übertragung mit Neuem plant der Tutor
+        # selbst; ob er wirklich läuft, entscheiden faellig() und der Tagesdeckel
+        # in lehrer.vielleicht_nachdenken (tutor_denkcheck_test.py).
+        key = self.pair()
+        raw, headers = self.signed(key, "/sync", {"dev": self.dev, "ev": []})
+        plan = {"plan": [], "denkcheck": {"anfordern": True, "t": 123, "bereiche": ["umkehren"], "grund": "g"}}
+        with patch.object(speicher, "schreibe", return_value=(3, 3)), patch.object(speicher, "wuensche_lesen", return_value=[]), \
+             patch.object(lehrer, "lies_plan", return_value=plan), patch.object(lehrer, "vielleicht_nachdenken") as tutor:
+            r = self.post("/sync", data=raw, headers=headers)
+            self.assertEqual(r.status_code, 200)
+            tutor.assert_called_once()
+            self.assertEqual(r.get_json()["denkcheck"], {"t": 123, "bereiche": ["umkehren"]})
+        raw, headers = self.signed(key, "/sync", {"dev": self.dev, "ev": []}, nonce="c"*32)
+        plan["denkcheck"] = {"anfordern": False, "bereiche": [], "grund": "g"}
+        with patch.object(speicher, "schreibe", return_value=(3, 0)), patch.object(speicher, "wuensche_lesen", return_value=[]), \
+             patch.object(lehrer, "lies_plan", return_value=plan), patch.object(lehrer, "vielleicht_nachdenken") as tutor:
+            r = self.post("/sync", data=raw, headers=headers)
+            tutor.assert_not_called()
+            self.assertIsNone(r.get_json()["denkcheck"])
+        # Es folgen weitere Häppchen: der Tutor wartet auf das letzte.
+        raw, headers = self.signed(key, "/sync", {"dev": self.dev, "ev": [], "mehr": True}, nonce="d"*32)
+        with patch.object(speicher, "schreibe", return_value=(3, 3)), patch.object(speicher, "wuensche_lesen", return_value=[]), \
+             patch.object(lehrer, "lies_plan", return_value=plan), patch.object(lehrer, "vielleicht_nachdenken") as tutor:
+            self.assertEqual(self.post("/sync", data=raw, headers=headers).status_code, 200)
+            tutor.assert_not_called()
+        # Erledigt (nach den Ergebnissen aller Geräte): die Anforderung geht nicht mehr hinaus.
+        raw, headers = self.signed(key, "/sync", {"dev": self.dev, "ev": []}, nonce="e"*32)
+        plan["denkcheck"] = {"anfordern": True, "t": 123, "bereiche": ["umkehren"], "grund": "g", "stand": {"umkehren": 0}}
+        with patch.object(speicher, "schreibe", return_value=(3, 0)), patch.object(speicher, "wuensche_lesen", return_value=[]), \
+             patch.object(speicher, "alle_ereignisse", return_value=[{"e": "c", "k": "umkehren", "t": 1}]), \
+             patch.object(lehrer, "lies_plan", return_value=plan):
+            self.assertIsNone(self.post("/sync", data=raw, headers=headers).get_json()["denkcheck"])
+        # Ein beschädigter Plan lässt die Übertragung nicht scheitern.
+        raw, headers = self.signed(key, "/sync", {"dev": self.dev, "ev": []}, nonce="f"*32)
+        with patch.object(speicher, "schreibe", return_value=(3, 0)), patch.object(speicher, "wuensche_lesen", return_value=[]), \
+             patch.object(lehrer, "lies_plan", return_value={"denkcheck": {"anfordern": True, "t": 5, "bereiche": 5}}):
+            r = self.post("/sync", data=raw, headers=headers)
+            self.assertEqual(r.status_code, 200); self.assertIsNone(r.get_json()["denkcheck"])
 
     def test_signature_body_path_and_timestamp_binding(self):
         key = self.pair();raw, headers = self.signed(key, "/sync", {"dev": self.dev, "ev": []})

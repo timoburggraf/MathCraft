@@ -62,6 +62,28 @@ WANN = ("frueh", "egal", "spaet")
 GEWICHT_MAX = 2.0     # 1.0 ist normal; darüber wird es dringlich
 DOSIS_MIN, DOSIS_NORMAL, DOSIS_MAX = 2, 8, 12
 
+# Denk-Check (ZIELE-V3 G4) im Blick des Tutors. Er bekommt das Profil zu sehen
+# und darf selbst einen neuen Check anfordern — ganz oder nur einzelne Bereiche.
+# Welche Fertigkeiten einen Bereich üben, steht hier und nicht im Prompt-Text,
+# damit ein umbenannter Bezeichner beim Laden auffällt statt still zu fehlen.
+DENKCHECK_UEBEN = {
+    "strukturen":    ("must_einfach", "must_schritt", "must_form", "must_wechsel", "must_figur",
+                      "must_matrix", "must_analogie"),
+    "schlussketten": ("log_paare", "log_waage", "log_reihen", "log_wahrheit", "log_gitter",
+                      "log_position"),
+    "algorithmik":   ("algo_befolgen", "algo_finden", "algo_reparieren", "algo_maschine",
+                      "algo_schleife"),
+    "darstellung":   ("must_figur", "geo_zaehl", "dat_tab"),
+    "raum":          ("geo_symm", "geo_spiegel", "geo_drehen", "geo_wuerfel", "geo_ansicht",
+                      "geo_netzfalten"),
+    "umkehren":      ("log_ruecklauf", "must_rueck", "algo_maschine", "plus_luecke"),
+    "merken":        (),
+    "systematik":    ("komb_paare", "komb_reihen", "komb_wege", "log_strategie"),
+    "rechnen":       ("plus_bis100", "plus_bis1000", "plus_tricks", "mal_kleine", "mal_alle",
+                      "mal_gross"),
+}
+DENKCHECK_PAUSE_TAGE = 14     # so lange nach einem Check wird keine neue Anforderung angenommen
+
 SYSTEM = """Du bist der Tutor eines Grundschulkindes und stellst seinen
 Lernplan auf. Wie alt es ist und wo es steht, liest du aus dem Verlauf ab —
 die Stufen, auf denen es gerade übt, sagen es dir (Stufe 1-4 ist Klasse 2,
@@ -128,7 +150,28 @@ wie bisher. Also genau das, was du gerade ändern wolltest.
 Für die Eltern schreibst du zwei Absätze in ruhigem, direktem Deutsch. Keine
 Fachwörter, kein pädagogisches Marketing, keine Beschwichtigung. Wenn etwas
 schlecht läuft, schreib das hin. Wenn du dir bei etwas unsicher bist, schreib
-auch das — du hast nur Zahlen gesehen, nicht das Kind."""
+auch das — du hast nur Zahlen gesehen, nicht das Kind.
+
+Der Denk-Check ist ein kurzes Screening in neun Denkbereichen (je vier
+Aufgaben im Treppenverfahren, Stufen 2-8). Sein Profil steht im Abschnitt
+"DENK-CHECK" zusammen mit den Fertigkeiten, die jeden Bereich üben. Nutze es so:
+- Schwerpunkt auf dem, was das Kind noch nicht so gut kann: Die schwächeren
+  Bereiche bekommen die meisten Posten, das höhere Gewicht und "frueh". Gib
+  sie anschaulich und in kleinen Portionen; liegt der Bereich auf Klassenniveau,
+  ist das keine Lücke, sondern Raum zum Wachsen.
+- Was das Kind schon sehr gut kann, kommt trotzdem regelmäßig dran — mindestens
+  ein Posten je Plan, auf seinem hohen Niveau, "spaet" und kurz. Das ist der
+  Moment, in dem es merkt, wie stark es ist; der hält es bei der Sache.
+- Vier Aufgaben je Bereich sind eine Momentaufnahme. Ein einzelner Fehler auf
+  niedriger Stufe kann Zufall, Lesen oder Links/Rechts gewesen sein; der
+  Übungsverlauf zählt mit.
+
+Einen neuen Denk-Check forderst du im Feld "denkcheck" selbst an, wenn du ihn
+brauchst: einzelne Bereiche, um zu sehen, ob gezieltes Üben gewirkt hat (frühestens
+nach etwa drei bis vier Wochen Übung darin), alle Bereiche etwa alle drei
+Monate. Nicht, solange ein angeforderter Check noch offen ist, nicht in einer
+Phase, in der das Kind kaum übt oder viel wegtippt, und nie öfter als alle zwei
+Wochen. Sonst anfordern=false. Das Kind sieht vom Check nur seine Stärken."""
 
 SCHEMA = {
     "type": "object",
@@ -214,8 +257,25 @@ SCHEMA = {
                 "additionalProperties": False,
             },
         },
+        "denkcheck": {
+            "type": "object",
+            "description": "Ob die App dem Kind jetzt einen Denk-Check anbieten soll.",
+            "properties": {
+                "anfordern": {"type": "boolean"},
+                "bereiche": {
+                    "type": "array",
+                    "items": {"type": "string", "enum": list(DENKCHECK_UEBEN)},
+                    "description": "Welche Bereiche geprüft werden. Leer bei "
+                                   "anfordern=false; alle neun für einen ganzen Check.",
+                },
+                "grund": {"type": "string",
+                          "description": "Ein Satz für die Eltern: warum jetzt (oder warum nicht)."},
+            },
+            "required": ["anfordern", "bereiche", "grund"],
+            "additionalProperties": False,
+        },
     },
-    "required": ["beobachtung", "eltern", "plan", "erzeugen"],
+    "required": ["beobachtung", "eltern", "plan", "erzeugen", "denkcheck"],
     "additionalProperties": False,
 }
 
@@ -278,6 +338,74 @@ def motivationsauszug(ev, seit_plan):
     return "\n".join(zeilen)
 
 
+def _dc_titel():
+    """Titel je Denk-Check-Bereich aus der Aufgabenbank (Fallback: der Schlüssel)."""
+    try:
+        d = json.loads((ROOT / "data" / "denkcheck.json").read_text("utf-8")).get("dimensionen") or {}
+        return {k: (v or {}).get("titel") or k for k, v in d.items()}
+    except (ValueError, OSError):
+        return {}
+
+
+def check_stand(ev):
+    """Wie viele Ergebnisse ("c") je Denk-Check-Bereich bisher angekommen sind."""
+    stand = {}
+    for e in ev:
+        if e.get("e") == "c" and isinstance(e.get("k"), str):
+            stand[e["k"]] = stand.get(e["k"], 0) + 1
+    return stand
+
+
+def offene_anforderung(plan, ev):
+    """Die Check-Anforderung aus `plan`, solange das Kind sie noch nicht erledigt hat.
+
+    Erledigt ist sie, wenn für jeden angeforderten Bereich seit der Anforderung
+    ein neues Ergebnis ("c") angekommen ist — gezählt, nicht nach Uhrzeit
+    verglichen: Die Anforderung trägt die Uhr des Dienstes, ein Ergebnis die
+    des Geräts, und die beiden müssen nicht übereinstimmen. `stand` ist der
+    Zählstand im Moment der Anforderung. Ohne Anforderung: None.
+    """
+    dc = (plan or {}).get("denkcheck") or {}
+    if not dc.get("anfordern") or not dc.get("t"):
+        return None
+    vorher, jetzt = dc.get("stand") or {}, check_stand(ev)
+    neu = {k for k in dc.get("bereiche") or [] if jetzt.get(k, 0) > int(vorher.get(k, 0))}
+    return None if set(dc.get("bereiche") or []) <= neu else dc
+
+
+def denkcheck_auszug(ev, frueher):
+    """Der Abschnitt DENK-CHECK für den Auszug: Profil, Übungsweg je Bereich,
+    Stand einer offenen Anforderung."""
+    prof = A.denkcheck_profil(ev)
+    titel = _dc_titel()
+    zeilen = ["DENK-CHECK (Screening; Stufe 2-4 = Klasse 2, 5 = Klasse 3, 6 = Klasse 4, "
+              "7 = Klasse 5/6, 8 = Knobelolympiade)"]
+    if not prof["dimensionen"]:
+        zeilen.append("Noch kein Check gemacht.")
+    for k, ueben in DENKCHECK_UEBEN.items():
+        d = prof["dimensionen"].get(k)
+        name = f'{titel.get(k, k)} ({k})'
+        if d:
+            z = {1: ", Decke nicht erreicht", -1: ", nichts gelöst"}.get(d["z"], "")
+            stand = (f'Stufe {d["schaetzung"]}{z}; {d["c"]}/{d["n"]} richtig, '
+                     f'Median {d["ms"] / 1000:.0f} s, am {d["datum"]}')
+            if d["verlauf"]:
+                stand += "; früher: " + ", ".join(f'{v["datum"]}: {v["schaetzung"]}' for v in d["verlauf"])
+        else:
+            stand = "noch nicht geprüft"
+        weg = ", ".join(s for s in ueben if s in _IDS) or "keine eigene Fertigkeit"
+        zeilen.append(f"  {name}: {stand}. Geübt über: {weg}")
+    offen = offene_anforderung(frueher, ev)
+    if offen:
+        zeilen.append(f'Offen: Du hast am {A.datetime.fromtimestamp(offen["t"] / 1000).strftime("%d.%m.")} '
+                      f'einen Check angefordert ({", ".join(offen.get("bereiche") or [])}); '
+                      "das Kind hat ihn noch nicht gemacht.")
+    elif prof["letzter"]:
+        tage = int((time.time() * 1000 - prof["letzter"]) / 86400000)
+        zeilen.append(f"Letzter Check vor {tage} Tagen.")
+    return "\n".join(zeilen)
+
+
 def auszug():
     """Was das Modell zu sehen bekommt. Zahlen, keine Wertungen.
 
@@ -325,6 +453,7 @@ def auszug():
         "\nDIE LETZTEN SITZUNGEN", "\n".join(sitz) or "  noch keine",
         f'\nVORRAT: {vorrat["unversorgt"]} von {vorrat["gesamt"]} Fertigkeiten ohne Paket',
         "\n" + motivationsauszug(ev, seit_plan),
+        "\n" + denkcheck_auszug(ev, frueher),
     ]
     if wuensche:
         teile.append("\nDIE ELTERN HABEN GEWÜNSCHT (das geht deinem Plan vor)")
@@ -427,9 +556,22 @@ def saeubere(obj):
             erzeugen.append({"skill": e["skill"], "stufe": stufe,
                              "warum": str(e.get("warum") or "").strip()[:300]})
 
+    # Denk-Check-Anforderung: nur bekannte Bereiche, doppelte fallen weg. Eine
+    # Anforderung ohne einen einzigen gültigen Bereich ist keine.
+    dc_roh = obj.get("denkcheck") if isinstance(obj.get("denkcheck"), dict) else {}
+    bereiche = []
+    for b in dc_roh.get("bereiche") or []:
+        if b in DENKCHECK_UEBEN and b not in bereiche:
+            bereiche.append(b)
+        elif b not in DENKCHECK_UEBEN:
+            hinweise.append(f"unbekannter Denk-Check-Bereich übergangen: {b!r}")
+    anfordern = dc_roh.get("anfordern") is True and bool(bereiche)
+    denkcheck = {"anfordern": anfordern, "bereiche": bereiche if anfordern else [],
+                 "grund": str(dc_roh.get("grund") or "").strip()[:400]}
+
     return {"beobachtung": str(obj.get("beobachtung") or "").strip()[:2000],
             "eltern": str(obj.get("eltern") or "").strip()[:4000],
-            "plan": plan, "erzeugen": erzeugen}, hinweise
+            "plan": plan, "erzeugen": erzeugen, "denkcheck": denkcheck}, hinweise
 
 
 # -------------------------------------------------------------------- Ablage
@@ -462,8 +604,25 @@ def _client():
     return Anthropic(api_key=konfig.geheim("ANTHROPIC_API_KEY"))
 
 
-def denk_nach(client=None):
-    """Einmal über den Verlauf nachdenken. Rückgabe: (plan|None, Protokoll)."""
+def denk_nach(client=None, _schon_belegt=False):
+    """Einmal über den Verlauf nachdenken. Rückgabe: (plan|None, Protokoll).
+
+    Läuft schon ein Durchgang (selbständig oder vom Elternknopf), kommt kein
+    zweiter dazu — sonst überschriebe der eine den Plan des anderen.
+    """
+    if not _schon_belegt:
+        with _sperre:
+            if _laeuft["ja"]:
+                return None, ["der Tutor denkt gerade schon nach"]
+            _laeuft["ja"] = True
+        try:
+            return _denk_nach(client)
+        finally:
+            _laeuft["ja"] = False
+    return _denk_nach(client)
+
+
+def _denk_nach(client=None):
     ev = SP.alle_ereignisse()
     # Denk-Check-Antworten sind kein Üben und zählen hier nicht (ZIELE-V3 G4).
     antworten = sum(1 for e in ev if e.get("e") == "a" and e.get("u") != "denkcheck")
@@ -501,10 +660,27 @@ def denk_nach(client=None):
         return None, hinweise
 
     jetzt = int(time.time() * 1000)
+    # Die Anforderung trägt die Zeit, ab der Ergebnisse sie erfüllen. Fordert der
+    # Tutor erneut an, während die alte noch offen ist, bleibt deren Zeit: Sonst
+    # würde ein angefangener Check nie als Erfüllung zählen, und die App böte
+    # gleich danach den nächsten an.
+    # Die Pause aus dem Prompt gilt auch im Code: Kurz nach einem Check wird
+    # eine neue Anforderung nicht angenommen (eine noch offene bleibt bestehen).
+    letzter = A.denkcheck_profil(ev)["letzter"]
+    if (plan["denkcheck"]["anfordern"] and not offene_anforderung(lies_plan(), ev) and letzter
+            and jetzt - letzter < DENKCHECK_PAUSE_TAGE * 86400000):
+        plan["denkcheck"].update(anfordern=False, bereiche=[])
+        hinweise.append(f"Denk-Check-Anforderung zurückgestellt: der letzte ist keine "
+                        f"{DENKCHECK_PAUSE_TAGE} Tage her")
+    if plan["denkcheck"]["anfordern"]:
+        offen = offene_anforderung(lies_plan(), ev)
+        plan["denkcheck"]["t"] = offen["t"] if offen else jetzt
+        plan["denkcheck"]["stand"] = (offen.get("stand") or {}) if offen else check_stand(ev)
     plan.update({
         "t": jetzt,
         "datum": A.datetime.fromtimestamp(jetzt / 1000).strftime("%d.%m.%Y %H:%M"),
-        "grundlage": {"antworten": antworten, "ereignisse": len(ev)},
+        "grundlage": {"antworten": antworten, "ereignisse": len(ev),
+                      "checks": sum(check_stand(ev).values())},
         "ms": int((time.time() - t0) * 1000),
         "kosten": {"rein": resp.usage.input_tokens, "raus": resp.usage.output_tokens},
         "hinweise": hinweise,
@@ -519,6 +695,8 @@ NEUE_ANTWORTEN = 8           # so viel Neues rechtfertigt einen Aufruf
 ALTER = 20 * 3600 * 1000     # oder der Plan ist so alt
 KURZ = 3                     # unter so vielen Aufgaben ist ein Abbruch ein Hilferuf
 _laeuft = {"ja": False}
+import threading  # noqa: E402
+_sperre = threading.Lock()   # schützt _laeuft und das Protokoll der Läufe
 
 
 def kurz_abgebrochen(ev, seit):
@@ -551,7 +729,16 @@ def faellig():
     if not p:
         return True
     seither = antworten - int((p.get("grundlage") or {}).get("antworten", 0))
-    if seither >= NEUE_ANTWORTEN or (time.time() * 1000 - p.get("t", 0)) > ALTER:
+    if seither >= NEUE_ANTWORTEN:
+        return True
+    # Ein neues Denk-Check-Ergebnis verändert das Bild mehr als acht Antworten.
+    # Gezählt, nicht nach Uhrzeit: Eine vorgehende Geräteuhr ließe ein altes
+    # Ergebnis sonst tagelang als neu gelten.
+    if sum(check_stand(ev).values()) > int((p.get("grundlage") or {}).get("checks", 0)):
+        return True
+    # Ein alter Plan allein ist kein Anlass: Ohne eine einzige neue Antwort
+    # sähe der Tutor dasselbe wie gestern und kostete trotzdem Geld.
+    if seither > 0 and (time.time() * 1000 - p.get("t", 0)) > ALTER:
         return True
     # Der einzige Anlass, der ohne neue Antworten zieht. Ein weggetipptes Paket
     # erzeugt fast keine Antworten und bliebe unter jeder Zählschwelle — dabei
@@ -559,17 +746,51 @@ def faellig():
     return kurz_abgebrochen(ev, p.get("t", 0))
 
 
-def vielleicht_nachdenken():
-    """Im Hintergrund, wenn es sich lohnt. Blockiert nie eine Übertragung."""
-    import threading
+AUTO_MAX_TAG = 3            # höchstens so viele selbständige Läufe in 24 Stunden
+AUTO_PROTOKOLL = PLAN.parent / "tutor_auto.json"
 
-    if not faellig():
+
+def _auto_frei(jetzt_ms=None):
+    """Kostenbremse für selbständige Läufe (nach einem Sync, ohne Elternknopf).
+
+    Ein gekoppeltes Gerät kann beliebig oft synchronisieren; ohne Deckel könnte
+    es so beliebig viele bezahlte Aufrufe auslösen. Die Zeitpunkte der letzten
+    Läufe stehen in einer kleinen Datei neben dem Plan. Ist sie unlesbar, gilt
+    sie als leer — eine kaputte Datei soll den Tutor nicht abstellen, und der
+    Deckel greift ab dem nächsten Lauf wieder.
+    """
+    jetzt_ms = jetzt_ms or int(time.time() * 1000)
+    try:
+        liste = json.loads(AUTO_PROTOKOLL.read_text("utf-8"))
+        liste = [int(t) for t in liste if isinstance(t, (int, float))]
+    except (OSError, ValueError, TypeError):
+        liste = []
+    liste = [t for t in liste if jetzt_ms - t < 24 * 3600 * 1000]
+    if len(liste) >= AUTO_MAX_TAG:
         return False
+    try:
+        AUTO_PROTOKOLL.parent.mkdir(parents=True, exist_ok=True)
+        AUTO_PROTOKOLL.write_text(json.dumps(liste + [jetzt_ms]), "utf-8")
+    except OSError:
+        return False             # ohne Protokoll kein Deckel, also kein Lauf
+    return True
+
+
+def vielleicht_nachdenken():
+    """Im Hintergrund, wenn es sich lohnt. Blockiert nie eine Übertragung.
+
+    Prüfen, Zählen und "läuft" setzen geschehen unter einer Sperre: Der Dienst
+    bedient mehrere Anfragen gleichzeitig, und zwei Übertragungen dürfen nicht
+    beide "nichts läuft" sehen und zweimal bezahlen.
+    """
+    with _sperre:
+        if not faellig() or not _auto_frei():
+            return False
+        _laeuft["ja"] = True
 
     def lauf():
-        _laeuft["ja"] = True
         try:
-            p, log = denk_nach()
+            p, log = denk_nach(_schon_belegt=True)
             print("Tutor: " + " · ".join(log), flush=True)
         except Exception as e:                       # nie den Dienst mitreißen
             print(f"Tutor gescheitert: {type(e).__name__}", flush=True)

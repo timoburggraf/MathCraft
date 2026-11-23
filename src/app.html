@@ -573,7 +573,8 @@ const freshState = () => ({
   // offen sein (dann geht er nach einer Unterbrechung an derselben Stelle weiter).
   // benutzt: Ids der schon gestellten Aufgaben — bei einer Wiederholung kommen
   // unbenutzte zuerst. Siehe dcLauf() und die Denk-Check-Funktionen weiter unten.
-  denkcheck:{laeufe:[], benutzt:[]},
+  // wunsch: eine Check-Anforderung des Tutors ({t, bereiche}) oder null.
+  denkcheck:{laeufe:[], benutzt:[], wunsch:null},
   typLog:[],  // die zuletzt vorgelegten Aufgabenarten, für die Mischung
   // D7: modus schaltet in diesem Schritt nur die Sichtbarkeit des Begleiters
   // um (begleiterAktiv()) — die eigentliche Denkschule-Kartenansicht (D1)
@@ -608,11 +609,28 @@ let S = load();
 /* Der Denk-Check-Stand aus dem Speicher, vollständig gesäubert: nur bekannte
    Dimensionen, Stufen 2..8, höchstens DC_N Antworten je Dimension. Ein
    beschädigter Eintrag kostet höchstens den laufenden Check, nie die App. */
+/* Eine Check-Anforderung des Tutors ({t, bereiche}, kommt mit der Antwort auf
+   /sync) — nur mit Zeitpunkt und mindestens einem bekannten Bereich, sonst null.
+   t ist die Kennung der Anforderung (Uhr des Dienstes); seit ist der Moment, in
+   dem DIESES Gerät sie bekam (eigene Uhr) — nur daran misst die App, ob ein
+   Bereich danach geprüft wurde. Beide Uhren werden nie miteinander verglichen. */
+function dcWunschSauber(w, vorher){
+  if(w === null || typeof w !== "object" || Array.isArray(w)) return null;
+  const dims = DENKCHECK ? Object.keys(DENKCHECK.dimensionen || {}) : [];
+  const zahl = v => (typeof v === "number" && isFinite(v) && v > 0) ? v : 0;
+  const t = zahl(w.t);
+  const bereiche = Array.isArray(w.bereiche)
+    ? dims.filter(d => w.bereiche.includes(d)) : [];
+  if(!t || !bereiche.length) return null;
+  const seit = vorher && vorher.t === t && zahl(vorher.seit) ? vorher.seit : (zahl(w.seit) || Date.now());
+  return {t, bereiche, seit};
+}
+
 function saeubereDenkcheck(raw){
   const isObj = v => v !== null && typeof v === "object" && !Array.isArray(v);
   const num = (v, def) => (typeof v === "number" && isFinite(v)) ? v : def;
   const dims = DENKCHECK ? Object.keys(DENKCHECK.dimensionen || {}) : [];
-  const out = {laeufe:[], benutzt:[]};
+  const out = {laeufe:[], benutzt:[], wunsch:dcWunschSauber(raw.wunsch, raw.wunsch)};
   if(Array.isArray(raw.benutzt))
     out.benutzt = raw.benutzt.filter(v => typeof v === "string" && v.length <= 40).slice(-DC_BENUTZT_MAX);
   if(!Array.isArray(raw.laeufe)) return out;
@@ -620,13 +638,17 @@ function saeubereDenkcheck(raw){
     if(!isObj(l) || !isObj(l.runde)) continue;
     const lauf = {start:Math.max(0, num(l.start, 0)), fertig:Math.max(0, num(l.fertig, 0)),
                   runde:{A:{fertig:0, dims:{}}, B:{fertig:0, dims:{}}}};
+    // nur: ein Teil-Check auf Anforderung des Tutors prüft nur diese Bereiche.
+    const nur = Array.isArray(l.nur) ? dims.filter(d => l.nur.includes(d)) : [];
+    if(nur.length) lauf.nur = nur;
+    const imLauf = dim => !lauf.nur || lauf.nur.includes(dim);
     for(const r of ["A", "B"]){
       const x = l.runde[r];
       if(!isObj(x)) continue;
       lauf.runde[r].fertig = Math.max(0, num(x.fertig, 0));
       if(!isObj(x.dims)) continue;
       for(const [dim, d] of Object.entries(x.dims)){
-        if(!dims.includes(dim) || !isObj(d) || !Array.isArray(d.folge)) continue;
+        if(!dims.includes(dim) || !imLauf(dim) || !isObj(d) || !Array.isArray(d.folge)) continue;
         const folge = d.folge.filter(a => isObj(a) && typeof a.id === "string" && a.id.length <= 40)
           .map(a => ({id:a.id, stufe:Math.max(DC_MIN, Math.min(DC_MAX, num(a.stufe, DC_MIN)|0)),
                       o:a.o === 1 ? 1 : 0, ms:Math.max(0, Math.min(600000, num(a.ms, 0)|0))}))
@@ -634,16 +656,20 @@ function saeubereDenkcheck(raw){
         const z = num(d.z, 0);
         lauf.runde[r].dims[dim] = {folge, e:d.e === null || d.e === undefined ? null : num(d.e, null),
                                    z:(z === 1 || z === -1) ? z : 0};
+        // f: wann der Bereich fertig geprüft war (Geräteuhr); ältere Stände haben es nicht.
+        if(num(d.f, 0) > 0 && folge.length >= DC_N) lauf.runde[r].dims[dim].f = d.f;
       }
     }
     // Die Vermerke „fertig“ müssen zum Inhalt passen: Eine Runde ist nur fertig,
     // wenn jede ihrer Dimensionen alle DC_N Antworten hat, und der Lauf nur, wenn
     // beide Runden fertig sind. Ein widersprüchlicher Stand (Runde fertig, Lauf
     // offen, aber nichts mehr zu tun) ließ den Check sonst nie wieder starten.
+    // Eine Runde ohne einen einzigen Bereich dieses Laufs gilt als erledigt.
     for(const r of ["A", "B"]){
-      const voll = dims.filter(dim => (DENKCHECK.dimensionen[dim] || {}).runde === r)
-        .every(dim => (lauf.runde[r].dims[dim] || {folge:[]}).folge.length >= DC_N);
+      const rDims = dims.filter(dim => (DENKCHECK.dimensionen[dim] || {}).runde === r && imLauf(dim));
+      const voll = rDims.every(dim => (lauf.runde[r].dims[dim] || {folge:[]}).folge.length >= DC_N);
       if(!voll) lauf.runde[r].fertig = 0;
+      else if(!rDims.length) lauf.runde[r].fertig = lauf.runde[r].fertig || lauf.start || 1;
     }
     lauf.fertig = lauf.runde.A.fertig && lauf.runde.B.fertig
       ? (lauf.fertig || Math.max(lauf.runde.A.fertig, lauf.runde.B.fertig)) : 0;
@@ -1303,7 +1329,8 @@ async function syncNow(leise){
         // Ereignissen, kein Ereignisfeld — er landet nie in einem Eintrag von
         // S.log.ev. Der Avatar-Name des Fuchses (S.avatar.name) bleibt davon
         // getrennt und erreicht diese Ladung weiterhin nie.
-        v:1, dev:S.dev, ev:paket, name:(S.profile.name||"").slice(0,18),
+        // mehr: es folgen weitere Häppchen — der Tutor wartet auf das letzte.
+        v:1, dev:S.dev, ev:paket, mehr:S.log.ev.length > paket.length, name:(S.profile.name||"").slice(0,18),
                              stats:{answers:S.stats.answers, lost:S.log.lost,
                                     offen:DATA.units.filter(u => ((S.units[u.id]||{}).stars||0) < 2)
                                                      .map(u => u.id)}}, {signal:ctl.signal});
@@ -1314,6 +1341,9 @@ async function syncNow(leise){
       S.log.ev = S.log.ev.filter(e => e.i > ack);
       if(Array.isArray(a.wishes)) S.wishes = a.wishes;
       if(Array.isArray(a.plan)) S.plan = a.plan;
+      // Check-Anforderung des Tutors; null nimmt sie zurück, fehlt das Feld
+      // (älterer Dienst), bleibt alles, wie es ist.
+      if("denkcheck" in a) S.denkcheck.wunsch = dcWunschSauber(a.denkcheck, S.denkcheck.wunsch);
       save();
       ok = true;
       if(!paket.length || !S.log.ev.length) break;
@@ -3764,6 +3794,38 @@ VIEWS.result = function(){
 const DC_TAGE = 90;               // so lange gilt ein fertiger Check als frisch
 const DC_DIMS = DENKCHECK ? Object.keys(DENKCHECK.dimensionen || {}) : [];
 const dcDimsVon = r => DC_DIMS.filter(k => DENKCHECK.dimensionen[k].runde === r);
+/* Die Bereiche einer Runde, die DIESER Lauf prüft — bei einem Teil-Check auf
+   Anforderung des Tutors (lauf.nur) nur dessen Bereiche. */
+const dcDimsIn = (lauf, r) => dcDimsVon(r).filter(k => !lauf || !lauf.nur || lauf.nur.includes(k));
+
+/* Ist ein Bereich fertig geprüft worden, nachdem dieses Gerät die Anforderung
+   bekam? Je Bereich zählt sein eigener Abschluss (dims[d].f) — dasselbe, was
+   der Dienst zählt: ein neues "c"-Ergebnis je Bereich seit der Anforderung
+   (lehrer.offene_anforderung). Was auf einem anderen Gerät geprüft wurde, sieht
+   nur der Dienst; er schickt die Anforderung dann nicht mehr, und mit der
+   nächsten Übertragung ist sie auch hier weg. */
+function dcBereichSeit(d, seit){
+  return S.denkcheck.laeufe.some(l => ["A", "B"].some(r => {
+    const x = l.runde[r].dims[d];
+    return x && x.f && x.f >= seit;
+  }));
+}
+
+/* Die offene Check-Anforderung des Tutors, oder null. */
+function dcWunschOffen(){
+  const w = S.denkcheck.wunsch;
+  if(!w) return null;
+  return w.bereiche.every(d => dcBereichSeit(d, w.seit)) ? null : w;
+}
+
+/* Die Bereiche einer Runde, die als Nächstes drankommen: die des offenen Laufs,
+   sonst die einer offenen Anforderung, sonst alle. */
+function dcPlanDims(r){
+  const lauf = dcOffenerLauf();
+  if(lauf) return dcDimsIn(lauf, r);
+  const w = dcWunschOffen();
+  return w ? dcDimsVon(r).filter(k => w.bereiche.includes(k) && !dcBereichSeit(k, w.seit)) : dcDimsVon(r);
+}
 
 /* Emoji und lobender Satz je Dimension — für „Deine Superkräfte“. Nur Stärken. */
 const DC_KRAFT = {
@@ -3811,20 +3873,31 @@ const dcOffenerLauf = () => {
   const l = S.denkcheck.laeufe[S.denkcheck.laeufe.length - 1];
   return l && !l.fertig ? l : null;
 };
-const dcLetzterFertiger = () => S.denkcheck.laeufe.filter(l => l.fertig).slice(-1)[0] || null;
+/* Der letzte fertige GANZE Check — ein Teil-Check auf Anforderung des Tutors
+   startet die Frist für den ganzen nicht neu. */
+const dcLetzterFertiger = () => S.denkcheck.laeufe.filter(l => l.fertig && !l.nur).slice(-1)[0] || null;
 
 /* Soll die Startseite den Check anbieten? Solange kein Lauf fertig ist oder der
    letzte fertige älter als 90 Tage ist. Nur in der Denkschule: der Boden wirkt
    nur dort (zielStufe()). */
 function dcFaellig(){
   if(!DENKCHECK || S.settings.modus !== "v2") return false;
-  if(dcOffenerLauf()) return true;
+  if(dcOffenerLauf() || dcWunschOffen()) return true;
   const l = dcLetzterFertiger();
   return !l || Date.now() - l.fertig > DC_TAGE * DAY;
 }
 
 function dcNeuerLauf(){
   const lauf = {start:Date.now(), fertig:0, runde:{A:{fertig:0, dims:{}}, B:{fertig:0, dims:{}}}};
+  // Hat der Tutor einen Teil-Check angefordert, prüft dieser Lauf nur dessen
+  // Bereiche; eine Runde ohne einen davon ist gleich erledigt.
+  // Bereiche, die seit der Anforderung schon geprüft sind, kommen nicht doppelt.
+  const w = dcWunschOffen();
+  const offen = w ? w.bereiche.filter(d => !dcBereichSeit(d, w.seit)) : [];
+  if(w && offen.length < DC_DIMS.length){
+    lauf.nur = offen;
+    for(const r of ["A", "B"]) if(!dcDimsIn(lauf, r).length) lauf.runde[r].fertig = lauf.start;
+  }
   S.denkcheck.laeufe.push(lauf);
   if(S.denkcheck.laeufe.length > DC_LAEUFE_MAX) S.denkcheck.laeufe.shift();
   return lauf;
@@ -3840,7 +3913,7 @@ const dcNaechsteRunde = lauf => !lauf.runde.A.fertig ? "A" : !lauf.runde.B.ferti
 /* Wie weit eine Runde ist: beantwortet von gesamt (ohne die Aufgabe, die gerade
    noch offen ist). */
 function dcZaehlung(lauf, r){
-  const dims = dcDimsVon(r);
+  const dims = lauf ? dcDimsIn(lauf, r) : dcPlanDims(r);
   const beantwortet = lauf
     ? dims.reduce((s, k) => s + ((lauf.runde[r].dims[k] || {folge:[]}).folge.length), 0) : 0;
   return {beantwortet, gesamt:dims.length * DC_N};
@@ -3865,7 +3938,7 @@ function dcWaehle(dim, stufe, folge){
 /* Die nächste Aufgabe der Runde samt Dimension — oder null, wenn alle Dimensionen
    der Runde ihre vier Antworten haben. */
 function dcNaechsteAufgabe(lauf, r){
-  for(const dim of dcDimsVon(r)){
+  for(const dim of dcDimsIn(lauf, r)){
     const d = dcDim(lauf, r, dim);
     if(d.folge.length >= DC_N) continue;
     const a = dcWaehle(dim, dcNaechsteStufe(d.folge, dcStartStufe()), d.folge);
@@ -3884,14 +3957,18 @@ const dcAufgabe = n => Object.assign({}, n.eintrag.task,
 function dcOeffnen(){
   if(!DENKCHECK) return;
   const lauf = dcOffenerLauf();
-  const r = lauf ? dcNaechsteRunde(lauf) : "A";
+  const r = lauf ? dcNaechsteRunde(lauf) : (dcPlanDims("A").length ? "A" : "B");
   dcIntro(r, !!lauf && dcZaehlung(lauf, r).beantwortet > 0);
 }
 
 function dcIntroText(r, weiter){
   const n = dcZaehlung(null, r).gesamt;
   if(weiter) return "Schön, dass du weitermachst! Wir machen genau da weiter, wo du aufgehört hast.";
-  if(r === "B") return "Runde B! Wieder kleine Rätsel, wieder ohne Punkte. Los geht's!";
+  // „Wieder“ nur, wenn in diesem Lauf schon eine Runde A gelaufen ist — ein
+  // Teil-Check kann auch gleich mit Runde B beginnen.
+  const lauf = dcOffenerLauf();
+  if(r === "B" && lauf && dcDimsIn(lauf, "A").length)
+    return "Runde B! Wieder kleine Rätsel, wieder ohne Punkte. Los geht's!";
   return "Willkommen beim Denk-Check! Hier knobelst du " + n + " kleine Rätsel. " +
     "Es gibt keine Noten und keine Punkte. Manche Rätsel sind leicht und manche richtig knifflig. " +
     "Das ist so gewollt. Mach einfach so gut du kannst. " +
@@ -3947,7 +4024,7 @@ function dcAntwort(ok){
 function dcDimensionFertig(lauf, r, dim){
   const d = dcDim(lauf, r, dim);
   const {e, z} = dcSchaetzung(d.folge);
-  d.e = e; d.z = z;
+  d.e = e; d.z = z; d.f = Date.now();
   logEvent("c", {k:dim, g:e, n:d.folge.length, c:d.folge.filter(a => a.o).length,
                  ms:dcMedian(d.folge.map(a => a.ms)), z});
 }
@@ -3966,7 +4043,7 @@ function dcWeiter(){
 /* Der Boden je Disziplin aus den Schätzungen einer Runde: ⌊E⌋ − 1, mindestens 1
    — eine Stufe unter dem Gezeigten, wie beim Klassen-Einstieg. */
 function dcBodenSetzen(lauf, r){
-  dcDimsVon(r).forEach(dim => {
+  dcDimsIn(lauf, r).forEach(dim => {
     const boden = DENKCHECK.dimensionen[dim].boden;
     const d = lauf.runde[r].dims[dim];
     if(!boden || !d || d.e === null || !Object.prototype.hasOwnProperty.call(DISZIPLINEN, boden)) return;
@@ -4009,7 +4086,7 @@ function dcAbbrechen(){
 function dcSuperkraefte(lauf){
   if(!lauf) return [];
   const liste = [];
-  for(const r of ["A", "B"]) for(const dim of dcDimsVon(r)){
+  for(const r of ["A", "B"]) for(const dim of dcDimsIn(lauf, r)){
     const d = lauf.runde[r].dims[dim];
     if(d && d.e !== null && d.z !== -1) liste.push({dim, e:d.e});
   }
@@ -4086,10 +4163,12 @@ function dcKarte(){
   const r = lauf ? dcNaechsteRunde(lauf) : "A";
   const stand = lauf && dcZaehlung(lauf, r).beantwortet > 0 ? `<div class="dc-sub">Weiter bei Runde ${r}</div>`
     : lauf && r === "B" ? `<div class="dc-sub">Weiter bei Runde B</div>` : "";
+  const n = dcPlanDims("A").length + dcPlanDims("B").length;
+  const umfang = n >= DC_DIMS.length ? "(2 kurze Runden)" : `(${n * DC_N} kleine Rätsel)`;
   return `<button class="btn wide dc-karte" onclick="dcOeffnen()">
       <span class="dc-e">🧭</span>
       <span class="dc-txt"><b>Denk-Check — finde deine Superkräfte</b>
-        <span class="dc-sub">(2 kurze Runden)</span>${stand}</span></button>`;
+        <span class="dc-sub">${umfang}</span>${stand}</span></button>`;
 }
 
 /* Der Eintrag in den Einstellungen — auch für eine vorzeitige Wiederholung. */
